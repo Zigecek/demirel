@@ -22,14 +22,21 @@ jobs:
     - name: Build the app
       run: npm run build  # Vytvoří produkční build aplikace
 
-    - name: Install serve
-      run: npm install -g serve  # Nainstaluje `serve` globálně
+    - name: Install background running deps
+      run: npm install -g serve pm2  # Nainstaluje `serve` globálně
 
-    - name: Start app using serve
+    - name: Start app using PM2
       run: |
-        serve -s build -l 3000
+        pm2 start serve --name "demirel" -- -s build -l 3000 --watch
+        pm2 save
       env:
         PORT: 3000  # Nastaví environment proměnnou PORT
+    - name: Restart app using PM2
+      run: pm2 restart my-react-app  # Restartuje aplikaci podle názvu
+
+    - name: Check PM2 status
+      run: pm2 list
+
 
   restart-nginx-on-vps:
     runs-on: [self-hosted, vps]
