@@ -25,17 +25,14 @@ jobs:
     - name: Install background running deps
       run: npm install -g serve pm2  # Nainstaluje `serve` globálně
 
-    - name: Start app using PM2
+    - name: Start or Restart app using PM2
       run: |
-        pm2 start serve --name "demirel" -- -s build -l 3000 --watch
+        pm2 restart demirel || pm2 start serve --name "demirel" -- -s build -l 3000
         pm2 save
       env:
         PORT: 3000  # Nastaví environment proměnnou PORT
-    - name: Restart app using PM2
-      run: pm2 restart demirel  # Restartuje aplikaci podle názvu
-
     - name: Check PM2 status
-      run: pm2 list
+      run: pm2 l
 
 
   restart-nginx-on-vps:
