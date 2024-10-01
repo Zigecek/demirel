@@ -1,0 +1,41 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Deploy to RPi and restart nginx on VPS
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  deploy-to-rpi:
+
+    runs-on: [self-hosted, rpi]  
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: npm install  # Nainstaluje závislosti
+
+    - name: Build the app
+      run: npm run build  # Vytvoří produkční build aplikace
+
+    - name: Install serve
+      run: npm install -g serve  # Nainstaluje `serve` globálně
+
+    - name: Start app using serve
+      run: |
+        serve -s build -l 3000
+      env:
+        PORT: 3000  # Nastaví environment proměnnou PORT
+
+  restart-nginx-on-vps:
+    runs-on: [self-hosted, vps]
+    needs: deploy-to-rpi  # Tento job se spustí až po dokončení deploye na RPi
+
+    steps:
+      - name: Restart Nginx on VPS
+        run: |
+          sudo nginx -s reload
