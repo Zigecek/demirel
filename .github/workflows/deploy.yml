@@ -22,9 +22,6 @@ jobs:
     - name: Build the app
       run: npm run build  # Vytvoří produkční build aplikace
 
-    - name: Install background running deps
-      run: npm install -g serve pm2  # Nainstaluje `serve` globálně
-
     - name: Start or Restart app using PM2
       run: |
         pm2 serve build/ 3000 --name "demirel" || pm2 restart demirel
