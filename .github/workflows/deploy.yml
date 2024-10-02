@@ -25,9 +25,7 @@ jobs:
         run: |
           touch .env.production
           echo NODE_ENV=${{ vars.NODE_ENV }} >> .env.production
-          echo PORT=${{ vars.PORT }} >> .env.production
-          echo HOST=${{ vars.HOST }} >> .env.production
-          echo CORS_ORIGIN=${{ vars.CORS_ORIGIN }} >> .env.production
+          echo VITE_API_URL=${{ vars.VITE_API_URL }} >> .env.production
           cat .env.production
 
       - name: PM2 delete process
