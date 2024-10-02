@@ -14,7 +14,17 @@ jobs:
     runs-on: [self-hosted, rpi]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: NPM modules cache
+        uses: actions/cache@v2
+        with:
+          path: "~/.npm"
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: npm install
 
@@ -48,7 +58,7 @@ jobs:
 
   restart-nginx-on-vps:
     runs-on: [self-hosted, vps]
-    needs: deploy-to-rpi # Tento job se spustí až po dokončení deploye na RPi
+    needs: deploy-to-rpi
 
     steps:
       - name: Restart Nginx on VPS
