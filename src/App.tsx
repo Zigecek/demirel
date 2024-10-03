@@ -1,18 +1,13 @@
 import { useState, useEffect, useContext } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
-import "./App.css";
 import { getRoot } from "./proxy/endpoints";
 import { globalContext } from "./main";
 
-function App() {
+export default function App() {
   const [count, setCount] = useState(0);
   const [text, setText] = useState("");
   const socket = useContext(globalContext);
-
-  socket.on("message", (data) => {
-    console.log(data);
-  });
 
   useEffect(() => {
     getRoot((data) => setText(data.responseObject));
@@ -40,5 +35,3 @@ function App() {
     </>
   );
 }
-
-export default App;
