@@ -1,7 +1,6 @@
 const getApiUrl = (): string => {
   const hostname = window.location.hostname;
   const port = import.meta.env.VITE_API_PORT;
-  console.log(`API port: ${port}`);
 
   if (hostname.startsWith("192.168.") || hostname.startsWith("10.66.66.") || hostname.startsWith("localhost")) {
     // Pokud běží na lokální síti

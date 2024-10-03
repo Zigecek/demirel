@@ -16,7 +16,7 @@ jobs:
         run: |
           touch .env.production
           echo NODE_ENV=${{ vars.NODE_ENV }} >> .env.production
-          echo VITE_LOCAL_API_PORT=${{ vars.VITE_LOCAL_API_PORT }} >> .env.production
+          echo VITE_API_PORT=${{ vars.VITE_API_PORT }} >> .env.production
           cat .env.production
 
       - name: Install dependencies
