@@ -31,12 +31,10 @@ jobs:
           pm2 delete demirel
 
       - name: PM2 start process
-        continue-on-error: true
         run: |
           pm2 serve dist/ 3000 --name "demirel"
 
       - name: PM2 save
-        continue-on-error: true
         run: |
           pm2 save
 
