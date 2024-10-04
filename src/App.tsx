@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { socket } from "./ws-client";
 
-import { Value } from "./components/value";
+import { Value } from "./components/Value";
 
 export default function App() {
   const [messages, setMessages] = useState<MQTTMessage[]>([]);
