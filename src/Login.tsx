@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TextInput from "./components/Textinput";
+import TextInput from "./components/TextInput";
 
 export default function Login() {
   const [username, setUsername] = useState("");
