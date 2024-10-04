@@ -1,37 +1,21 @@
 import { useState, useEffect, useContext } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import { getRoot } from "./proxy/endpoints";
-import { globalContext } from "./main";
+import { socket } from "./ws-client";
+
+import { Value } from "./components/value";
 
 export default function App() {
-  const [count, setCount] = useState(0);
-  const [text, setText] = useState("");
-  const socket = useContext(globalContext);
+  const [messages, setMessages] = useState<MQTTMessage[]>([]);
 
-  useEffect(() => {
-    getRoot((data) => setText(data.responseObject));
-  }, []);
+  socket.on("messages", (msgs: MQTTMessage[]) => {
+    setMessages([...msgs, ...messages]);
+  });
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="flex flex-wrap justify-start">
+        <Value topic="zige/pozar1/temp/val"/>
+        <Value topic="zige/pozar1/12v/val"/>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
-      <p>{text}</p>
     </>
   );
 }

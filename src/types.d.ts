@@ -8,3 +8,8 @@ type ApiBase<T> = {
 type SocketAuth = {
   socketId: string | undefined;
 };
+
+type MQTTMessage = {
+  topic: string;
+  message: string;
+};
