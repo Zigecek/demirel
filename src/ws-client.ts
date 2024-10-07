@@ -17,6 +17,15 @@ socket.on('connect', async () => {
   });
 });
 
+socket.on('reconnect', async () => {
+  console.log('Reconnected to websocket server');
+
+  // connect socket to user session on expresse
+  await postSocketAuth({
+    socketId: socket.id,
+  });
+});
+
 export const socketEE = new EventEmitter();
 
 socket.on('messages', (msgs: MQTTMessage[]) => {
