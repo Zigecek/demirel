@@ -12,12 +12,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: "Create env.production file"
+      - name: "Create .env file"
         run: |
-          touch .env.production
-          echo NODE_ENV=${{ vars.NODE_ENV }} >> .env.production
-          echo VITE_API_PORT=${{ vars.VITE_API_PORT }} >> .env.production
-          cat .env.production
+          touch .env
+          echo NODE_ENV=${{ vars.NODE_ENV }} >> .env
+          echo VITE_API_PORT=${{ vars.VITE_API_PORT }} >> .env
+          cat .env
 
       - name: Install dependencies
         run: npm install
@@ -32,7 +32,7 @@ jobs:
 
       - name: PM2 start process
         run: |
-          pm2 start server.js --name "demirel"
+          pm2 serve dist/ 3000 --name "demirel"
 
       - name: PM2 save
         run: |

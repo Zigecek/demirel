@@ -1,9 +1,10 @@
 import "./axios";
-import { get, postAsync } from "./axios";
+import { get, postAsync, getAsync } from "./axios";
 
 export const getRoot = get<ApiBase<string>>("/");
 export const postSocketAuth = (data: SocketAuth) => postAsync<ApiBase<boolean>>("/sockets/auth", data);
 export const getIfLoggedIn = get<ApiBase<boolean>>("/auth/loggedIn");
+export const getIfLoggedInAsync = () => getAsync<ApiBase<boolean>>("/auth/loggedIn");
 // login: /auth/login
 export const postLogin = (data: Login) => postAsync<ApiBase<UserSafe>>("/auth/login", data);
 // logout: /auth/logout

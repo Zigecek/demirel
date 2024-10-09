@@ -24,7 +24,7 @@ export const useTopicValue = (topic: string) => {
     // Vyčištění při unmount
     return () => {
       clearInterval(interval);
-      socketEE.off(topic, handleUpdate);
+      socketEE.removeListener(topic, handleUpdate);
     };
   }, [topic]);
 

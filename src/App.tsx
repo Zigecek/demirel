@@ -1,22 +1,20 @@
 import { useState, useEffect } from "react";
-import { socket } from "./ws-client";
 import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
 import { number, unit, fix } from "./utils/values";
-
 import { Value } from "./components/Value";
 import { getLogout } from "./proxy/endpoints";
+import { root } from "./utils/onRender";
 
 export default function App() {
-  const [messages, setMessages] = useState<MQTTMessage[]>([]);
   const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
+
+  useEffect(() => {
+    root();
+  }, []);
 
   useEffect(() => {
     setSnackbarConfig(createDefaultConfig(setSnackbarConfig));
   }, []);
-
-  socket.on("messages", (msgs: MQTTMessage[]) => {
-    setMessages([...msgs, ...messages]);
-  });
 
   const handleLogout = () => {
     getLogout((data) => {
@@ -25,7 +23,7 @@ export default function App() {
       } else {
         snackbarConfig?.showSnackbar({
           text: "User not logged in",
-          severity: "warn",
+          severity: "warning",
         });
       }
     });

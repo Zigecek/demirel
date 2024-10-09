@@ -1,27 +1,29 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, redirect, RouterProvider } from "react-router-dom";
 import App from "./App";
 import Login from "./Login";
-//import Register from "./Register";
-import { getIfLoggedIn } from "./proxy/endpoints";
+import Register from "./Register";
 import "./index.css";
-
-getIfLoggedIn((data) => {
-  if (!data.responseObject) {
-    if (window.location.pathname != "/login" && window.location.pathname != "/register") window.location.href = "/login";
-  }
-});
+import "./ws-client";
+import { rootLoader } from "./utils/loaders";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    loader: rootLoader,
   },
   {
     path: "/login",
     element: <Login />,
   },
+  import.meta.env.MODE === "development"
+    ? {
+        path: "/register",
+        element: <Register />,
+      }
+    : {},
 ]);
 
 createRoot(document.getElementById("root")!).render(
