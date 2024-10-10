@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 export const validateOrigin = (origin: string | undefined): boolean => {
   if (env.NODE_ENV === "development") {
     // Povolit všechny localhost v development módu
-    if (origin && origin.startsWith("http://localhost")) {
+    if (origin && (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1"))) {
       return true;
     }
   } else if (env.NODE_ENV === "production") {

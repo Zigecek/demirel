@@ -5,7 +5,12 @@ enum Afix {
 
 export const number = (val: string) => parseFloat(val);
 
-export const fix = (val: number, fix: number) => val.toFixed(fix);
+export const fix = (val: number, fix: number) => {
+  if (isNaN(val)) {
+    return "---";
+  }
+  return val.toFixed(fix);
+};
 
 export const unit = (val: number | string, unit: string, afix: Afix = Afix.suffix, delimiter: string = "") => {
   let string = val.toString();
