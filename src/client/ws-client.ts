@@ -8,6 +8,11 @@ console.log("Connecting to websocket server: " + API_URL);
 export const socketEE = new EventEmitter();
 export const socket = io(API_URL, {
   autoConnect: false,
+  withCredentials: true,
+  tryAllTransports: true,
+  transports: ["websocket", "polling"],
+  reconnection: true,
+  upgrade: true,
 });
 
 socket.on("connect", async () => {

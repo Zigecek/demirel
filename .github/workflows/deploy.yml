@@ -17,10 +17,23 @@ jobs:
           touch .env
           echo NODE_ENV=${{ vars.NODE_ENV }} >> .env
           echo VITE_API_PORT=${{ vars.VITE_API_PORT }} >> .env
-          cat .env
+
+          echo PORT=${{ vars.PORT }} >> .env
+          echo HOST=${{ vars.HOST }} >> .env
+          echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> .env
+          echo MQTT_URL=${{ secrets.MQTT_URL }} >> .env
+          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> .env
+          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> .env
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
 
       - name: Install dependencies
         run: npm install
+
+      - name: Pull database schema
+        run: npx prisma db pull
+
+      - name: Generate Prisma client
+        run: npx prisma generate
 
       - name: Build
         run: npm run build
@@ -32,7 +45,7 @@ jobs:
 
       - name: PM2 start process
         run: |
-          pm2 serve dist/ 3000 --name "demirel"
+          npm run start:pm2
 
       - name: PM2 save
         run: |
