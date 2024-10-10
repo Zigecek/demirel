@@ -7,7 +7,7 @@ const getApiUrl = (): string => {
     return `http://${hostname}:${port}`; // Změň IP na adresu API serveru v lokální síti
   } else {
     // Výchozí hodnota, pokud žádný z případů nevyhovuje
-    return `https://api.${hostname}`;
+    return `https://${hostname}`;
   }
 };
 
