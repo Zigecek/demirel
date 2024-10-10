@@ -19,24 +19,22 @@ export const server = ViteExpress.listen(app, env.PORT, () => {
 });
 
 export const io = new Server(server, {
-  cors: {
-    origin: (origin, callback) => {
-      return origin ? callback(null, validateOrigin(origin)) : callback(new Error("Not allowed by CORS"), false);
-    },
-    methods: ["GET", "POST"],
-    credentials: true,
+  transports: ["websocket", "polling", "webtransport"],
+  allowEIO3: true,
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2 * 60 * 1000,
+    skipMiddlewares: true,
   },
-  transports: ['websocket', 'polling'],
-  allowEIO3: true
 });
 
-io.engine.on("connection_error", (err) => {
-  console.log(err.req);      // the request object
-  console.log(err.code);     // the error code, for example 1
-  console.log(err.message);  // the error message, for example "Session ID unknown"
-  console.log(err.context);  // some additional error context
-});
-
+if (env.NODE_ENV === "development") {
+  io.engine.on("connection_error", (err) => {
+    console.log(err.req); // the request object
+    console.log(err.code); // the error code, for example 1
+    console.log(err.message); // the error message, for example "Session ID unknown"
+    console.log(err.context); // some additional error context
+  });
+}
 
 ws(io);
 

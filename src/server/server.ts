@@ -14,6 +14,7 @@ import { corsMiddleware } from "./common/utils/cors";
 //import { ServiceResponse } from "@/common/models/serviceResponse";
 //import { handleServiceResponse } from "@/common/utils/httpHandlers";
 import session from "express-session";
+import "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { env } from "./common/utils/envConfig";
 import pg from "pg";
@@ -27,7 +28,7 @@ app.set("trust proxy", true);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(corsMiddleware);
+//app.use(corsMiddleware);
 
 declare module "express-session" {
   interface SessionData {
@@ -70,6 +71,26 @@ app.use("/api", apiRouter);
 // Swagger UI
 app.use(openAPIRouter);
 
+// Secure static routes
+app.get("/", (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const { user } = req.session;
+  if (user) {
+    return next();
+  } else {
+    return res.redirect("/login");
+  }
+});
+
+app.get("/login", (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const { user } = req.session;
+  if (user) {
+    return res.redirect("/");
+  } else {
+    return next();
+  }
+});
+
+// Vite Express
 app.use(ViteExpress.static());
 
 // Error handlers

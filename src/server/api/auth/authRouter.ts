@@ -87,13 +87,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
   // set session user
   req.session.user = user;
 
-  const serviceResponse = ServiceResponse.success(
-    "Successfully logged in.",
-    {
-      username: user.username,
-    },
-    200
-  );
+  const serviceResponse = ServiceResponse.success("Login successful.", true, 200);
   return handleServiceResponse(serviceResponse, res);
 });
 
@@ -114,11 +108,14 @@ authRouter.get("/logout", async (req: Request, res: Response) => {
 
   // if session user exists
   // then delete session user
-  delete req.session.user;
+  req.session.destroy((err) => {
+    if (err) {
+      logger.error("Error destroying session: ", err);
+    }
+  });
 
   // send Response
-  const serviceResponse = ServiceResponse.success("Successfully logged out.", true, 200);
-  return handleServiceResponse(serviceResponse, res);
+  res.redirect("/login");
 });
 
 // /register
@@ -178,12 +175,5 @@ authRouter.post("/register", async (req: Request, res: Response) => {
   req.session.user = newUser;
 
   // send response
-  const serviceResponse = ServiceResponse.success(
-    "Successfully registered.",
-    {
-      username: newUser.username,
-    },
-    200
-  );
-  return handleServiceResponse(serviceResponse, res);
+  res.redirect("/");
 });
