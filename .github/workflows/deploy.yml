@@ -7,6 +7,7 @@ on:
 jobs:
   deploy-to-rpi:
     runs-on: [self-hosted, rpi]
+    environment: rpi
 
     steps:
       - name: Checkout
@@ -15,11 +16,61 @@ jobs:
       - name: "Create .env file"
         run: |
           touch .env
-          echo NODE_ENV=${{ vars.NODE_ENV }} >> .env
-          echo VITE_API_PORT=${{ vars.VITE_API_PORT }} >> .env
+          echo NODE_ENV=${{ secrets.NODE_ENV }} >> .env
+          echo VITE_API_PORT=${{ secrets.VITE_API_PORT }} >> .env
 
-          echo PORT=${{ vars.PORT }} >> .env
-          echo HOST=${{ vars.HOST }} >> .env
+          echo PORT=${{ secrets.PORT }} >> .env
+          echo HOST=${{ secrets.HOST }} >> .env
+          echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> .env
+          echo MQTT_URL=${{ secrets.MQTT_URL }} >> .env
+          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> .env
+          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> .env
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Pull database schema
+        run: npx prisma db pull
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build
+        run: npm run build
+
+      - name: PM2 delete process
+        continue-on-error: true
+        run: |
+          pm2 delete demirel
+
+      - name: PM2 start process
+        run: |
+          npm run start:pm2
+
+      - name: PM2 save
+        run: |
+          pm2 save
+
+      - name: PM2 list
+        run: pm2 l
+
+  deploy-to-vps:
+    runs-on: [self-hosted, vps]
+    environment: vps
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: "Create .env file"
+        run: |
+          touch .env
+          echo NODE_ENV=${{ secrets.NODE_ENV }} >> .env
+          echo VITE_API_PORT=${{ secrets.VITE_API_PORT }} >> .env
+
+          echo PORT=${{ secrets.PORT }} >> .env
+          echo HOST=${{ secrets.HOST }} >> .env
           echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> .env
           echo MQTT_URL=${{ secrets.MQTT_URL }} >> .env
           echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> .env
@@ -56,9 +107,9 @@ jobs:
 
   restart-nginx-on-vps:
     runs-on: [self-hosted, vps]
-    needs: deploy-to-rpi
+    needs: [deploy-to-rpi, deploy-to-vps]
 
     steps:
-      - name: Restart Nginx on VPS
+      - name: Restart Openresty on VPS
         run: |
-          sudo nginx -s reload
+          sudo openresty -s reload

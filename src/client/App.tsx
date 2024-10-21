@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
-import { number, unit, fix } from "./utils/values";
+import { number, unit, fix, bool } from "./utils/values";
 import { Value } from "./components/Value";
 import { root } from "./utils/onRender";
 
@@ -28,8 +28,10 @@ export default function App() {
         <div className="flex flex-wrap justify-center bg-white p-4 rounded shadow-md">
           <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
           <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
+          <Value topic="zige/pozar1/fire/val" valueF={(v) => bool(v, "HOŘÍME!", "nehoříme.")} />
           <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
           <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
+          <Value topic="zige/pozar0/fire/val" valueF={(v) => bool(v, "HOŘÍME!", "nehoříme.")} />
         </div>
       </div>
       {snackbarConfig && <CustomSnackbar config={snackbarConfig} />}
