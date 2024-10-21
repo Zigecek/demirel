@@ -1,0 +1,76 @@
+name: Deploy to RPi and restart nginx on VPS
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy-to-rpi:
+    runs-on: [self-hosted, rpi]
+    environment: rpi
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: NVM setup
+        run: |
+          export NVM_DIR="$HOME/.nvm"
+          source ~/.nvm/nvm.sh
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install 20.17.0
+          nvm use 20.17.0
+          echo "$NVM_DIR/versions/node/$(nvm version)/bin" >> $GITHUB_PATH
+          npm i -g npm@latest
+
+      - name: Debug Environment
+        run: |
+          echo "NVM dir: $NVM_DIR"
+          echo "Current user: $USER"
+          echo "Home directory: $HOME"
+          echo "Current directory: $(pwd)"
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          echo "PATH: $PATH"
+
+      - name: "Create .env file"
+        run: |
+          touch .env
+          echo NODE_ENV=${{ secrets.NODE_ENV }} >> .env
+          echo VITE_API_PORT=${{ secrets.VITE_API_PORT }} >> .env
+
+          echo PORT=${{ secrets.PORT }} >> .env
+          echo HOST=${{ secrets.HOST }} >> .env
+          echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> .env
+          echo MQTT_URL=${{ secrets.MQTT_URL }} >> .env
+          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> .env
+          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> .env
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Pull database schema
+        run: npx prisma db pull
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build
+        run: npm run build
+
+      - name: PM2 delete process
+        continue-on-error: true
+        run: |
+          pm2 delete demirel
+
+      - name: PM2 start process
+        run: |
+          npm run start:pm2
+
+      - name: PM2 save
+        run: |
+          pm2 save
+
+      - name: PM2 list
+        run: pm2 l

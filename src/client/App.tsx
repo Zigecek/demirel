@@ -28,10 +28,10 @@ export default function App() {
         <div className="flex flex-wrap justify-center bg-white p-4 rounded shadow-md">
           <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
           <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
-          <Value topic="zige/pozar1/fire/val" valueF={(v) => bool(v, "HOŘÍME!", "nehoříme.")} />
+          <Value topic="zige/pozar1/fire/val" valueF={(v) => bool(v, "HOŘÍME!", "nehoříme.", true)} />
           <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
           <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
-          <Value topic="zige/pozar0/fire/val" valueF={(v) => bool(v, "HOŘÍME!", "nehoříme.")} />
+          <Value topic="zige/pozar0/fire/val" valueF={(v) => bool(v, "HOŘÍME!", "nehoříme.", true)} />
         </div>
       </div>
       {snackbarConfig && <CustomSnackbar config={snackbarConfig} />}

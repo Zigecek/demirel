@@ -24,9 +24,10 @@ export const unit = (val: number | string, unit: string, afix: Afix = Afix.suffi
   return string;
 };
 
-export const bool = (val: string, on: string, off: string) => {
-  return parseBoolean(val) ? on : off;
+export const bool = (val: string | boolean, on: string, off: string, invert: boolean = false) => {
+  return parseBoolean(val) !== invert ? on : off;
 };
+
 
 
 function parseBoolean(value: number | string | boolean): boolean {

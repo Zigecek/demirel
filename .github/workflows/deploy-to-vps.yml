@@ -1,4 +1,4 @@
-name: Deploy to RPi and restart nginx on VPS
+name: Deploy to VPS
 
 on:
   push:
@@ -15,16 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Debug Environment
-        run: |
-          echo "NVM dir: $NVM_DIR"
-          echo "Current user: $USER"
-          echo "Home directory: $HOME"
-          echo "Current directory: $(pwd)"
-          echo "Node version: $(node -v)"
-          echo "NPM version: $(npm -v)"
-          echo "PATH: $PATH"
 
       - name: NVM setup
         run: |
@@ -87,12 +77,3 @@ jobs:
 
       - name: PM2 list
         run: pm2 l
-
-  restart-nginx-on-vps:
-    runs-on: [self-hosted, vps]
-    needs: [deploy-to-vps]
-
-    steps:
-      - name: Restart Openresty on VPS
-        run: |
-          sudo openresty -s reload
