@@ -76,7 +76,7 @@ jobs:
 
   restart-nginx-on-vps:
     runs-on: [self-hosted, vps]
-    needs: [deploy-to-rpi, deploy-to-vps]
+    needs: [deploy-to-vps]
 
     steps:
       - name: Restart Openresty on VPS
