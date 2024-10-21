@@ -5,66 +5,6 @@ on:
     branches: ["main"]
 
 jobs:
-  deploy-to-rpi:
-    runs-on: [self-hosted, rpi]
-    environment: rpi
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: NVM env
-        run: |
-          export NVM_DIR=~/.nvm
-          source ~/.nvm/nvm.sh
-
-      - name: PATH
-        run: |
-          echo $PATH
-          whoami
-
-      - name: "Create .env file"
-        run: |
-          touch .env
-          echo NODE_ENV=${{ secrets.NODE_ENV }} >> .env
-          echo VITE_API_PORT=${{ secrets.VITE_API_PORT }} >> .env
-
-          echo PORT=${{ secrets.PORT }} >> .env
-          echo HOST=${{ secrets.HOST }} >> .env
-          echo SESSION_SECRET=${{ secrets.SESSION_SECRET }} >> .env
-          echo MQTT_URL=${{ secrets.MQTT_URL }} >> .env
-          echo MQTT_USERNAME=${{ secrets.MQTT_USERNAME }} >> .env
-          echo MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }} >> .env
-          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Pull database schema
-        run: npx prisma db pull
-
-      - name: Generate Prisma client
-        run: npx prisma generate
-
-      - name: Build
-        run: npm run build
-
-      - name: PM2 delete process
-        continue-on-error: true
-        run: |
-          pm2 delete demirel
-
-      - name: PM2 start process
-        run: |
-          npm run start:pm2
-
-      - name: PM2 save
-        run: |
-          pm2 save
-
-      - name: PM2 list
-        run: pm2 l
-
   deploy-to-vps:
     runs-on: [self-hosted, vps]
     environment: vps
@@ -73,6 +13,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: PATH
+        run: |
+          echo $HOME
+          echo $PATH
+          echo $USER
+          echo $NVM_DIR
+
       - name: NVM env
         run: |
           export NVM_DIR=~/.nvm
@@ -80,8 +27,10 @@ jobs:
 
       - name: PATH
         run: |
+          echo $HOME
           echo $PATH
-          whoami
+          echo $USER
+          echo $NVM_DIR
 
       - name: "Create .env file"
         run: |
