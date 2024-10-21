@@ -8,13 +8,15 @@ jobs:
   deploy-to-vps:
     runs-on: [self-hosted, vps]
     environment: vps
+    defaults:
+      run:
+        shell: zsh {0}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Debug Environment
-        shell: zsh
         run: |
           echo "Current user: $(whoami)"
           echo "Home directory: $HOME"
@@ -24,14 +26,12 @@ jobs:
           echo "PATH: $PATH"
 
       - name: NVM env
-        shell: zsh
         run: |
           export NVM_DIR="$HOME/.nvm"
           source ~/.nvm/nvm.sh
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
       - name: Debug Environment
-        shell: zsh
         run: |
           echo "Current user: $(whoami)"
           echo "Home directory: $HOME"
@@ -41,7 +41,6 @@ jobs:
           echo "PATH: $PATH"
 
       - name: "Create .env file"
-        shell: zsh
         run: |
           touch .env
           echo NODE_ENV=${{ secrets.NODE_ENV }} >> .env
@@ -56,39 +55,31 @@ jobs:
           echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
 
       - name: Install dependencies
-        shell: zsh
         run: npm install
 
       - name: Pull database schema
-        shell: zsh
         run: npx prisma db pull
 
       - name: Generate Prisma client
-        shell: zsh
         run: npx prisma generate
 
       - name: Build
-        shell: zsh
         run: npm run build
 
       - name: PM2 delete process
-        shell: zsh
         continue-on-error: true
         run: |
           pm2 delete demirel
 
       - name: PM2 start process
-        shell: zsh
         run: |
           npm run start:pm2
 
       - name: PM2 save
-        shell: zsh
         run: |
           pm2 save
 
       - name: PM2 list
-        shell: zsh
         run: pm2 l
 
   restart-nginx-on-vps:
