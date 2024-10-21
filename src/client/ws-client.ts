@@ -35,6 +35,6 @@ socket.on("reconnect", async () => {
 
 socket.on("messages", (msgs: MQTTMessage[]) => {
   msgs.forEach((msg) => {
-    socketEE.emit(msg.topic, msg.message);
+    socketEE.emit(msg.topic, { ...(msg as Omit<MQTTMessage, "topic">) });
   });
 });

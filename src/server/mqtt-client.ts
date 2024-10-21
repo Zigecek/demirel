@@ -22,9 +22,9 @@ const regexes = {
 const wsQueue: MQTTMessage[] = [];
 let instantSend = false;
 
-const lastMessages = new Map<string, string>();
+const lastMessages = new Map<string, Omit<MQTTMessage, "topic">>();
 export const getRetainedMessages = () => {
-  return Array.from(lastMessages.entries()).map(([key, value]) => ({ topic: key, message: value }) as MQTTMessage);
+  return Array.from(lastMessages.entries()).map(([key, value]) => ({ topic: key, ...value }) as MQTTMessage);
 };
 
 export const getNewClient = () => {
@@ -64,11 +64,12 @@ mqtt.on("message", (topic, message, packet) => {
 
   if (regexes.basicVal.test(topic) || regexes.basicSet.test(topic)) {
     logger.info(`MQTT message registered: ${topic}: ${message.toString()}`);
+    const when = Date.now();
     if (packet.retain || lastMessages.has(topic)) {
-      lastMessages.set(topic, message.toString());
+      lastMessages.set(topic, { message: message.toString(), timestamp: when });
     }
 
-    wsQueue.push({ topic, message: message.toString() } as MQTTMessage);
+    wsQueue.push({ topic, message: message.toString(), timestamp: when } as MQTTMessage);
     if (instantSend) {
       instantSend = false;
       setTimeout(checkQueue, 100);

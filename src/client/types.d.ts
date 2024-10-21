@@ -12,6 +12,7 @@ type SocketAuth = {
 type MQTTMessage = {
   topic: string;
   message: string;
+  timestamp: number;
 };
 
 type Login = {
