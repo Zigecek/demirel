@@ -19,7 +19,9 @@ jobs:
           source ~/.nvm/nvm.sh
 
       - name: PATH
-        run: echo $PATH
+        run: |
+          echo $PATH
+          whoami
 
       - name: "Create .env file"
         run: |
@@ -77,7 +79,9 @@ jobs:
           source ~/.nvm/nvm.sh
 
       - name: PATH
-        run: echo $PATH
+        run: |
+          echo $PATH
+          whoami
 
       - name: "Create .env file"
         run: |
