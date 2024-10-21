@@ -8,6 +8,9 @@ jobs:
   deploy-to-vps:
     runs-on: [self-hosted, vps]
     environment: vps
+    defaults:
+      run:
+        shell: zsh
 
     steps:
       - name: Checkout
