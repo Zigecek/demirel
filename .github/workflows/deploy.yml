@@ -18,7 +18,8 @@ jobs:
 
       - name: Debug Environment
         run: |
-          echo "Current user: $(whoami)"
+          echo "NVM dir: $NVM_DIR"
+          echo "Current user: $USER"
           echo "Home directory: $HOME"
           echo "Current directory: $(pwd)"
           echo "Node version: $(node -v)"
@@ -30,10 +31,12 @@ jobs:
           export NVM_DIR="$HOME/.nvm"
           source ~/.nvm/nvm.sh
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm use --lts
 
       - name: Debug Environment
         run: |
-          echo "Current user: $(whoami)"
+          echo "NVM dir: $NVM_DIR"
+          echo "Current user: $USER"
           echo "Home directory: $HOME"
           echo "Current directory: $(pwd)"
           echo "Node version: $(node -v)"
