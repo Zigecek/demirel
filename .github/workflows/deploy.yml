@@ -18,6 +18,9 @@ jobs:
           export NVM_DIR=~/.nvm
           source ~/.nvm/nvm.sh
 
+      - name: PATH
+        run: echo $PATH
+
       - name: "Create .env file"
         run: |
           touch .env
@@ -72,6 +75,9 @@ jobs:
         run: |
           export NVM_DIR=~/.nvm
           source ~/.nvm/nvm.sh
+
+      - name: PATH
+        run: echo $PATH
 
       - name: "Create .env file"
         run: |
