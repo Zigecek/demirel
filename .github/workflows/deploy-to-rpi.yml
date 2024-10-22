@@ -1,4 +1,4 @@
-name: Deploy to RPi and restart nginx on VPS
+name: Deploy to RPi
 
 on:
   push:

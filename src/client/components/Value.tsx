@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTopicValue } from "../utils/topicHook";
+import { Graph } from "./Graph";
 
 type ValueProps = {
   topic: string;
@@ -7,7 +8,18 @@ type ValueProps = {
 };
 
 export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
-  const { value, lastUpdated, suspicious } = useTopicValue(topic);
+  const { value, lastUpdated, timestamp, suspicious } = useTopicValue(topic);
+  const [dataPoints, setDataPoints] = useState<{ value: number; timestamp: number }[]>([]);
+
+  useEffect(() => {
+    if (value && timestamp) {
+      console.log("Value: ", value, "Timestamp: ", timestamp);
+      setDataPoints((prevData) => [
+        ...prevData,
+        { value: parseFloat(value), timestamp: timestamp }, // timestamp v ms pro graf
+      ]);
+    }
+  }, [value, timestamp]);
 
   return (
     <div className="border border-gray-300 rounded-lg shadow-md p-4 m-2 w-56">
@@ -19,6 +31,8 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
           Updated <span className={suspicious ? "text-red-600 font-bold" : "text-gray-500"}>{lastUpdated}</span> seconds ago
         </p>
       )}
+
+      <Graph dataPoints={dataPoints} />
     </div>
   );
 };

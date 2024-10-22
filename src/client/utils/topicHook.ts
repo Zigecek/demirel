@@ -68,5 +68,5 @@ export const useTopicValue = (topic: string) => {
     }
   }, [timestamp]);
 
-  return { value, lastUpdated, suspicious };
+  return { value, lastUpdated, timestamp, suspicious };
 };
