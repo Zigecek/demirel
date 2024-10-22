@@ -40,8 +40,11 @@ const checkQueue = async () => {
     wsQueue.length = 0;
     logger.info(`Sending ${toSend.length} messages to WS`);
     io.to("mqtt").emit("messages", toSend);
-    logger.info("Messages sent to WS, saving to DB");
-    await prisma.mqtt.createMany({ data: toSend });
+
+    if (env.RUNNER === "vps") {
+      logger.info("Messages sent to WS, saving to DB");
+      await prisma.mqtt.createMany({ data: toSend });
+    }
   }
 };
 

@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { cleanEnv, host, port, str, testOnly } from "envalid";
+import { ESModulesRunner } from "vite/runtime";
 
 dotenv.config();
 
@@ -12,4 +13,5 @@ export const env = cleanEnv(process.env, {
   MQTT_USERNAME: str(),
   MQTT_PASSWORD: str(),
   DATABASE_URL: str(),
+  RUNNER: str({ choices: ["vps", "rpi", "dev"] }),
 });

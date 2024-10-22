@@ -41,6 +41,7 @@ jobs:
           touch .env
           echo NODE_ENV=${{ secrets.NODE_ENV }} >> .env
           echo VITE_API_PORT=${{ secrets.VITE_API_PORT }} >> .env
+          echo RUNNER=${{ secrets.RUNNER }} >> .env
 
           echo PORT=${{ secrets.PORT }} >> .env
           echo HOST=${{ secrets.HOST }} >> .env
