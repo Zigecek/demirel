@@ -8,21 +8,25 @@ type ValueProps = {
 };
 
 export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
-  const { value, lastUpdated, timestamp, suspicious } = useTopicValue(topic);
+  const { value, lastUpdated, timestamp, suspicious, lastMsgs } = useTopicValue(topic);
   const [dataPoints, setDataPoints] = useState<{ value: number; timestamp: number }[]>([]);
 
   useEffect(() => {
+    if (lastMsgs.length) {
+      const msgs = lastMsgs.map((msg) => ({ value: parseFloat(msg.message), timestamp: msg.timestamp }));
+      setDataPoints((prevData) => [...prevData, ...msgs]);
+    }
+
     if (value && timestamp) {
-      console.log("Value: ", value, "Timestamp: ", timestamp);
       setDataPoints((prevData) => [
         ...prevData,
         { value: parseFloat(value), timestamp: timestamp }, // timestamp v ms pro graf
       ]);
     }
-  }, [value, timestamp]);
+  }, [value, timestamp, lastMsgs]);
 
   return (
-    <div className="border border-gray-300 rounded-lg shadow-md p-4 m-2 w-56">
+    <div className="border border-gray-300 rounded-lg shadow-md p-2 m-1 w-72">
       <h2 className="text-xl font-semibold mb-2">{topic}</h2>
       <p className="text-2xl font-bold text-blue-500">{valueF(value)}</p>
 

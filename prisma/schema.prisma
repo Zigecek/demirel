@@ -18,4 +18,16 @@ model session {
 model user {
   username String @id @unique(map: "username") @db.VarChar(255)
   password String @db.VarChar
+
+  @@index([username])
+}
+
+model mqtt {
+  id        Int    @id @default(autoincrement())
+  topic     String
+  message   String
+  timestamp BigInt
+
+  @@unique([topic, timestamp])
+  @@index([topic, timestamp])
 }

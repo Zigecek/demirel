@@ -34,7 +34,16 @@ socket.on("reconnect", async () => {
 });
 
 socket.on("messages", (msgs: MQTTMessage[]) => {
+  // bundle messages from db by topic and emit them
+  const topics = new Map<string, MQTTMessage[]>();
   msgs.forEach((msg) => {
-    socketEE.emit(msg.topic, { ...(msg as Omit<MQTTMessage, "topic">) });
+    if (!topics.has(msg.topic)) {
+      topics.set(msg.topic, []);
+    }
+    topics.get(msg.topic)?.push(msg);
+  });
+  // emit messages by topic
+  topics.forEach((msgs, topic) => {
+    socketEE.emit(topic, msgs);
   });
 });

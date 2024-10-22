@@ -21,7 +21,7 @@ export default function App() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center box-border">
         <button onClick={handleLogout} className="mb-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
           Logout
         </button>

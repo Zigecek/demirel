@@ -3,6 +3,7 @@ import { socketEE } from "../ws-client";
 
 export const useTopicValue = (topic: string) => {
   const [value, setValue] = useState<string>("");
+  const [lastMsgs, setLastMsgs] = useState<Omit<MQTTMessage, "topic">[]>([]);
   const [lastUpdated, setLastUpdated] = useState<number>();
   const [timestamp, setTimestamp] = useState<number>();
   const [suspicious, setSuspicious] = useState<boolean>(false);
@@ -33,7 +34,12 @@ export const useTopicValue = (topic: string) => {
   };
 
   useEffect(() => {
-    const handleUpdate = (msg: Omit<MQTTMessage, "topic">) => {
+    const handleUpdate = (msgs: Omit<MQTTMessage, "topic">[]) => {
+      if (!msgs.length) {
+        return;
+      }
+      // Získat poslední zprávu (ignoruje jiné zprávy, např. z db)
+      const msg = msgs.pop() as Omit<MQTTMessage, "topic">;
       const now = msg.timestamp;
 
       // Pokud již máme uložený čas předchozí zprávy
@@ -43,6 +49,7 @@ export const useTopicValue = (topic: string) => {
       }
 
       // Uložit hodnotu a timestamp aktuální zprávy
+      setLastMsgs(msgs);
       setValue(msg.message);
       setTimestamp(now);
       setSuspicious(false); // resetovat suspicious při nové zprávě
@@ -68,5 +75,5 @@ export const useTopicValue = (topic: string) => {
     }
   }, [timestamp]);
 
-  return { value, lastUpdated, timestamp, suspicious };
+  return { value, lastUpdated, timestamp, suspicious, lastMsgs };
 };

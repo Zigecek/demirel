@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import "chartjs-plugin-zoom";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
-import { format } from "date-fns";
 import "chartjs-adapter-date-fns";
 
 type GraphProps = {
@@ -10,25 +9,28 @@ type GraphProps = {
 };
 
 export const Graph: React.FC<GraphProps> = ({ dataPoints }) => {
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<any>({});
   const [options, setOptions] = useState<any>({});
 
   useEffect(() => {
-
     setData({
       datasets: [
         {
           label: "",
-          data: dataPoints ? dataPoints.map((dp) => ({ x: dp.timestamp, y: dp.value })) : [],
+          data: dataPoints ? [...new Set(dataPoints)].map((dp) => ({ x: dp.timestamp, y: dp.value })) : [],
           borderColor: "rgba(75, 192, 192, 1)",
           borderWidth: 2,
           fill: false,
           tension: 0.1,
+          pointRadius: 0,
         },
       ],
     });
 
     setOptions({
+      responsive: true,
+      maintainAspectRatio: false,
       scales: {
         y: {
           min: 0,
@@ -64,5 +66,20 @@ export const Graph: React.FC<GraphProps> = ({ dataPoints }) => {
     });
   }, [dataPoints]);
 
-  return <div>{dataPoints.length > 0 && <Line data={data} options={options} />}</div>;
+  const updateChart = () => {
+    if (chartRef.current) {
+      chartRef.current.update();
+    }
+  };
+
+  useLayoutEffect(() => {
+    window.addEventListener("resize", updateChart);
+    //const interval = setInterval(updateChart, 2000);
+    return () => {
+      window.removeEventListener("resize", updateChart);
+      //clearInterval(interval);
+    };
+  }, []);
+
+  return <div>{dataPoints.length > 0 && <Line ref={chartRef} data={data} options={options} />}</div>;
 };
