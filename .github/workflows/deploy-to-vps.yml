@@ -54,8 +54,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Push database schema
-        run: npx prisma db push
+      - name: Apply Prisma migrations
+        run: npx prisma migrate deploy
 
       - name: Generate Prisma client
         run: npx prisma generate
