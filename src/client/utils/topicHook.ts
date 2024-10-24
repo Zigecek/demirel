@@ -39,13 +39,15 @@ export const useTopicValue = (topic: string) => {
         return;
       }
       // Získat poslední zprávu (ignoruje jiné zprávy, např. z db)
-      const msg = msgs.shift() as Omit<MQTTMessageNew, "topic">;
+      const msg = msgs.pop() as Omit<MQTTMessageNew, "topic">;
 
       // Pokud již máme uložený čas předchozí zprávy
       if (timestamp) {
         const interval = msg.timestamp.getTime() - timestamp.getTime(); // rozdíl mezi touto a předchozí zprávou
         setLastMessageInterval(interval); // aktualizujeme lastMessageInterval
       }
+
+      //console.log(msg.value, topic);
 
       // Uložit hodnotu a timestamp aktuální zprávy
       setLastMsgs(msgs);

@@ -47,7 +47,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
       },
     },
     orderBy: {
-      timestamp: "desc",
+      timestamp: "asc",
     },
   });
   // get rid of ids

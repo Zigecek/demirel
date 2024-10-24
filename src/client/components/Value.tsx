@@ -18,10 +18,13 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
     }
 
     if (value && timestamp) {
-      setDataPoints((prevData) => [
-        ...prevData,
-        { value: value as number, timestamp: timestamp }, // timestamp v ms pro graf
-      ]);
+      setDataPoints((prevData) => {
+
+        return [
+          ...prevData,
+          { value: value as number, timestamp: timestamp }, // timestamp v ms pro graf
+        ];
+      });
     }
   }, [value, timestamp, lastMsgs]);
 

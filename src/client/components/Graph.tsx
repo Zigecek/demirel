@@ -18,7 +18,7 @@ export const Graph: React.FC<GraphProps> = ({ dataPoints }) => {
       datasets: [
         {
           label: "",
-          data: dataPoints ? [...new Set(dataPoints)].map((dp) => ({ x: dp.timestamp, y: dp.value })) : [],
+          data: dataPoints ? [...new Set(dataPoints)].map((dp) => ({ x: dp.timestamp.getTime(), y: dp.value })) : [],
           borderColor: "rgba(75, 192, 192, 1)",
           borderWidth: 2,
           fill: false,
