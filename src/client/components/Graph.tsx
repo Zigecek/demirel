@@ -5,7 +5,7 @@ import "chart.js/auto";
 import "chartjs-adapter-date-fns";
 
 type GraphProps = {
-  dataPoints: { value: number; timestamp: number }[];
+  dataPoints: { value: number; timestamp: Date }[];
 };
 
 export const Graph: React.FC<GraphProps> = ({ dataPoints }) => {

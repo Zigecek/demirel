@@ -15,6 +15,13 @@ type MQTTMessage = {
   timestamp: number;
 };
 
+type MQTTMessageNew = {
+  topic: string;
+  value: string | number | boolean;
+  timestamp: Date;
+  valueType: "STRING" | "FLOAT" | "BOOLEAN";
+};
+
 type Login = {
   username: string;
   password: string;

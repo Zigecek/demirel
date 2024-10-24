@@ -25,8 +25,8 @@ model user {
 model mqtt {
   id        Int           @id @default(autoincrement())
   topic     String
-  message   String
-  timestamp BigInt
+  value     Json          @db.JsonB
+  timestamp DateTime      @db.Timestamptz
   valueType MqttValueType @default(STRING)
 
   @@unique([topic, timestamp])

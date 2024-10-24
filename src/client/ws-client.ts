@@ -33,14 +33,17 @@ socket.on("reconnect", async () => {
   });
 });
 
-socket.on("messages", (msgs: MQTTMessage[]) => {
+socket.on("messages", (msgs: (MQTTMessageNew & { timestamp: number })[]) => {
   // bundle messages from db by topic and emit them
-  const topics = new Map<string, MQTTMessage[]>();
+  const topics = new Map<string, MQTTMessageNew[]>();
   msgs.forEach((msg) => {
     if (!topics.has(msg.topic)) {
       topics.set(msg.topic, []);
     }
-    topics.get(msg.topic)?.push(msg);
+    topics.get(msg.topic)?.push({
+      ...msg,
+      timestamp: new Date(msg.timestamp),
+    });
   });
   // emit messages by topic
   topics.forEach((msgs, topic) => {

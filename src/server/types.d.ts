@@ -8,8 +8,3 @@ type UserLogin = {
   username: string;
   password: string;
 };
-
-type MQTTMessage = {
-  topic: string;
-  message: string;
-};

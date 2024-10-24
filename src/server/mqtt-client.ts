@@ -3,6 +3,8 @@ import { env } from "./common/utils/envConfig";
 import { logger } from "./server";
 import { io, prisma } from ".";
 import { setIntervalAsync } from "set-interval-async";
+import { mqtt as prismaMqtt, MqttValueType } from "@prisma/client";
+import { InputJsonValue, JsonValue } from "@prisma/client/runtime/library";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -19,7 +21,7 @@ const regexes = {
   config: /^zige\/.+\/config$/,
 };
 
-const wsQueue: MQTTMessage[] = [];
+const wsQueue: MQTTMessageNew[] = [];
 /*
 const lastMessages = new Map<string, Omit<MQTTMessage, "topic">>();
 export const getRetainedMessages = () => {
@@ -41,10 +43,13 @@ const checkQueue = async () => {
     logger.info(`Sending ${toSend.length} messages to WS`);
     io.to("mqtt").emit("messages", toSend);
 
-    if (env.RUNNER === "vps") {
-      logger.info("Messages sent to WS, saving to DB");
-      await prisma.mqtt.createMany({ data: toSend });
-    }
+    logger.info("Messages sent to WS, saving to DB");
+    // rename message to value and add mqttValueType depending on the type of the message
+
+    await prisma.mqtt.createMany({
+      data: toSend,
+      skipDuplicates: true,
+    });
   }
 };
 
@@ -60,20 +65,37 @@ mqtt.stream.on("error", (err) => {
 });
 
 mqtt.on("message", (topic, message, packet) => {
+  const msg: string = message.toString();
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
     logger.warn("Invalid topic in net: " + topic);
     return;
   }
 
   if (regexes.basicVal.test(topic) || regexes.basicSet.test(topic)) {
-    logger.info(`MQTT message registered: ${topic}: ${message.toString()}`);
-    const when = Date.now();
+    logger.info(`MQTT message registered: ${topic}: ${msg}`);
+    const when = new Date();
     /*
     if (packet.retain || lastMessages.has(topic)) {
-      lastMessages.set(topic, { message: message.toString(), timestamp: when });
+      lastMessages.set(topic, { message: msg, timestamp: when });
     }*/
 
-    wsQueue.push({ topic, message: message.toString(), timestamp: when } as MQTTMessage);
+    let valueType: MqttValueType = MqttValueType.STRING;
+    let val: string | number | boolean = msg;
+
+    if (msg === "true" || msg === "false" || msg === "1" || msg === "0") {
+      valueType = MqttValueType.BOOLEAN;
+      val = msg === "true" || msg === "1";
+    } else if (!isNaN(parseFloat(msg))) {
+      valueType = MqttValueType.FLOAT;
+      val = parseFloat(msg);
+    }
+
+    wsQueue.push({
+      topic,
+      value: val,
+      timestamp: when,
+      valueType,
+    } as MQTTMessageNew);
     setTimeout(checkQueue, 100);
   }
 });

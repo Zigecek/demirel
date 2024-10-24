@@ -2,23 +2,23 @@ import { useEffect, useState } from "react";
 import { socketEE } from "../ws-client";
 
 export const useTopicValue = (topic: string) => {
-  const [value, setValue] = useState<string>("");
-  const [lastMsgs, setLastMsgs] = useState<Omit<MQTTMessage, "topic">[]>([]);
+  const [value, setValue] = useState<MQTTMessageNew["value"]>("");
+  const [lastMsgs, setLastMsgs] = useState<Omit<MQTTMessageNew, "topic">[]>([]);
   const [lastUpdated, setLastUpdated] = useState<number>();
-  const [timestamp, setTimestamp] = useState<number>();
+  const [timestamp, setTimestamp] = useState<Date>();
   const [suspicious, setSuspicious] = useState<boolean>(false);
   const [lastMessageInterval, setLastMessageInterval] = useState<number | undefined>(undefined); // změněno na useState
 
   const updateLastUpdated = () => {
     if (timestamp) {
-      const now = Date.now();
-      const timeSinceLastMessage = (now - timestamp) / 1000; // čas od poslední zprávy v sekundách
+      const now = new Date();
+      const timeSinceLastMessage = (now.getTime() - timestamp.getTime()) / 1000; // čas od poslední zprávy v sekundách
       setLastUpdated(Math.round(timeSinceLastMessage));
 
       // 1. Ověření podle intervalu mezi zprávami
       if (lastMessageInterval) {
         const allowedInterval = lastMessageInterval * 1.5; // 150 % posledního intervalu
-        if (now - timestamp > allowedInterval) {
+        if (now.getTime() - timestamp.getTime() > allowedInterval) {
           setSuspicious(true); // zpráva přišla později než 150 % intervalu
         } else {
           setSuspicious(false);
@@ -27,31 +27,30 @@ export const useTopicValue = (topic: string) => {
 
       // 2. Hard limit (např. 2 minuty)
       const hardLimit = 2 * 60 * 1000; // 2 minuty v milisekundách
-      if (now - timestamp > hardLimit) {
+      if (now.getTime() - timestamp.getTime() > hardLimit) {
         setSuspicious(true); // příliš dlouhá doba od první zprávy
       }
     }
   };
 
   useEffect(() => {
-    const handleUpdate = (msgs: Omit<MQTTMessage, "topic">[]) => {
+    const handleUpdate = (msgs: Omit<MQTTMessageNew, "topic">[]) => {
       if (!msgs.length) {
         return;
       }
       // Získat poslední zprávu (ignoruje jiné zprávy, např. z db)
-      const msg = msgs.pop() as Omit<MQTTMessage, "topic">;
-      const now = msg.timestamp;
+      const msg = msgs.shift() as Omit<MQTTMessageNew, "topic">;
 
       // Pokud již máme uložený čas předchozí zprávy
       if (timestamp) {
-        const interval = now - timestamp; // rozdíl mezi touto a předchozí zprávou
+        const interval = msg.timestamp.getTime() - timestamp.getTime(); // rozdíl mezi touto a předchozí zprávou
         setLastMessageInterval(interval); // aktualizujeme lastMessageInterval
       }
 
       // Uložit hodnotu a timestamp aktuální zprávy
       setLastMsgs(msgs);
-      setValue(msg.message);
-      setTimestamp(now);
+      setValue(msg.value);
+      setTimestamp(msg.timestamp);
       setSuspicious(false); // resetovat suspicious při nové zprávě
     };
 

@@ -7,6 +7,7 @@ import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { io, prisma } from "../../index";
 //import { getRetainedMessages } from "../../mqtt-client";
 import { logger } from "../../server";
+import { MqttValueType } from "@prisma/client";
 
 export const socketsRegistry = new OpenAPIRegistry();
 export const socketsRouter: Router = express.Router();
@@ -42,18 +43,19 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
   const messages = await prisma.mqtt.findMany({
     where: {
       timestamp: {
-        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).getTime(),
+        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
       },
+    },
+    orderBy: {
+      timestamp: "desc",
     },
   });
   // get rid of ids
   const messagesToSend = messages.map(({ id, ...rest }) => {
-    return Object.fromEntries(
-      Object.entries(rest).map(([key, value]) => {
-        // Convert BigInt to Number if it's a BigInt
-        return [key, typeof value === "bigint" ? Number(value) : value];
-      })
-    );
+    return {
+      ...rest,
+      timestamp: rest.timestamp.getTime(),
+    } as MQTTMessageNew & { timestamp: number };
   });
 
   gotSocket.join("mqtt");

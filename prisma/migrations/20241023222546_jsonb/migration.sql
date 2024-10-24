@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "mqtt" ALTER COLUMN "value" SET DATA TYPE JSONB;
