@@ -51,12 +51,17 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
     },
   });
   // get rid of ids
-  const messagesToSend = messages.map(({ id, ...rest }) => {
+  console.log(messages.length);
+  let messagesToSend = messages.map(({ id, ...rest }) => {
     return {
       ...rest,
       timestamp: rest.timestamp.getTime(),
     } as MQTTMessageNew & { timestamp: number };
   });
+
+  // keep only every 6th message
+  messagesToSend = messagesToSend.filter((v, i) => i % 6 === 0 || v.timestamp > Date.now() - 1000 * 60 * 60 * 2);
+  console.log(messagesToSend.length);
 
   gotSocket.join("mqtt");
   gotSocket.emit("messages", [...new Set([...messagesToSend /*, ...getRetainedMessages()*/])]);

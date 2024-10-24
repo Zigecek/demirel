@@ -40,6 +40,7 @@ export const useTopicValue = (topic: string) => {
       }
       // Získat poslední zprávu (ignoruje jiné zprávy, např. z db)
       const msg = msgs.pop() as Omit<MQTTMessageNew, "topic">;
+      console.log(msg.value, msg.timestamp.toISOString());
 
       // Pokud již máme uložený čas předchozí zprávy
       if (timestamp) {
