@@ -23,11 +23,11 @@ model user {
 }
 
 model mqtt {
-  id        Int           @id @default(autoincrement())
-  topic     String
-  value     Json          @db.JsonB
-  timestamp DateTime      @db.Timestamptz
-  valueType MqttValueType @default(STRING)
+  id         Int           @id @default(autoincrement())
+  topic      String
+  value      Json          @db.JsonB
+  timestamp  DateTime      @db.Timestamptz
+  valueType  MqttValueType @default(STRING)
 
   @@unique([topic, timestamp])
   @@index([topic, timestamp])

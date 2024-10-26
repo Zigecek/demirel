@@ -3,15 +3,35 @@ import "chartjs-plugin-zoom";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
+import { useTopicValue } from "../utils/topicHook";
 
 type GraphProps = {
-  dataPoints: { value: number; timestamp: Date }[];
+  topic: string;
 };
 
-export const Graph: React.FC<GraphProps> = ({ dataPoints }) => {
+export const Graph: React.FC<GraphProps> = ({ topic }) => {
   const chartRef = useRef<any>(null);
+  const { value, lastUpdated, timestamp, suspicious, lastMsgs } = useTopicValue(topic);
+  const [dataPoints, setDataPoints] = useState<{ value: number; timestamp: Date }[]>([]);
+
   const [data, setData] = useState<any>({});
   const [options, setOptions] = useState<any>({});
+
+  useEffect(() => {
+    if (lastMsgs.length) {
+      const msgs = lastMsgs.map((msg) => ({ value: msg.value as number, timestamp: msg.timestamp }));
+      setDataPoints((prevData) => [...prevData, ...msgs]);
+    }
+
+    if (value && timestamp) {
+      setDataPoints((prevData) => {
+        return [
+          ...prevData,
+          { value: value as number, timestamp: timestamp }, // timestamp v ms pro graf
+        ];
+      });
+    }
+  }, [value, timestamp, lastMsgs]);
 
   useEffect(() => {
     setData({
@@ -19,7 +39,7 @@ export const Graph: React.FC<GraphProps> = ({ dataPoints }) => {
         {
           label: "",
           data: dataPoints ? [...new Set(dataPoints)].map((dp) => ({ x: dp.timestamp.getTime(), y: dp.value })) : [],
-          borderColor: "rgba(75, 192, 192, 1)",
+          borderColor: suspicious ? "rgba(220, 75, 75, 1)" : "rgba(75, 220, 170, 1)",
           borderWidth: 2,
           fill: false,
           tension: 0.1,

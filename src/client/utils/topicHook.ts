@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { socketEE } from "../ws-client";
 
 export const useTopicValue = (topic: string) => {
@@ -33,38 +33,38 @@ export const useTopicValue = (topic: string) => {
     }
   };
 
+  const handleUpdate = useCallback((msgs: Omit<MQTTMessageNew, "topic">[]) => {
+    if (!msgs.length) {
+      return;
+    }
+    // Získat poslední zprávu (ignoruje jiné zprávy, např. z db)
+    const msg = msgs.pop() as Omit<MQTTMessageNew, "topic">;
+    if (topic == "zige/pozar1/temp/val") console.log(msg.value, msg.timestamp.toISOString());
+
+    // Pokud již máme uložený čas předchozí zprávy
+    if (timestamp) {
+      const interval = msg.timestamp.getTime() - timestamp.getTime(); // rozdíl mezi touto a předchozí zprávou
+      setLastMessageInterval(interval); // aktualizujeme lastMessageInterval
+    }
+
+    //console.log(msg.value, topic);
+
+    // Uložit hodnotu a timestamp aktuální zprávy
+    setLastMsgs(msgs);
+    setValue(msg.value);
+    setTimestamp(msg.timestamp);
+    setSuspicious(false); // resetovat suspicious při nové zprávě
+  }, []);
+
   useEffect(() => {
-    const handleUpdate = (msgs: Omit<MQTTMessageNew, "topic">[]) => {
-      if (!msgs.length) {
-        return;
-      }
-      // Získat poslední zprávu (ignoruje jiné zprávy, např. z db)
-      const msg = msgs.pop() as Omit<MQTTMessageNew, "topic">;
-      console.log(msg.value, msg.timestamp.toISOString());
-
-      // Pokud již máme uložený čas předchozí zprávy
-      if (timestamp) {
-        const interval = msg.timestamp.getTime() - timestamp.getTime(); // rozdíl mezi touto a předchozí zprávou
-        setLastMessageInterval(interval); // aktualizujeme lastMessageInterval
-      }
-
-      //console.log(msg.value, topic);
-
-      // Uložit hodnotu a timestamp aktuální zprávy
-      setLastMsgs(msgs);
-      setValue(msg.value);
-      setTimestamp(msg.timestamp);
-      setSuspicious(false); // resetovat suspicious při nové zprávě
-    };
-
     // Přihlásit se k topicu
     socketEE.on(topic, handleUpdate);
 
     // Vyčištění při unmount
     return () => {
-      socketEE.removeListener(topic, handleUpdate);
+      socketEE.off(topic, handleUpdate);
     };
-  }, [topic, timestamp]); // Přidáno timestamp jako závislost
+  }, [topic, timestamp, handleUpdate]); // Přidáno timestamp jako závislost
 
   useEffect(() => {
     if (timestamp) {

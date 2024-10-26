@@ -41,18 +41,13 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
 
   // get messages from db (not older than 1 day)
   const messages = await prisma.mqtt.findMany({
-    where: {
-      timestamp: {
-        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
-      },
-    },
     orderBy: {
       timestamp: "asc",
     },
   });
   // get rid of ids
   console.log(messages.length);
-  let messagesToSend = messages.map(({ id, ...rest }) => {
+  const messagesToSend = messages.map(({ id, ...rest }) => {
     return {
       ...rest,
       timestamp: rest.timestamp.getTime(),
@@ -60,8 +55,6 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
   });
 
   // keep only every 6th message
-  messagesToSend = messagesToSend.filter((v, i) => i % 6 === 0 || v.timestamp > Date.now() - 1000 * 60 * 60 * 2);
-  console.log(messagesToSend.length);
 
   gotSocket.join("mqtt");
   gotSocket.emit("messages", [...new Set([...messagesToSend /*, ...getRetainedMessages()*/])]);

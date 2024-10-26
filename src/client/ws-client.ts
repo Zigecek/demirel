@@ -49,4 +49,5 @@ socket.on("messages", (msgs: (MQTTMessageNew & { timestamp: number })[]) => {
   topics.forEach((msgs, topic) => {
     socketEE.emit(topic, msgs);
   });
+  console.log(socketEE.listeners("zige/pozar1/temp/val"));
 });
