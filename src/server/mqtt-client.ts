@@ -2,9 +2,8 @@ import { connect } from "mqtt";
 import { env } from "./common/utils/envConfig";
 import { logger } from "./server";
 import { io, prisma } from ".";
-import { setIntervalAsync } from "set-interval-async";
 import { mqtt as prismaMqtt, MqttValueType } from "@prisma/client";
-import { InputJsonValue, JsonValue } from "@prisma/client/runtime/library";
+import { JsonValue } from "@prisma/client/runtime/library";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -22,11 +21,6 @@ const regexes = {
 };
 
 const wsQueue: MQTTMessageNew[] = [];
-/*
-const lastMessages = new Map<string, Omit<MQTTMessage, "topic">>();
-export const getRetainedMessages = () => {
-  return Array.from(lastMessages.entries()).map(([key, value]) => ({ topic: key, ...value }) as MQTTMessage);
-};*/
 
 export const getNewClient = () => {
   return connect(`${mqConfig.url}`, {
@@ -38,13 +32,40 @@ export const getNewClient = () => {
 const mqtt = getNewClient();
 const checkQueue = async () => {
   if (wsQueue.length > 0) {
-    const toSend = [...new Set(wsQueue)];
+    let toSend = [...new Set(wsQueue)];
     wsQueue.length = 0;
     logger.info(`Sending ${toSend.length} messages to WS`);
     io.to("mqtt").emit("messages", toSend);
 
     logger.info("Messages sent to WS, saving to DB");
     // rename message to value and add mqttValueType depending on the type of the message
+
+    // get last value from every topic
+    const lastValues = await prisma.mqtt.findMany({
+      select: {
+        topic: true,
+        value: true,
+      },
+      distinct: ["topic"],
+      orderBy: {
+        timestamp: "desc",
+      },
+    });
+
+    if (lastValues.length > 0) {
+      const lastValuesMap = new Map<string, JsonValue>();
+      lastValues.forEach((val) => {
+        lastValuesMap.set(val.topic, val.value);
+      });
+
+      toSend.forEach((msg) => {
+        const lastValue = lastValuesMap.get(msg.topic);
+        if (lastValue == msg.value) {
+          // remove from toSend
+          toSend = toSend.filter((m) => m.topic !== msg.topic);
+        }
+      });
+    }
 
     await prisma.mqtt.createMany({
       data: toSend,
@@ -74,10 +95,6 @@ mqtt.on("message", (topic, message, packet) => {
   if (regexes.basicVal.test(topic) || regexes.basicSet.test(topic)) {
     logger.info(`MQTT message registered: ${topic}: ${msg}`);
     const when = new Date();
-    /*
-    if (packet.retain || lastMessages.has(topic)) {
-      lastMessages.set(topic, { message: msg, timestamp: when });
-    }*/
 
     let valueType: MqttValueType = MqttValueType.STRING;
     let val: string | number | boolean = msg;
@@ -87,7 +104,8 @@ mqtt.on("message", (topic, message, packet) => {
       val = msg === "true" || msg === "1";
     } else if (!isNaN(parseFloat(msg))) {
       valueType = MqttValueType.FLOAT;
-      val = parseFloat(msg);
+      // parseFloat and mathematicaly round to 1 decimal place
+      val = Math.round(parseFloat(msg) * 10) / 10;
     }
 
     wsQueue.push({

@@ -9,12 +9,6 @@ type SocketAuth = {
   socketId: string | undefined;
 };
 
-type MQTTMessage = {
-  topic: string;
-  message: string;
-  timestamp: number;
-};
-
 type MQTTMessageNew = {
   topic: string;
   value: string | number | boolean;
