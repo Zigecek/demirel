@@ -46,7 +46,6 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
     },
   });
   // get rid of ids
-  console.log(messages.length);
   const messagesToSend = messages.map(({ id, ...rest }) => {
     return {
       ...rest,
@@ -54,10 +53,8 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
     } as MQTTMessageNew & { timestamp: number };
   });
 
-  // keep only every 6th message
-
   gotSocket.join("mqtt");
-  gotSocket.emit("messages", [...new Set([...messagesToSend /*, ...getRetainedMessages()*/])]);
+  gotSocket.emit("messages", [...new Set([...messagesToSend])]);
   logger.info("Socket Authenticated.");
 
   const serviceResponse = ServiceResponse.success("Socket Authenticated.", true);

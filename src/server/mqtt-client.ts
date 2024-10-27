@@ -2,7 +2,7 @@ import { connect } from "mqtt";
 import { env } from "./common/utils/envConfig";
 import { logger } from "./server";
 import { io, prisma } from ".";
-import { mqtt as prismaMqtt, MqttValueType } from "@prisma/client";
+import { mqtt as prismaMqtt, MqttValueType, Prisma } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 
 export const mqConfig = {
@@ -32,7 +32,7 @@ export const getNewClient = () => {
 const mqtt = getNewClient();
 const checkQueue = async () => {
   if (wsQueue.length > 0) {
-    let toSend = [...new Set(wsQueue)];
+    const toSend = [...new Set(wsQueue)];
     wsQueue.length = 0;
     logger.info(`Sending ${toSend.length} messages to WS`);
     io.to("mqtt").emit("messages", toSend);
@@ -40,36 +40,107 @@ const checkQueue = async () => {
     logger.info("Messages sent to WS, saving to DB");
     // rename message to value and add mqttValueType depending on the type of the message
 
-    // get last value from every topic
+    // Get the latest value from each topic
     const lastValues = await prisma.mqtt.findMany({
-      select: {
-        topic: true,
-        value: true,
-      },
+      select: { topic: true, value: true, id: true },
       distinct: ["topic"],
       orderBy: {
         timestamp: "desc",
       },
     });
 
-    if (lastValues.length > 0) {
-      const lastValuesMap = new Map<string, JsonValue>();
-      lastValues.forEach((val) => {
-        lastValuesMap.set(val.topic, val.value);
-      });
+    // Map pro poslední hodnoty
+    const lastValuesMap = new Map<string, { value: JsonValue; id: number }>();
+    lastValues.forEach((val) => {
+      lastValuesMap.set(val.topic, { value: val.value, id: val.id });
+    });
 
-      toSend.forEach((msg) => {
-        const lastValue = lastValuesMap.get(msg.topic);
-        if (lastValue == msg.value) {
-          // remove from toSend
-          toSend = toSend.filter((m) => m.topic !== msg.topic);
+    // Příprava na vložení nových hodnot a aktualizace existujících
+    const updates: Array<Prisma.mqttUpdateArgs> = [];
+    const inserts: Array<Prisma.mqttCreateArgs> = [];
+
+    // Filtrovat nové zprávy
+    toSend.forEach((msg) => {
+      const lastValue = lastValuesMap.get(msg.topic);
+
+      if (lastValue) {
+        if (lastValue.value === msg.value) {
+          // Pokud se hodnota nezměnila, aktualizuj timestamp
+          updates.push({
+            where: { id: lastValue.id },
+            data: { timestamp: msg.timestamp },
+          });
+        } else {
+          if (msg.valueType === "BOOLEAN") {
+            // Pokud je to BOOLEAN, přidej ještě jeden záznam s opačnou hodnotou
+            inserts.push({
+              data: {
+                topic: msg.topic,
+                value: !msg.value,
+                timestamp: new Date(msg.timestamp.getTime() - 2),
+                valueType: msg.valueType,
+              },
+            });
+
+            inserts.push({
+              data: {
+                topic: msg.topic,
+                value: msg.value,
+                timestamp: new Date(msg.timestamp.getTime() - 1),
+                valueType: msg.valueType,
+              },
+            });
+          }
+
+          // Pro ostatní typy hodnot přidej nový záznam
+          inserts.push({
+            data: {
+              topic: msg.topic,
+              value: msg.value,
+              timestamp: msg.timestamp,
+              valueType: msg.valueType,
+            },
+          });
         }
-      });
-    }
+      } else {
+        // Pokud neexistuje žádná poslední hodnota, přidej nový záznam
 
-    await prisma.mqtt.createMany({
-      data: toSend,
-      skipDuplicates: true,
+        inserts.push({
+          data: {
+            topic: msg.topic,
+            value: msg.value,
+            timestamp: new Date(msg.timestamp.getTime() - 1),
+            valueType: "BOOLEAN",
+          },
+        });
+
+        inserts.push({
+          data: {
+            topic: msg.topic,
+            value: msg.value,
+            timestamp: msg.timestamp,
+            valueType: msg.valueType,
+          },
+        });
+      }
+    });
+
+    // Vykonání aktualizací a vkládání v transakci
+    await prisma.$transaction(async (transaction) => {
+      if (inserts.length > 0) {
+        logger.info("Inserting new values. " + inserts.length);
+        await transaction.mqtt.createMany({
+          data: inserts.map((insert) => insert.data),
+          skipDuplicates: true,
+        });
+      }
+
+      if (updates.length > 0) {
+        logger.info("Updating existing values. " + updates.length);
+        await Promise.all(updates.map((update) => transaction.mqtt.update(update)));
+      }
+
+      logger.info("---------------------------------------------");
     });
   }
 };
@@ -93,7 +164,6 @@ mqtt.on("message", (topic, message, packet) => {
   }
 
   if (regexes.basicVal.test(topic) || regexes.basicSet.test(topic)) {
-    logger.info(`MQTT message registered: ${topic}: ${msg}`);
     const when = new Date();
 
     let valueType: MqttValueType = MqttValueType.STRING;
@@ -107,6 +177,8 @@ mqtt.on("message", (topic, message, packet) => {
       // parseFloat and mathematicaly round to 1 decimal place
       val = Math.round(parseFloat(msg) * 10) / 10;
     }
+
+    logger.info(`MQTT: ${topic}: ${val} <${valueType}>`);
 
     wsQueue.push({
       topic,

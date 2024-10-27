@@ -7,6 +7,7 @@ import Register from "./Register";
 import "./index.css";
 import "./ws-client";
 import { rootLoader } from "./utils/loaders";
+import { WebSocketProvider } from "./utils/WebSocketContext";
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <WebSocketProvider>
+      <RouterProvider router={router} />
+    </WebSocketProvider>
   </StrictMode>
 );

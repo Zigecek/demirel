@@ -1,11 +1,11 @@
 import { io } from "socket.io-client";
 import { API_URL } from "./utils/apiUrl";
 import { postSocketAuth } from "./proxy/endpoints";
-import EventEmitter from "eventemitter3";
+//import EventEmitter from "eventemitter3";
 
 console.log("Connecting to websocket server: " + API_URL);
 
-export const socketEE = new EventEmitter();
+//export const socketEE = new EventEmitter();
 export const socket = io(API_URL, {
   autoConnect: false,
   withCredentials: true,
@@ -32,7 +32,7 @@ socket.on("reconnect", async () => {
     socketId: socket.id,
   });
 });
-
+/*
 socket.on("messages", (msgs: (MQTTMessageNew & { timestamp: number })[]) => {
   // bundle messages from db by topic and emit them
   const topics = new Map<string, MQTTMessageNew[]>();
@@ -49,5 +49,5 @@ socket.on("messages", (msgs: (MQTTMessageNew & { timestamp: number })[]) => {
   topics.forEach((msgs, topic) => {
     socketEE.emit(topic, msgs);
   });
-  console.log(socketEE.listeners("zige/pozar1/temp/val"));
 });
+*/

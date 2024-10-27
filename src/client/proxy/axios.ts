@@ -3,8 +3,6 @@ import { API_URL } from "../utils/apiUrl";
 
 axios.defaults.withCredentials = true
 
-console.log(API_URL);
-
 export const getBase = async <T,>(url: string, config?: AxiosRequestConfig<any>, params?: any): Promise<T> => await (await axios.get(url, { ...config, withCredentials: true, params: params })).data;
 export const postBase = async <T,>(url: string, data?: any, config?: AxiosRequestConfig<any>): Promise<T> => await (await axios.post(url, data, { ...config, withCredentials: true })).data;
 

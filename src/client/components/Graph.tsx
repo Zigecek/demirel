@@ -42,7 +42,7 @@ export const Graph: React.FC<GraphProps> = ({ topic }) => {
           borderColor: suspicious ? "rgba(220, 75, 75, 1)" : "rgba(75, 220, 170, 1)",
           borderWidth: 2,
           fill: false,
-          tension: 0.1,
+          tension: 0,
           pointRadius: 0,
         },
       ],
