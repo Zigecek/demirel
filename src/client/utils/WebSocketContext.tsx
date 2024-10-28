@@ -2,10 +2,18 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { socket } from "../ws-client"; // Import your socket instance
 
-const WebSocketContext = createContext<any>(null);
+interface WebSocketContextType {
+  messages: Map<string, Omit<MQTTMessageNew, "topic">[]>;
+}
 
-export const useWebSocket = () => {
-  return useContext(WebSocketContext);
+const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
+
+export const useWebSocket = (): WebSocketContextType => {
+  const context = useContext(WebSocketContext);
+  if (!context) {
+    throw new Error("useWebSocket must be used within a WebSocketProvider");
+  }
+  return context;
 };
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

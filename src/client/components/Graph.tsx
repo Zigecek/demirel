@@ -59,7 +59,7 @@ export const Graph: React.FC<GraphProps> = ({ topic }) => {
         x: {
           type: "time",
           time: {
-            unit: "day",
+            unit: "hour",
           },
         },
       },
