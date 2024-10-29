@@ -1,9 +1,15 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
-import "chartjs-plugin-zoom";
-import { Line } from "react-chartjs-2";
+import zoomPlugin from "chartjs-plugin-zoom";
+import { Chart, Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
+import { format } from "date-fns"; // Import date-fns formatting
 import { useTopicValue } from "../utils/topicHook";
+import { Chart as ChartJS } from "chart.js";
+
+ChartJS.register(
+  zoomPlugin
+);
 
 type GraphProps = {
   topic: string;
@@ -43,7 +49,7 @@ export const Graph: React.FC<GraphProps> = ({ topic }) => {
           borderWidth: 2,
           fill: false,
           tension: 0,
-          pointRadius: 0,
+          pointRadius: 1,
         },
       ],
     });
@@ -60,10 +66,17 @@ export const Graph: React.FC<GraphProps> = ({ topic }) => {
           type: "time",
           time: {
             unit: "hour",
+            tooltipFormat: "HH:mm", // Format for tooltip in 24-hour format
+            displayFormats: {
+              hour: "HH:mm", // Display format in 24-hour format
+            },
           },
         },
       },
       plugins: {
+        legend: {
+          display: false,
+        },
         zoom: {
           pan: {
             enabled: true,
@@ -78,9 +91,6 @@ export const Graph: React.FC<GraphProps> = ({ topic }) => {
             },
             mode: "x",
           },
-        },
-        legend: {
-          display: false,
         },
       },
     });
