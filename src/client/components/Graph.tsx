@@ -66,7 +66,7 @@ export const Graph: React.FC<GraphProps> = ({ topic }) => {
           type: "time",
           time: {
             unit: "hour",
-            tooltipFormat: "HH:mm", // Format for tooltip in 24-hour format
+            tooltipFormat: "dd-LL-yyyy HH:mm:ss", // Full date time format
             displayFormats: {
               hour: "HH:mm", // Display format in 24-hour format
             },
