@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import zoomPlugin from "chartjs-plugin-zoom";
+import annotationPlugin from "chartjs-plugin-annotation"; // Import annotation plugin
 import { Chart, Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
@@ -7,9 +8,7 @@ import { format } from "date-fns"; // Import date-fns formatting
 import { useTopicValue } from "../utils/topicHook";
 import { Chart as ChartJS } from "chart.js";
 
-ChartJS.register(
-  zoomPlugin
-);
+ChartJS.register(zoomPlugin, annotationPlugin);
 
 type GraphProps = {
   topic: string;
@@ -40,6 +39,35 @@ export const Graph: React.FC<GraphProps> = ({ topic }) => {
   }, [value, timestamp, lastMsgs]);
 
   useEffect(() => {
+    const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
+    const maxTimestamp = Math.max(...dataPoints.map((dp) => dp.timestamp.getTime()));
+
+    // Define unique midnights without mutating original timestamps
+    const uniqueMidnights = Array.from(
+      new Set(
+        dataPoints.map((dp) => {
+          const date = new Date(dp.timestamp); // Create a new Date instance to avoid mutation
+          date.setHours(0, 0, 0, 0); // Set to midnight
+          return date.getTime();
+        })
+      )
+    );
+
+    // Filter midnights to be within the min and max timestamps
+    const midnightAnnotations = uniqueMidnights
+      .filter((midnightTime) => midnightTime >= minTimestamp && midnightTime <= maxTimestamp)
+      .map((midnightTime) => ({
+        type: "line",
+        mode: "vertical",
+        scaleID: "x",
+        value: midnightTime,
+        borderColor: "rgba(0, 120, 70, 0.5)",
+        borderWidth: 1,
+        label: {
+          display: false,
+        },
+      }));
+
     setData({
       datasets: [
         {
@@ -91,6 +119,9 @@ export const Graph: React.FC<GraphProps> = ({ topic }) => {
             },
             mode: "x",
           },
+        },
+        annotation: {
+          annotations: midnightAnnotations,
         },
       },
     });
