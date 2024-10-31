@@ -5,9 +5,10 @@ import { rootRegistry } from "../api/rootRouter";
 import { openAPIRegistry } from "./openAPIRouter";
 import { socketsRegistry } from "../api/sockets/socketsRouter";
 import { authRegistry } from "../api/auth/authRouter";
+import { mqttRegistry } from "../api/mqtt/mqttRouter";
 
 export function generateOpenAPIDocument() {
-  const registry = new OpenAPIRegistry([healthCheckRegistry, rootRegistry, openAPIRegistry, socketsRegistry, authRegistry]);
+  const registry = new OpenAPIRegistry([healthCheckRegistry, rootRegistry, openAPIRegistry, socketsRegistry, authRegistry, mqttRegistry]);
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
   return generator.generateDocument({
