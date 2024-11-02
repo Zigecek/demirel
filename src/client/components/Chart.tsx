@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { useTopicValue } from "../utils/topicHook";
+import React from "react";
 import { Graph } from "./Graph";
 
 type ChartProps = {

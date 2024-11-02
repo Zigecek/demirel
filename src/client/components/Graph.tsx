@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation"; // Import annotation plugin
-import { Chart, Line } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
 import { useTopicValue } from "../utils/topicHook";
@@ -20,7 +20,7 @@ type Bounds = { min: number; max: number; minDefined: boolean; maxDefined: boole
 export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
   const chartRef = useRef<any>(null);
 
-  const { value, lastUpdated, timestamp, suspicious, lastMsgs } = useTopicValue(topic);
+  const { value, timestamp, suspicious, lastMsgs } = useTopicValue(topic);
   const [dataPoints, setDataPoints] = useState<{ value: number; timestamp: Date }[]>([]);
 
   const [bounds, setBounds] = useState<Bounds>();
@@ -33,23 +33,26 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
   useEffect(() => {
     if (lastMsgs.length) {
       const msgs = lastMsgs.map((msg) => ({ value: msg.value as number, timestamp: msg.timestamp }));
-      setDataPoints((prevData) => [...prevData, ...msgs]);
+      setDataPoints((prevData) => [...prevData, ...msgs].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()));
     }
+  }, [lastMsgs]);
 
+  useEffect(() => {
     if (value && timestamp) {
       setDataPoints((prevData) => {
         return [
           ...prevData,
           { value: value as number, timestamp: timestamp },
-        ];
+        ].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
       });
     }
-  }, [value, timestamp, lastMsgs]);
+  }, [value, timestamp]);
 
   // updating zoom on dataPoints change
   useEffect(() => {
     if (dataPoints.length > 0) {
-      const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
+      
+      //const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
       const maxTimestamp = Math.max(...dataPoints.map((dp) => dp.timestamp.getTime()));
 
       if (!bounds || !bounds.minDefined || !bounds.maxDefined) {
@@ -100,7 +103,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
       return midnightAnnotations;
     };
 
-    const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
+    //const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
     const maxTimestamp = Math.max(...dataPoints.map((dp) => dp.timestamp.getTime()));
 
     const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;

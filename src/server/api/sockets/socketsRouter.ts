@@ -5,9 +5,7 @@ import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
 import { ServiceResponse } from "../../common/models/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { io, prisma } from "../../index";
-//import { getRetainedMessages } from "../../mqtt-client";
 import { logger } from "../../server";
-import { MqttValueType } from "@prisma/client";
 
 export const socketsRegistry = new OpenAPIRegistry();
 export const socketsRouter: Router = express.Router();
@@ -38,7 +36,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
     const serviceResponse = ServiceResponse.failure("Socket not found.", false, 404);
     return handleServiceResponse(serviceResponse, res);
   }
-
+  
   // get messages from db (not older than 1 day)
   const messages = await prisma.mqtt.findMany({
     orderBy: {
@@ -52,7 +50,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
       timestamp: rest.timestamp.getTime(),
     } as MQTTMessageNew & { timestamp: number };
   });
-
+  
   gotSocket.join("mqtt");
   gotSocket.emit("messages", [...new Set([...messagesToSend])]);
   logger.info("Socket Authenticated.");

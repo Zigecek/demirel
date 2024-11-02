@@ -4,10 +4,7 @@ import { z } from "zod";
 import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
 import { ServiceResponse } from "../../common/models/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
-import { io, prisma } from "../../index";
-//import { getRetainedMessages } from "../../mqtt-client";
-import { logger } from "../../server";
-import { MqttValueType } from "@prisma/client";
+import { prisma } from "../../index";
 
 export const mqttRegistry = new OpenAPIRegistry();
 export const mqttRouter: Router = express.Router();
@@ -26,16 +23,5 @@ mqttRouter.get("/data", async (req: Request, res: Response) => {
     return handleServiceResponse(serviceResponse, res);
   }
 
-  const messages = await prisma.mqtt.findMany({
-    orderBy: {
-      timestamp: "asc",
-    },
-  });
-  // get rid of ids
-  const messagesToSend = messages.map(({ id, ...rest }) => {
-    return {
-      ...rest,
-      timestamp: rest.timestamp.getTime(),
-    } as MQTTMessageNew & { timestamp: number };
-  });
+  // here implement the logic to get the data from the database depending on the start and end timestamp
 });

@@ -1,6 +1,5 @@
-// topicHook.ts
 import { useEffect, useState, useCallback } from "react";
-import { useWebSocket } from "./WebSocketContext"; // Import the context
+import { useWebSocket } from "./WebSocketContext";
 
 export const useTopicValue = (topic: string) => {
   const { messages } = useWebSocket();
@@ -18,53 +17,50 @@ export const useTopicValue = (topic: string) => {
       setLastUpdated(Math.round(timeSinceLastMessage));
 
       if (lastMessageInterval) {
-        const allowedInterval = lastMessageInterval * 1.5; // 150 % of the last interval
+        const allowedInterval = lastMessageInterval * 1.5;
         setSuspicious(now.getTime() - timestamp.getTime() > allowedInterval);
       }
 
-      const hardLimit = 2 * 60 * 1000; // 2 minutes
+      const hardLimit = 2 * 60 * 1000;
       if (now.getTime() - timestamp.getTime() > hardLimit) {
-        setSuspicious(true); // Too much time since the last message
+        setSuspicious(true);
       }
     }
   };
 
   const handleUpdate = useCallback(() => {
-    const msgs = messages.get(topic);
-    if (!msgs || msgs.length === 0) {
-      return;
-    }
+    const msgs = [...(messages.get(topic) || [])];
+    if (!msgs.length) return;
+    if (msgs.length == 0) return;
 
-    const msg = msgs[msgs.length - 1]; // Get the last message
+    const msg = msgs.pop();
+    if (!msg) return;
 
-    // Update the last message interval
     if (timestamp) {
       const interval = msg.timestamp.getTime() - timestamp.getTime();
       setLastMessageInterval(interval);
     }
 
-    // Update state with the new message data
-    setLastMsgs(msgs); // Store all messages received
-    setValue(msg.value); // Update the value state
-    setTimestamp(msg.timestamp); // Update the timestamp
-    setSuspicious(false); // Reset suspicious flag on new message
-  }, [messages, topic, timestamp]);
+    if (msgs.length > 0) setLastMsgs(msgs);
+    setValue(msg.value);
+    setTimestamp(msg.timestamp);
+    setSuspicious(false);
+  }, [messages]);
 
   useEffect(() => {
-    handleUpdate(); // Handle updates whenever messages or topic changes
-  }, [messages, topic, handleUpdate]); // Added handleUpdate to dependencies
+    handleUpdate();
+  }, [messages, topic]);
 
   useEffect(() => {
-    // Set an interval to update the last updated time
     if (timestamp) {
-      const interval = setInterval(updateLastUpdated, 1000); // Check every second
-      updateLastUpdated(); // Initial call to set last updated immediately
+      const interval = setInterval(updateLastUpdated, 1000);
+      updateLastUpdated();
 
       return () => {
-        clearInterval(interval); // Clean up interval on unmount
+        clearInterval(interval);
       };
     }
   }, [timestamp]);
 
-  return { value, lastUpdated, timestamp, suspicious, lastMsgs }; // Return the state
+  return { value, lastUpdated, timestamp, suspicious, lastMsgs };
 };
