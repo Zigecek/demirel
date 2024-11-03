@@ -20,7 +20,7 @@ const regexes = {
   config: /^zige\/.+\/config$/,
 };
 
-const wsQueue: MQTTMessageNew[] = [];
+const wsQueue: MQTTMessage[] = [];
 
 export const getNewClient = () => {
   return connect(`${mqConfig.url}`, {
@@ -187,7 +187,7 @@ mqtt.on("message", (topic, message, /*packet*/) => {
       value: val,
       timestamp: when,
       valueType,
-    } as MQTTMessageNew);
+    } as MQTTMessage);
     setTimeout(checkQueue, 100);
   }
 });

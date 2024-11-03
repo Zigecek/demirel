@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { socket } from "../ws-client";
 
 interface WebSocketContextType {
-  messages: MQTTMessageNew[];
+  messages: MQTTMessage[];
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
@@ -16,11 +16,11 @@ export const useWebSocket = (): WebSocketContextType => {
 };
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [messages, setMessages] = useState<MQTTMessageNew[]>([]);
+  const [messages, setMessages] = useState<MQTTMessage[]>([]);
 
   useEffect(() => {
-    socket.on("messages", (msgs: (MQTTMessageNew & { timestamp: number })[]) => {
-      const topics: MQTTMessageNew[] = [];
+    socket.on("messages", (msgs: MQTTMessageTransfer[]) => {
+      const topics: MQTTMessage[] = [];
       msgs.forEach((msg) => {
         const msgData = { ...msg, timestamp: new Date(msg.timestamp) };
         topics.push(msgData);

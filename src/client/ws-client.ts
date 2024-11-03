@@ -3,7 +3,7 @@ import { API_URL } from "./utils/apiUrl";
 import { postSocketAuth } from "./proxy/endpoints";
 //import EventEmitter from "eventemitter3";
 
-console.log("Connecting to websocket server: " + API_URL);
+console.log("WS: Connecting (" + API_URL + ")");
 
 //export const socketEE = new EventEmitter();
 export const socket = io(API_URL, {
@@ -16,7 +16,7 @@ export const socket = io(API_URL, {
 });
 
 socket.on("connect", async () => {
-  console.log("Connected to websocket server");
+  console.log("WS: Connected.");
 
   // connect socket to user session on expresse
   await postSocketAuth({
@@ -25,29 +25,10 @@ socket.on("connect", async () => {
 });
 
 socket.on("reconnect", async () => {
-  console.log("Reconnected to websocket server");
+  console.log("WS: Reconnected.");
 
   // connect socket to user session on expresse
   await postSocketAuth({
     socketId: socket.id,
   });
 });
-/*
-socket.on("messages", (msgs: (MQTTMessageNew & { timestamp: number })[]) => {
-  // bundle messages from db by topic and emit them
-  const topics = new Map<string, MQTTMessageNew[]>();
-  msgs.forEach((msg) => {
-    if (!topics.has(msg.topic)) {
-      topics.set(msg.topic, []);
-    }
-    topics.get(msg.topic)?.push({
-      ...msg,
-      timestamp: new Date(msg.timestamp),
-    });
-  });
-  // emit messages by topic
-  topics.forEach((msgs, topic) => {
-    socketEE.emit(topic, msgs);
-  });
-});
-*/

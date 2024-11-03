@@ -7,6 +7,7 @@ import "chartjs-adapter-date-fns";
 import { useTopicValue } from "../utils/topicHook";
 import { Chart as ChartJS } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
+import { postMqttData } from "../proxy/endpoints";
 
 ChartJS.register(zoomPlugin, annotationPlugin);
 
@@ -26,52 +27,69 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
   const [bounds, setBounds] = useState<Bounds>();
   const [isUserInteracting, setIsUserInteracting] = useState(false);
   const [resetTimeout, setResetTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [boundsTimeout, setBoundsTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  const [data, setData] = useState<any>({});
-  const [options, setOptions] = useState<any>({});
+  const [data, setData] = useState<any>();
+  const [options, setOptions] = useState<any>();
 
   // only used when more than one message is received at once
   useEffect(() => {
     if (lastMsgs.length) {
       const msgs = lastMsgs.map((msg) => ({ value: msg.value as number, timestamp: msg.timestamp }));
-      setDataPoints((prevData) => [...prevData, ...msgs].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()));
+      setDataPoints((prevData) =>
+        [...prevData, ...msgs]
+          // remove duplicates
+          .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
+          // sort by timestamp
+          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      );
     }
   }, [lastMsgs]);
 
   useEffect(() => {
     if (value != undefined && timestamp) {
       setDataPoints((prevData) => {
-        return [...prevData, { value: value as number, timestamp }].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        return (
+          [...prevData, { value: value as number, timestamp }]
+            // remove duplicates
+            .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
+            // sort by timestamp
+            .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+        );
       });
     }
   }, [value]);
 
-  // updating zoom on dataPoints change
   useEffect(() => {
-    if (dataPoints.length > 0) {
-      //const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
-      const maxTimestamp = Math.max(...dataPoints.map((dp) => dp.timestamp.getTime()));
+    if (boundsTimeout) clearTimeout(boundsTimeout);
 
-      if (!bounds || !bounds.minDefined || !bounds.maxDefined) {
-        const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
-        setBounds({
-          min: bounds?.minDefined ? bounds.min : twoDaysAgo,
-          max: bounds?.maxDefined ? bounds.max : maxTimestamp,
-          minDefined: true,
-          maxDefined: true,
-        });
-      }
+    const timeout = setTimeout(() => {
+      if (!bounds) return;
+      console.log((bounds.max - bounds.min) / (24 * 60 * 60 * 1000));
 
-      if (!isUserInteracting) {
-        setBounds((prev) => ({
-          min: Math.max(maxTimestamp - 2 * 24 * 60 * 60 * 1000, prev?.min || 0),
-          max: maxTimestamp,
-          minDefined: true,
-          maxDefined: true,
-        }));
-      }
-    }
-  }, [dataPoints]);
+      postMqttData(bounds.min, bounds.max, topic).then((res) => {
+        if (res.success) {
+          const formattedData = res.responseObject.map((msg: MQTTMessageTransfer) => ({
+            value: msg.value as number,
+            timestamp: new Date(msg.timestamp),
+          }));
+          // add new data to existing data
+          setDataPoints((prevData) => {
+            return (
+              [...prevData, ...formattedData]
+                // remove duplicates
+                .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
+                // sort by timestamp
+                .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+            );
+          });
+        }
+      });
+    }, 100);
+
+    setBoundsTimeout(timeout);
+    return () => clearTimeout(timeout);
+  }, [bounds]);
 
   // main datapoints useEffect
   useEffect(() => {
@@ -101,8 +119,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
     };
 
     //const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
-    const maxTimestamp = Math.max(...dataPoints.map((dp) => dp.timestamp.getTime()));
-
+    const maxTimestamp = Date.now();
     const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
 
     const minX = bounds?.minDefined ? bounds.min : twoDaysAgo;
@@ -185,6 +202,19 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
     });
   }, [dataPoints, isUserInteracting]);
 
+  useEffect(() => {
+    if (bounds == undefined) {
+      const maxTimestamp = Date.now();
+      const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
+      setBounds({
+        min: twoDaysAgo,
+        max: maxTimestamp,
+        minDefined: true,
+        maxDefined: true,
+      });
+    }
+  }, []);
+
   const updateChart = () => {
     if (chartRef.current) {
       chartRef.current.update();
@@ -211,7 +241,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
 
   const resetZoom = () => {
     if (dataPoints.length > 0) {
-      const maxTimestamp = Math.max(...dataPoints.map((dp) => dp.timestamp.getTime()));
+      const maxTimestamp = Date.now();
       const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
       setBounds({
         min: twoDaysAgo,
@@ -243,5 +273,5 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
     };
   }, [dataPoints]);
 
-  return <div>{dataPoints.length > 0 && <Line style={style} ref={chartRef} data={data} options={options} />}</div>;
+  return <div>{options != undefined && data != undefined && <Line style={style} ref={chartRef} data={data} options={options} />}</div>;
 };

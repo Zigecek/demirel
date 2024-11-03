@@ -9,7 +9,7 @@ type SocketAuth = {
   socketId: string | undefined;
 };
 
-type MQTTMessageNew = {
+type MQTTMessage = {
   topic: string;
   value: string | number | boolean;
   timestamp: Date;
@@ -38,3 +38,14 @@ type SnackBarConfig = {
   showSnackbar: (newConfig: Partial<SnackBarConfig>) => void;
   handleClose: () => void;
 };
+
+type SocketAuth = {
+  socketId: string | undefined;
+};
+
+type UserLogin = {
+  username: string;
+  password: string;
+};
+
+type MQTTMessageTransfer = MQTTMessage & { timestamp: number };

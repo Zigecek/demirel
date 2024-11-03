@@ -4,8 +4,8 @@ import _ from "lodash";
 
 export const useTopicValue = (topic: string) => {
   const { messages } = useWebSocket();
-  const [value, setValue] = useState<MQTTMessageNew["value"]>("");
-  const [lastMsgs, setLastMsgs] = useState<Omit<MQTTMessageNew, "topic">[]>([]);
+  const [value, setValue] = useState<MQTTMessage["value"]>("");
+  const [lastMsgs, setLastMsgs] = useState<Omit<MQTTMessage, "topic">[]>([]);
   const [lastUpdated, setLastUpdated] = useState<number>();
   const [timestamp, setTimestamp] = useState<Date>();
   const [suspicious, setSuspicious] = useState<boolean>(false);

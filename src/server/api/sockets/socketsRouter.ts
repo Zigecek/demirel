@@ -37,18 +37,25 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
     return handleServiceResponse(serviceResponse, res);
   }
   
-  // get messages from db (not older than 1 day)
+  // get one value of each topic
   const messages = await prisma.mqtt.findMany({
-    orderBy: {
-      timestamp: "asc",
+    select: {
+      id: true,
+      topic: true,
+      value: true,
+      timestamp: true,
     },
+    orderBy: {
+      timestamp: "desc",
+    },
+    distinct: ["topic"],
   });
   // get rid of ids
   const messagesToSend = messages.map(({ id, ...rest }) => {
     return {
       ...rest,
       timestamp: rest.timestamp.getTime(),
-    } as MQTTMessageNew & { timestamp: number };
+    } as MQTTMessageTransfer;
   });
   
   gotSocket.join("mqtt");

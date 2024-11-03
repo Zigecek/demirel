@@ -10,18 +10,58 @@ export const mqttRegistry = new OpenAPIRegistry();
 export const mqttRouter: Router = express.Router();
 
 mqttRegistry.registerPath({
-  method: "get",
+  method: "post",
   path: "/auth",
   tags: ["MQTT"],
-  responses: createApiResponse(z.boolean(), "Success"),
+  responses: createApiResponse(z.object({}), "Success"),
 });
 
-mqttRouter.get("/data", async (req: Request, res: Response) => {
+mqttRouter.post("/data", async (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user) {
     const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
     return handleServiceResponse(serviceResponse, res);
   }
 
-  // here implement the logic to get the data from the database depending on the start and end timestamp
+  // get request parameters
+  const { start, end, topic } = req.body;
+  if (!start || !end || !topic) {
+    const serviceResponse = ServiceResponse.failure("No start or end time provided.", false, 400);
+    return handleServiceResponse(serviceResponse, res);
+  }
+  const s = new Date(start);
+  const e = new Date(end);
+  const t = topic;
+  const zoom = (e.getTime() - s.getTime()) / (24 * 60 * 60 * 1000);
+
+  // get all messages between start and end
+  const messages = await prisma.mqtt.findMany({
+    where: {
+      timestamp: {
+        gte: s,
+        lte: e,
+      },
+      topic: t,
+    },
+    select: {
+      id: true,
+      topic: true,
+      value: true,
+      timestamp: true,
+    },
+    orderBy: {
+      timestamp: "asc",
+    },
+  });
+
+  // get rid of ids
+  const messagesToSend = messages.map(({ id, ...rest }) => {
+    return {
+      ...rest,
+      timestamp: rest.timestamp.getTime(),
+    } as MQTTMessageTransfer;
+  });
+
+  const serviceResponse = ServiceResponse.success("Data here.", messagesToSend, 200);
+  return handleServiceResponse(serviceResponse, res);
 });
