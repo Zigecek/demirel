@@ -65,7 +65,6 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
 
     const timeout = setTimeout(() => {
       if (!bounds) return;
-      console.log((bounds.max - bounds.min) / (24 * 60 * 60 * 1000));
 
       postMqttData(bounds.min, bounds.max, topic).then((res) => {
         if (res.success) {
