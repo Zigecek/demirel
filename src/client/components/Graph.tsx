@@ -33,7 +33,6 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
   // only used when more than one message is received at once
   useEffect(() => {
     if (lastMsgs.length) {
-      if (topic == "zige/pozar0/cerpadlo/val") console.log("msgs");
       const msgs = lastMsgs.map((msg) => ({ value: msg.value as number, timestamp: msg.timestamp }));
       setDataPoints((prevData) => [...prevData, ...msgs].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()));
     }

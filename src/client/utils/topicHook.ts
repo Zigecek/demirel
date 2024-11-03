@@ -52,8 +52,6 @@ export const useTopicValue = (topic: string) => {
       setLastMessageInterval(interval);
     }
 
-    if (topic == "zige/pozar0/cerpadlo/val") console.log("update");
-
     if (topicMsgs.length > 0) setLastMsgs(topicMsgs);
     setValue(msg.value);
     setTimestamp(msg.timestamp);
