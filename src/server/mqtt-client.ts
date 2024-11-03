@@ -2,7 +2,7 @@ import { connect } from "mqtt";
 import { env } from "./common/utils/envConfig";
 import { logger } from "./server";
 import { io, prisma } from ".";
-import { mqtt as prismaMqtt, MqttValueType, Prisma } from "@prisma/client";
+import { MqttValueType, Prisma } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 
 export const mqConfig = {
@@ -105,6 +105,7 @@ const checkQueue = async () => {
       } else {
         // Pokud neexistuje žádná poslední hodnota, přidej nový záznam
 
+        // this will stay in place
         inserts.push({
           data: {
             topic: msg.topic,
@@ -114,6 +115,7 @@ const checkQueue = async () => {
           },
         });
 
+        // this will be updated
         inserts.push({
           data: {
             topic: msg.topic,
@@ -156,7 +158,7 @@ mqtt.stream.on("error", (err) => {
   logger.error("MQTT error: ", err);
 });
 
-mqtt.on("message", (topic, message, packet) => {
+mqtt.on("message", (topic, message, /*packet*/) => {
   const msg: string = message.toString();
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
     logger.warn("Invalid topic in net: " + topic);

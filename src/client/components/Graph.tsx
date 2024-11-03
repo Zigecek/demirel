@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import zoomPlugin from "chartjs-plugin-zoom";
-import annotationPlugin from "chartjs-plugin-annotation"; // Import annotation plugin
+import annotationPlugin from "chartjs-plugin-annotation";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
@@ -33,26 +33,23 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
   // only used when more than one message is received at once
   useEffect(() => {
     if (lastMsgs.length) {
+      if (topic == "zige/pozar0/cerpadlo/val") console.log("msgs");
       const msgs = lastMsgs.map((msg) => ({ value: msg.value as number, timestamp: msg.timestamp }));
       setDataPoints((prevData) => [...prevData, ...msgs].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()));
     }
   }, [lastMsgs]);
 
   useEffect(() => {
-    if (value && timestamp) {
+    if (value != undefined && timestamp) {
       setDataPoints((prevData) => {
-        return [
-          ...prevData,
-          { value: value as number, timestamp: timestamp },
-        ].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        return [...prevData, { value: value as number, timestamp }].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
       });
     }
-  }, [value, timestamp]);
+  }, [value]);
 
   // updating zoom on dataPoints change
   useEffect(() => {
     if (dataPoints.length > 0) {
-      
       //const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
       const maxTimestamp = Math.max(...dataPoints.map((dp) => dp.timestamp.getTime()));
 

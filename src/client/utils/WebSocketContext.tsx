@@ -1,9 +1,8 @@
-// WebSocketContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { socket } from "../ws-client"; // Import your socket instance
+import { socket } from "../ws-client";
 
 interface WebSocketContextType {
-  messages: Map<string, Omit<MQTTMessageNew, "topic">[]>;
+  messages: MQTTMessageNew[];
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
@@ -17,28 +16,17 @@ export const useWebSocket = (): WebSocketContextType => {
 };
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [messages, setMessages] = useState<Map<string, Omit<MQTTMessageNew, "topic">[]>>(new Map());
+  const [messages, setMessages] = useState<MQTTMessageNew[]>([]);
 
   useEffect(() => {
     socket.on("messages", (msgs: (MQTTMessageNew & { timestamp: number })[]) => {
-      const topics = new Map<string, Omit<MQTTMessageNew, "topic">[]>();
+      const topics: MQTTMessageNew[] = [];
       msgs.forEach((msg) => {
-        const topic = msg.topic;
         const msgData = { ...msg, timestamp: new Date(msg.timestamp) };
-
-        if (!topics.has(topic)) {
-          topics.set(topic, []);
-        }
-        topics.get(topic)?.push(msgData);
+        topics.push(msgData);
       });
 
-      setMessages(() => {
-        const updated = new Map();
-        topics.forEach((msgs, topic) => {
-          updated.set(topic, msgs);
-        });
-        return updated;
-      });
+      setMessages(topics);
     });
 
     return () => {

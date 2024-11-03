@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWebSocket } from "./WebSocketContext";
+import _ from "lodash";
 
 export const useTopicValue = (topic: string) => {
   const { messages } = useWebSocket();
@@ -19,18 +20,31 @@ export const useTopicValue = (topic: string) => {
       if (lastMessageInterval) {
         const allowedInterval = lastMessageInterval * 1.5;
         setSuspicious(now.getTime() - timestamp.getTime() > allowedInterval);
+        return;
       }
 
       const hardLimit = 2 * 60 * 1000;
       if (now.getTime() - timestamp.getTime() > hardLimit) {
         setSuspicious(true);
+        return;
       }
+
+      setSuspicious(false);
     }
   };
 
-  const handleUpdate = () => {
-    const msgs = [...(messages.get(topic) || [])];
-    const msg = msgs.pop();
+  useEffect(() => {
+    if (!messages) return;
+    if (!topic) return;
+    if (messages.length == 0) return;
+    const clonnedMessages = _.cloneDeep(messages);
+
+    // get messages for the topic
+    const topicMsgs = clonnedMessages.filter((msg) => msg.topic == topic);
+    if (!topicMsgs) return;
+    if (topicMsgs.length == 0) return;
+
+    const msg = topicMsgs.pop();
     if (!msg) return;
 
     if (timestamp) {
@@ -38,19 +52,11 @@ export const useTopicValue = (topic: string) => {
       setLastMessageInterval(interval);
     }
 
-    if (msgs.length > 0) setLastMsgs(msgs);
+    if (topic == "zige/pozar0/cerpadlo/val") console.log("update");
+
+    if (topicMsgs.length > 0) setLastMsgs(topicMsgs);
     setValue(msg.value);
     setTimestamp(msg.timestamp);
-    setSuspicious(false);
-  };
-
-  useEffect(() => {
-    if (!messages) return;
-    if (!messages.has(topic)) return;
-    if (!messages.get(topic)?.length) return;
-    if (messages.get(topic)?.length == 0) return;
-    if (!topic) return;
-    handleUpdate();
   }, [messages, topic]);
 
   useEffect(() => {
