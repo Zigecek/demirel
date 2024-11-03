@@ -30,6 +30,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
   const [data, setData] = useState<any>({});
   const [options, setOptions] = useState<any>({});
 
+  // only used when more than one message is received at once
   useEffect(() => {
     if (lastMsgs.length) {
       const msgs = lastMsgs.map((msg) => ({ value: msg.value as number, timestamp: msg.timestamp }));

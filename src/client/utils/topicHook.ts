@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useWebSocket } from "./WebSocketContext";
 
 export const useTopicValue = (topic: string) => {
@@ -28,11 +28,8 @@ export const useTopicValue = (topic: string) => {
     }
   };
 
-  const handleUpdate = useCallback(() => {
+  const handleUpdate = () => {
     const msgs = [...(messages.get(topic) || [])];
-    if (!msgs.length) return;
-    if (msgs.length == 0) return;
-
     const msg = msgs.pop();
     if (!msg) return;
 
@@ -45,9 +42,14 @@ export const useTopicValue = (topic: string) => {
     setValue(msg.value);
     setTimestamp(msg.timestamp);
     setSuspicious(false);
-  }, [messages]);
+  };
 
   useEffect(() => {
+    if (!messages) return;
+    if (!messages.has(topic)) return;
+    if (!messages.get(topic)?.length) return;
+    if (messages.get(topic)?.length == 0) return;
+    if (!topic) return;
     handleUpdate();
   }, [messages, topic]);
 

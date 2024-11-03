@@ -32,8 +32,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         topics.get(topic)?.push(msgData);
       });
 
-      setMessages((prev) => {
-        const updated = new Map(prev);
+      setMessages(() => {
+        const updated = new Map();
         topics.forEach((msgs, topic) => {
           updated.set(topic, msgs);
         });
