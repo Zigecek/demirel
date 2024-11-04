@@ -53,13 +53,11 @@ export default function App() {
         .then((subscription) => {
           postWebPushSubscribe(subscription).then((res) => {
             if (res.success) {
-              console.log("Subscription sent to server");
               snackbarConfig?.showSnackbar({
                 text: "Subscription sent to server",
                 severity: "success",
               });
             } else {
-              console.error("Subscription not sent to server");
               snackbarConfig?.showSnackbar({
                 text: "Subscription not sent to server",
                 severity: "error",
