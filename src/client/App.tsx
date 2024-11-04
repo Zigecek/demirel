@@ -28,7 +28,7 @@ export default function App() {
   const handleNotifikace = () => {
     postWebPushSendNotification().then((res) => {
       snackbarConfig?.showSnackbar({
-        text: res.success ? "Notification sent" : "Notification not sent",
+        text: res.message,
         severity: res.success ? "success" : "error",
       });
     });
@@ -54,12 +54,12 @@ export default function App() {
           postWebPushSubscribe(subscription).then((res) => {
             if (res.success) {
               snackbarConfig?.showSnackbar({
-                text: "Subscription sent to server",
+                text: res.message,
                 severity: "success",
               });
             } else {
               snackbarConfig?.showSnackbar({
-                text: "Subscription not sent to server",
+                text: res.message,
                 severity: "error",
               });
             }

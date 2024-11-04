@@ -105,5 +105,8 @@ pushRouter.post("/send-notification", (req: Request, res: Response) => {
             }
           });
       });
+
+      const serviceResponse = ServiceResponse.success("Notification sent.", true, 200);
+      return handleServiceResponse(serviceResponse, res);
     });
 });
