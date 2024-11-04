@@ -15,6 +15,7 @@ import pg from "pg";
 import { user } from "@prisma/client";
 import ViteExpress from "vite-express";
 import { mqttRouter } from "./api/mqtt/mqttRouter";
+import { pushRouter } from "./api/push/pushRouter";
 
 const logger = pino({ name: "api.demirel" });
 const app: Express = express();
@@ -62,6 +63,7 @@ apiRouter.use("/health-check", healthCheckRouter);
 apiRouter.use("/sockets", socketsRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/mqtt", mqttRouter);
+apiRouter.use("/push", pushRouter);
 app.use("/api", apiRouter);
 
 // Swagger UI

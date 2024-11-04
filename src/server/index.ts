@@ -2,7 +2,6 @@ import { env } from "./common/utils/envConfig";
 import { app, logger } from "./server";
 import { Server } from "socket.io";
 import ws from "./ws-server";
-import { validateOrigin } from "./common/utils/cors";
 import "./mqtt-client";
 import { PrismaClient } from "@prisma/client";
 import ViteExpress from "vite-express";

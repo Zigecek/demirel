@@ -11,7 +11,7 @@ export const mqttRouter: Router = express.Router();
 
 mqttRegistry.registerPath({
   method: "post",
-  path: "/auth",
+  path: "/data",
   tags: ["MQTT"],
   responses: createApiResponse(z.object({}), "Success"),
 });

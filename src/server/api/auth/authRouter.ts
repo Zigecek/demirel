@@ -9,11 +9,11 @@ import { logger } from "../../server";
 //import { io } from "../../index";
 import { prisma } from "../../index";
 import argon2 from "argon2";
+import { user } from "@prisma/client";
 
 export const ZUserSafe = z.object({
   username: z.string(),
 });
-type UserSafe = z.infer<typeof ZUserSafe>;
 
 export const authRegistry = new OpenAPIRegistry();
 export const authRouter: Router = express.Router();
@@ -22,7 +22,7 @@ authRegistry.registerPath({
   method: "get",
   path: "/loggedIn",
   tags: ["Auth"],
-  responses: createApiResponse(z.boolean(), "Success"),
+  responses: createApiResponse(z.boolean().or(ZUserSafe).or(z.null()), "Success"),
 });
 
 authRouter.get("/loggedIn", (req: Request, res: Response) => {
@@ -34,11 +34,11 @@ authRouter.get("/loggedIn", (req: Request, res: Response) => {
     return handleServiceResponse(serviceResponse, res);
   }
 
+  const { password, ...userSafe } = req.session.user;
+
   const serviceResponse = ServiceResponse.success(
     "User authenticated.",
-    {
-      username: req.session.user.username,
-    },
+    userSafe as Omit<user, "password">,
     200
   );
   return handleServiceResponse(serviceResponse, res);

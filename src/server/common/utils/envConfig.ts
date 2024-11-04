@@ -14,4 +14,6 @@ export const env = cleanEnv(process.env, {
   MQTT_PASSWORD: str(),
   DATABASE_URL: str(),
   RUNNER: str({ choices: ["vps", "rpi", "dev"] }),
+  VAPID_PRIVATE: str(),
+  VITE_VAPID_PUBLIC: str(),
 });

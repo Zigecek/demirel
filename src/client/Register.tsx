@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import TextInput from "./components/TextInput";
 import { postRegister } from "./proxy/endpoints";
 import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
-import { loginRegister } from "./utils/onRender";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -10,10 +9,6 @@ export default function Register() {
   const [password2, setPassword2] = useState("");
   const [errors, setErrors] = useState({ username: false, password: false, password2: false });
   const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
-
-  useEffect(() => {
-    loginRegister();
-  }, []);
 
   useEffect(() => {
     setSnackbarConfig(createDefaultConfig(setSnackbarConfig));

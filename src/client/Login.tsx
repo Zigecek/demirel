@@ -2,18 +2,12 @@ import React, { useEffect, useState } from "react";
 import TextInput from "./components/TextInput";
 import { postLogin } from "./proxy/endpoints";
 import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
-import { redirect, useNavigate } from "react-router-dom";
-import { loginRegister } from "./utils/onRender";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({ username: false, password: false });
   const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
-
-  useEffect(() => {
-    loginRegister();
-  }, []);
 
   useEffect(() => {
     setSnackbarConfig(createDefaultConfig(setSnackbarConfig));

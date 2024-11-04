@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
 import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
-import { number, unit, fix, bool } from "./utils/values";
+import { number, unit, fix } from "./utils/values";
 import { Value } from "./components/Value";
-import { root } from "./utils/onRender";
 import { Chart } from "./components/Chart";
+import { postWebPushSendNotification, postWebPushSubscribe } from "./proxy/endpoints";
+import { socket } from "./ws-client";
 
 export default function App() {
   const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
 
   useEffect(() => {
-    root();
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -20,11 +25,76 @@ export default function App() {
     window.location.href = "/api/auth/logout";
   };
 
+  const handleNotifikace = () => {
+    postWebPushSendNotification().then((res) => {
+      snackbarConfig?.showSnackbar({
+        text: res.success ? "Notification sent" : "Notification not sent",
+        severity: res.success ? "success" : "error",
+      });
+    });
+  };
+
+  const subscribeToPushNotifications = () => {
+    const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC;
+
+    if (!publicVapidKey) {
+      snackbarConfig?.showSnackbar({
+        text: "VAPID_PUBLIC not set",
+        severity: "error",
+      });
+      return;
+    }
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.pushManager
+        .subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC),
+        })
+        .then((subscription) => {
+          postWebPushSubscribe(subscription).then((res) => {
+            if (res.success) {
+              console.log("Subscription sent to server");
+              snackbarConfig?.showSnackbar({
+                text: "Subscription sent to server",
+                severity: "success",
+              });
+            } else {
+              console.error("Subscription not sent to server");
+              snackbarConfig?.showSnackbar({
+                text: "Subscription not sent to server",
+                severity: "error",
+              });
+            }
+          });
+        });
+    });
+  };
+
+  useEffect(() => {
+    const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC;
+
+    if (!publicVapidKey) {
+      console.error("VAPID_PUBLIC not set");
+      return;
+    }
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
+  }, []);
+
   return (
     <div className="bg-gray-100">
-      <button onClick={handleLogout} className="mb-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-        Logout
-      </button>
+      <div className="flex flex-row flex-wrap gap-2 m-2">
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+          Logout
+        </button>
+        <button onClick={subscribeToPushNotifications} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+          Přihlásit notifikace
+        </button>
+        <button onClick={handleNotifikace} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+          Odeslat notifikaci
+        </button>
+      </div>
       <div className="flex flex-row items-center justify-center box-border flex-wrap">
         <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
         <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
@@ -39,4 +109,16 @@ export default function App() {
       {snackbarConfig && <CustomSnackbar config={snackbarConfig} />}
     </div>
   );
+}
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }

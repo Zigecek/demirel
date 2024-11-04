@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useTopicValue } from "../utils/topicHook";
-import { Graph } from "./Graph";
 
 type ValueProps = {
   topic: string;
@@ -8,7 +7,7 @@ type ValueProps = {
 };
 
 export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
-  const { value, lastUpdated, timestamp, suspicious, lastMsgs } = useTopicValue(topic);
+  const { value, lastUpdated, suspicious } = useTopicValue(topic);
 
   return (
     <div className="bg-gray-50 border border-gray-300 rounded-lg shadow-md p-2 m-1">
@@ -17,7 +16,7 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
 
       {lastUpdated != undefined && (
         <p className="text-xs text-gray-500 mt-2">
-          Updated <span className={suspicious ? "text-red-600 font-bold" : "text-gray-500"}>{lastUpdated}</span> seconds ago
+          Před <span className={suspicious ? "text-red-600 font-bold" : "text-gray-500"}>{lastUpdated}</span> vteřinami
         </p>
       )}
     </div>

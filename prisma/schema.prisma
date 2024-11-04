@@ -18,6 +18,7 @@ model session {
 model user {
   username String @id @unique(map: "username") @db.VarChar(255)
   password String @db.VarChar
+  webpush  webpush[]
 
   @@index([username])
 }
@@ -37,4 +38,16 @@ enum MqttValueType {
   FLOAT
   BOOLEAN
   STRING
+}
+
+// webpush
+model webpush {
+  id         Int           @id @default(autoincrement())
+  data       Json          @db.JsonB
+  timestamp  DateTime      @db.Timestamptz
+
+  userId     String
+  user       user          @relation(fields: [userId], references: [username])
+
+  @@index([userId])
 }
