@@ -3,6 +3,9 @@ self.addEventListener('push', event => {
   self.registration.showNotification(data.title, {
     body: data.body,
     icon: data.icon,
-    renotify: true,
+    renotify: data.renotify,
+    tag: data.tag,
+    badge: data.badge,
+    icon: data.icon,
   });
 });

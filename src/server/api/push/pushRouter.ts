@@ -69,9 +69,12 @@ pushRouter.post("/send-notification", (req: Request, res: Response) => {
   }
 
   const notificationPayload = {
-    title: "Test Push Notification",
-    body: "This is a test message",
-    icon: "https://cdn.iconscout.com/icon/free/png-256/node-js-1174925.png",
+    title: "Testovací notifikace",
+    body: "Toto je testovací notifikace.",
+    icon: "/demirel-icon.webp",
+    badge: "/demirel-icon.webp",
+    renotify: true,
+    tag: "test-notification",
   };
 
   // Získání všech subscriptions uživatele
