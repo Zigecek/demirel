@@ -9,8 +9,6 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import type { DecimationOptions } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import { postMqttData } from "../../proxy/endpoints";
-import { on } from "events";
-import { set } from "lodash";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Decimation);
 
@@ -44,7 +42,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
   const [loaded, setLoaded] = useState({ min: Number.MAX_SAFE_INTEGER, max: 0 });
 
   // time unit
-  const [timeUnit, setTimeUnit] = useState("hour");
+  const [timeUnit, setTimeUnit] = useState("day");
 
   // only used when more than one message is received at once
   useEffect(() => {

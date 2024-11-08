@@ -32,7 +32,7 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
   const s = new Date(start);
   const e = new Date(end);
   const t = topic;
-  const zoom = (e.getTime() - s.getTime()) / (24 * 60 * 60 * 1000);
+  //const zoom = (e.getTime() - s.getTime()) / (24 * 60 * 60 * 1000);
 
   if (isNaN(s.getTime()) || isNaN(e.getTime())) {
     const serviceResponse = ServiceResponse.failure("Invalid start or end time provided.", false, 400);
