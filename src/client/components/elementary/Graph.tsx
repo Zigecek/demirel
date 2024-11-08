@@ -5,11 +5,14 @@ import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
 import { useTopicValue } from "../../utils/topicHook";
-import { Chart as ChartJS } from "chart.js";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Decimation } from "chart.js";
+import type { DecimationOptions } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import { postMqttData } from "../../proxy/endpoints";
+import { on } from "events";
+import { set } from "lodash";
 
-ChartJS.register(zoomPlugin, annotationPlugin);
+ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Decimation);
 
 type GraphProps = {
   topic: string;
@@ -39,6 +42,9 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
 
   // timestamp interval for data fetching in milliseconds
   const [loaded, setLoaded] = useState({ min: Number.MAX_SAFE_INTEGER, max: 0 });
+
+  // time unit
+  const [timeUnit, setTimeUnit] = useState("hour");
 
   // only used when more than one message is received at once
   useEffect(() => {
@@ -70,6 +76,23 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
 
   useEffect(() => {
     if (boundsTimeout) clearTimeout(boundsTimeout);
+
+    
+    if (bounds) {
+      const days = (bounds.max - bounds.min) / (24 * 60 * 60 * 1000);
+      const hours = (bounds.max - bounds.min) / (60 * 60 * 1000);
+      const minutes = (bounds.max - bounds.min) / (60 * 1000);
+
+      if (days > 4) {
+        setTimeUnit("day");
+      } else if (hours > 2.5) {
+        setTimeUnit("hour");
+      } else if (minutes > 2.5) {
+        setTimeUnit("minute");
+      } else {
+        setTimeUnit("second");
+      }
+    }
 
     const timeout = setTimeout(() => {
       if (!bounds) return;
@@ -176,14 +199,8 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
           mode: "vertical",
           scaleID: "x",
           value: date.getTime(),
-          borderColor: "rgba(255, 0, 0, 0.8)",
-          borderWidth: 1,
-          label: {
-            backgroundColor: "rgba(255, 255, 255, 0.8)",
-            content: "Půlnoc",
-            enabled: true,
-            position: "top",
-          },
+          borderColor: "rgba(100, 100, 100, 0.8)",
+          borderWidth: 2,
         }))
       );
 
@@ -227,18 +244,27 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
           min: minX,
           max: maxX,
           time: {
-            unit: "hour",
+            unit: timeUnit,
             tooltipFormat: "dd-LL-yyyy HH:mm:ss",
             displayFormats: {
+              day: "dd-LL-yyyy",
               hour: "HH:mm",
+              minute: "HH:mm",
+              second: "HH:mm:ss",
             },
           },
         },
       },
       interaction: {
+        mode: "nearest",
+        axis: "x",
         intersect: false,
       },
       plugins: {
+        decimation: {
+          enabled: true,
+          algorithm: "min-max",
+        } as DecimationOptions,
         legend: {
           display: false,
         },
@@ -272,7 +298,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
         },
       },
     });
-  }, [dataPoints, isUserInteracting]);
+  }, [dataPoints, isUserInteracting, timeUnit]);
 
   useEffect(() => {
     if (bounds == undefined) {
@@ -313,6 +339,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
 
   const resetZoom = () => {
     if (dataPoints.length > 0) {
+      setTimeUnit("day");
       const maxTimestamp = Date.now();
       const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
       setBounds({

@@ -90,11 +90,11 @@ pushRouter.post("/send-notification", (req: Request, res: Response) => {
         webPush
           .sendNotification(data, JSON.stringify(notificationPayload))
           .then(() => {
-            logger.info("Webpush: Notified - ", data.endpoint);
+            logger.info("Webpush: Notified - " + data.endpoint);
           })
           .catch(async (err) => {
             if (err.statusCode === 410) {
-              logger.info("Webpush: Unavailable - ", data.endpoint);
+              logger.info("Webpush: Unavailable - " + data.endpoint);
               // Smazání neplatné subscription
               await prisma.webpush
                 .delete({
@@ -103,7 +103,7 @@ pushRouter.post("/send-notification", (req: Request, res: Response) => {
                   },
                 })
                 .then(() => {
-                  logger.info("Webpush: Removed - ", data.endpoint);
+                  logger.info("Webpush: Removed - " + data.endpoint);
                 });
             }
           });

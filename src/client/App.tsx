@@ -25,7 +25,7 @@ export default function App() {
     window.location.href = "/api/auth/logout";
   };
 
-  const handleNotifikace = () => {
+  const sendNotification = () => {
     postWebPushSendNotification().then((res) => {
       snackbarConfig?.showSnackbar({
         text: res.message,
@@ -34,50 +34,108 @@ export default function App() {
     });
   };
 
-  const subscribeToPushNotifications = () => {
-    const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC;
+  const handleNotifikace = async () => {
+    try {
+      // 1. Žádost o oprávnění
+      const permission = await Notification.requestPermission();
 
-    if (!publicVapidKey) {
-      snackbarConfig?.showSnackbar({
-        text: "VAPID_PUBLIC not set",
-        severity: "error",
-      });
-      return;
-    }
-    navigator.serviceWorker.ready.then((registration) => {
-      registration.pushManager
-        .subscribe({
+      if (permission !== "granted") {
+        // 2. Pokud oprávnění není uděleno, zobraz chybu v konzoli
+        snackbarConfig?.showSnackbar({
+          text: "You need to grant permission to send notifications",
+          severity: "error",
+        });
+        return;
+      }
+
+      // 3. Kontrola, zda je uživatel již přihlášený k odběru
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        // Pokud není žádná registrace, vytvoří novou
+        if (!import.meta.env.VITE_VAPID_PUBLIC) {
+          snackbarConfig?.showSnackbar({
+            text: "VAPID_PUBLIC not set",
+            severity: "error",
+          });
+          return;
+        }
+
+        const newSubscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC),
-        })
-        .then((subscription) => {
-          postWebPushSubscribe(subscription).then((res) => {
-            if (res.success) {
-              snackbarConfig?.showSnackbar({
-                text: res.message,
-                severity: "success",
-              });
-            } else {
-              snackbarConfig?.showSnackbar({
-                text: res.message,
-                severity: "error",
-              });
-            }
-          });
         });
-    });
+
+        // Odeslání nové subscription na backend
+        postWebPushSubscribe(newSubscription).then((res) => {
+          if (res.success) {
+            snackbarConfig?.showSnackbar({
+              text: res.message,
+              severity: "success",
+            });
+            // 4. Odeslání notifikace na backend
+            sendNotification();
+          } else {
+            snackbarConfig?.showSnackbar({
+              text: res.message,
+              severity: "error",
+            });
+          }
+        });
+        return;
+      }
+
+      // 5. Odeslání notifikace na backend
+      sendNotification();
+    } catch (error) {
+      console.error("Došlo k chybě při žádosti o notifikace:", error);
+    }
   };
 
   useEffect(() => {
-    const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC;
-
-    if (!publicVapidKey) {
-      console.error("VAPID_PUBLIC not set");
+    if (!("serviceWorker" in navigator)) {
+      console.error("Service Worker není podporován v tomto prohlížeči.");
       return;
     }
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js");
-    }
+
+    const registerServiceWorker = async () => {
+      try {
+        // 1. Registrace Service Workeru
+        const registration = await navigator.serviceWorker.register("/service-worker.js");
+
+        // 2. Detekce aktualizací Service Workeru
+        registration.onupdatefound = () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.onstatechange = () => {
+              if (newWorker.state === "installed") {
+                if (navigator.serviceWorker.controller) {
+                  // Nová verze byla nainstalována, čeká na aktivaci
+                  console.log("Nový Service Worker je připraven k použití.");
+                  if (window.confirm("Je k dispozici aktualizace. Chcete ji aplikovat?")) {
+                    window.location.reload();
+                  }
+                } else {
+                  // Poprvé nainstalovaný SW
+                  console.log("Service Worker byl úspěšně nainstalován poprvé.");
+                }
+              }
+            };
+          }
+        };
+
+        // 3. Odstraňování zastaralých SW
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          console.log("Service Worker se změnil, provádí se reload...");
+          window.location.reload();
+        });
+      } catch (error) {
+        console.error("Chyba při registraci Service Workeru:", error);
+      }
+    };
+
+    registerServiceWorker();
   }, []);
 
   return (
@@ -86,11 +144,8 @@ export default function App() {
         <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
           Logout
         </button>
-        <button onClick={subscribeToPushNotifications} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-          Přihlásit notifikace
-        </button>
         <button onClick={handleNotifikace} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
-          Odeslat notifikaci
+          Notifikace
         </button>
       </div>
       <div className="flex flex-row items-center justify-center box-border flex-wrap">
