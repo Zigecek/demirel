@@ -8,7 +8,7 @@ export const getIfLoggedInAsync = () => getAsync<ApiBase<Omit<user, "password">>
 export const postLogin = (data: Login) => postAsync<ApiBase<UserSafe>>("/api/auth/login", data);
 //export const getLogout = get<ApiBase<boolean>>("/api/auth/logout");
 export const postRegister = (data: Register) => postAsync<ApiBase<UserSafe>>("/api/auth/register", data);
-export const postMqttData = (start: number, end: number, topic: string) => postAsync<ApiBase<MQTTMessageTransfer[]>>("/api/mqtt/data", { start, end, topic });
+export const postMqttData = (requestData: postMqttDataRequest) => postAsync<ApiBase<MQTTMessageTransfer[]>>("/api/mqtt/data", requestData);
 // web-push subscription endpoint for Web Push Notifications
 export const postWebPushSubscribe = (data: PushSubscription) => postAsync<ApiBase<boolean>>("/api/push/subscribe", data);
 export const postWebPushSendNotification = () => postAsync<ApiBase<boolean>>("/api/push/send-notification");

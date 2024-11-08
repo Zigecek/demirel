@@ -6,6 +6,5 @@ self.addEventListener('push', event => {
     renotify: data.renotify,
     tag: data.tag,
     badge: data.badge,
-    icon: data.icon,
   });
 });

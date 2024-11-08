@@ -4,33 +4,41 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
-import { useTopicValue } from "../utils/topicHook";
+import { useTopicValue } from "../../utils/topicHook";
 import { Chart as ChartJS } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
-import { postMqttData } from "../proxy/endpoints";
+import { postMqttData } from "../../proxy/endpoints";
 
 ChartJS.register(zoomPlugin, annotationPlugin);
 
 type GraphProps = {
   topic: string;
   style?: React.CSSProperties;
+  boolean?: boolean;
 };
 
 type Bounds = { min: number; max: number; minDefined: boolean; maxDefined: boolean };
 
-export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
+export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) => {
   const chartRef = useRef<any>(null);
 
   const { value, timestamp, suspicious, lastMsgs } = useTopicValue(topic);
   const [dataPoints, setDataPoints] = useState<{ value: number; timestamp: Date }[]>([]);
 
+  // Bounds for data fetching and timeout for debouncing
   const [bounds, setBounds] = useState<Bounds>();
-  const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const [resetTimeout, setResetTimeout] = useState<NodeJS.Timeout | null>(null);
   const [boundsTimeout, setBoundsTimeout] = useState<NodeJS.Timeout | null>(null);
 
+  // User interaction state and timeout for resetting zoom
+  const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const [resetTimeout, setResetTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Chart.js data and options
   const [data, setData] = useState<any>();
   const [options, setOptions] = useState<any>();
+
+  // timestamp interval for data fetching in milliseconds
+  const [loaded, setLoaded] = useState({ min: Number.MAX_SAFE_INTEGER, max: 0 });
 
   // only used when more than one message is received at once
   useEffect(() => {
@@ -65,9 +73,74 @@ export const Graph: React.FC<GraphProps> = ({ topic, style }) => {
 
     const timeout = setTimeout(() => {
       if (!bounds) return;
+      if (bounds.min >= loaded.min && bounds.max <= loaded.max) return;
 
-      postMqttData(bounds.min, bounds.max, topic).then((res) => {
+      // get needed interval of timestamps for data fetching
+      const postMin: number = bounds.min < loaded.min ? bounds.min : loaded.max;
+      const postMax: number = bounds.max > loaded.max ? bounds.max : loaded.min;
+
+      // if the new interval contains the old one, post the difference (two intervals)
+      if (postMin < loaded.min && postMax > loaded.max && loaded.min < loaded.max) {
+        postMqttData({
+          start: postMin,
+          end: loaded.min,
+          topic,
+          boolean,
+        }).then((res) => {
+          if (res.success) {
+            setLoaded((prev) => ({ min: postMin, max: prev.max }));
+            const formattedData = res.responseObject.map((msg: MQTTMessageTransfer) => ({
+              value: msg.value as number,
+              timestamp: new Date(msg.timestamp),
+            }));
+            setDataPoints((prevData) => {
+              return (
+                [...prevData, ...formattedData]
+                  // remove duplicates
+                  .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
+                  // sort by timestamp
+                  .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+              );
+            });
+          }
+        });
+
+        postMqttData({
+          start: loaded.max,
+          end: postMax,
+          topic,
+          boolean,
+        }).then((res) => {
+          if (res.success) {
+            setLoaded((prev) => ({ min: prev.min, max: postMax }));
+            const formattedData = res.responseObject.map((msg: MQTTMessageTransfer) => ({
+              value: msg.value as number,
+              timestamp: new Date(msg.timestamp),
+            }));
+            setDataPoints((prevData) => {
+              return (
+                [...prevData, ...formattedData]
+                  // remove duplicates
+                  .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
+                  // sort by timestamp
+                  .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+              );
+            });
+          }
+        });
+        return;
+      }
+
+      postMqttData({
+        start: postMin,
+        end: postMax,
+        topic,
+        boolean,
+      }).then((res) => {
         if (res.success) {
+          // union loaded interval with new interval
+          setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
+
           const formattedData = res.responseObject.map((msg: MQTTMessageTransfer) => ({
             value: msg.value as number,
             timestamp: new Date(msg.timestamp),

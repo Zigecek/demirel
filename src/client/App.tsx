@@ -100,7 +100,7 @@ export default function App() {
         <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
       </div>
       <div>
-        <Chart topic="zige/pozar0/cerpadlo/val"></Chart>
+        <Chart topic="zige/pozar0/cerpadlo/val" boolean={true}></Chart>
         <Chart topic="zige/pozar0/temp/val"></Chart>
         <Chart topic="zige/pozar1/temp/val"></Chart>
       </div>

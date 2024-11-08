@@ -58,3 +58,10 @@ interface PushSubscription {
     auth: string;
   };
 }
+
+type postMqttDataRequest = {
+  start: number;
+  end: number;
+  topic: string;
+  boolean?: boolean;
+};

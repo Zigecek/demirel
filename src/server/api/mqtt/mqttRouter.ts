@@ -24,8 +24,8 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
   }
 
   // get request parameters
-  const { start, end, topic } = req.body;
-  if (!start || !end || !topic) {
+  const { start, end, topic, boolean } = req.body as postMqttDataRequest;
+  if (!start || !end || !topic || typeof start !== "number" || typeof end !== "number" || typeof topic !== "string") {
     const serviceResponse = ServiceResponse.failure("No start or end time provided.", false, 400);
     return handleServiceResponse(serviceResponse, res);
   }
@@ -33,6 +33,11 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
   const e = new Date(end);
   const t = topic;
   const zoom = (e.getTime() - s.getTime()) / (24 * 60 * 60 * 1000);
+
+  if (isNaN(s.getTime()) || isNaN(e.getTime())) {
+    const serviceResponse = ServiceResponse.failure("Invalid start or end time provided.", false, 400);
+    return handleServiceResponse(serviceResponse, res);
+  }
 
   // get all messages between start and end
   const messages = await prisma.mqtt.findMany({
@@ -53,6 +58,30 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
       timestamp: "asc",
     },
   });
+
+  // if boolean is true, get also first value before start
+  if (boolean) {
+    const firstMessage = await prisma.mqtt.findFirst({
+      where: {
+        timestamp: {
+          lt: s,
+        },
+        topic: t,
+      },
+      select: {
+        id: true,
+        topic: true,
+        value: true,
+        timestamp: true,
+      },
+      orderBy: {
+        timestamp: "desc",
+      },
+    });
+    if (firstMessage) {
+      messages.unshift(firstMessage);
+    }
+  }
 
   // get rid of ids
   const messagesToSend = messages.map(({ id, ...rest }) => {
