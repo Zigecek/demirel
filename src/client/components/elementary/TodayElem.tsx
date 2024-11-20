@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { postMqttToday } from "../../proxy/endpoints";
-import prettyMilliseconds from "pretty-ms";
 import { MaterialSymbol } from "react-material-symbols";
+import { format, addMinutes } from "date-fns";
 
 type TodayElemProps = {
   topic: string;
@@ -30,19 +30,23 @@ export const TodayElem: React.FC<TodayElemProps> = ({ topic, valueF }) => {
     return () => clearInterval(interval);
   }, [topic]);
 
+  function formatTime(date: Date) {
+    return format(addMinutes(date, date.getTimezoneOffset()), 'HH:mm:ss');
+  }
+
   return (
     <>
       {stats && <h3 className="text-xl font-nadpis mt-2">Dnes</h3>}
       {stats && stats.valueType === "BOOLEAN" && (
         <>
           <p className="text-base mt-2">
-            <MaterialSymbol icon="hourglass_top" size={18} fill={false} grade={-25} color="green" />
+            <MaterialSymbol icon="radio_button_checked" size={18} fill={false} grade={-25} color="green" />
             <span className="font-semibold">: </span>
-            {prettyMilliseconds(stats.uptime as number, { compact: true })}
+            {formatTime(new Date(stats.uptime as number))}
           </p>
           <p className="text-base mt-2">
             <MaterialSymbol icon="radio_button_unchecked" size={18} fill={false} grade={-25} color="red" />
-            <span className="font-semibold">: </span> {prettyMilliseconds(stats.downtime as number, { compact: true })}
+            <span className="font-semibold">: </span> {formatTime(new Date(stats.downtime as number))}
           </p>
         </>
       )}
