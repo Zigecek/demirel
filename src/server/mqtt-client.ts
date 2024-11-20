@@ -29,15 +29,19 @@ export const getNewClient = () => {
     clientId: mqConfig.clientId,
   });
 };
+
+export const endClient = () => new Promise((resolve) => mqtt.end(false, {}, resolve));
+
 const mqtt = getNewClient();
 const checkQueue = async () => {
   if (wsQueue.length > 0) {
     const toSend = [...new Set(wsQueue)];
     wsQueue.length = 0;
-    logger.info(`Sending ${toSend.length} messages to WS`);
+    logger.info(`WS: Sending ${toSend.length} messages to WS`);
     io.to("mqtt").emit("messages", toSend);
 
-    logger.info("Messages sent to WS, saving to DB");
+    logger.info("WS: Messages sent to WS");
+    logger.info("Prisma: Saving messages to DB");
     // rename message to value and add mqttValueType depending on the type of the message
 
     // Get the latest value from each topic
@@ -111,7 +115,7 @@ const checkQueue = async () => {
             topic: msg.topic,
             value: msg.value,
             timestamp: new Date(msg.timestamp.getTime() - 1),
-            valueType: "BOOLEAN",
+            valueType: msg.valueType,
           },
         });
 
@@ -127,23 +131,21 @@ const checkQueue = async () => {
       }
     });
 
+    if (inserts.length > 0) {
+      logger.info("Prisma: Inserting new values. " + inserts.length);
+      await prisma.mqtt.createMany({
+        data: inserts.map((insert) => insert.data),
+        skipDuplicates: true,
+      });
+    }
+
     // Vykonání aktualizací a vkládání v transakci
-    await prisma.$transaction(async (transaction) => {
-      if (inserts.length > 0) {
-        logger.info("Inserting new values. " + inserts.length);
-        await transaction.mqtt.createMany({
-          data: inserts.map((insert) => insert.data),
-          skipDuplicates: true,
-        });
-      }
+    if (updates.length > 0) {
+      logger.info("Prisma: Updating existing values. " + updates.length);
+      await prisma.$transaction(updates.map((update) => prisma.mqtt.update(update)));
+    }
 
-      if (updates.length > 0) {
-        logger.info("Updating existing values. " + updates.length);
-        await Promise.all(updates.map((update) => transaction.mqtt.update(update)));
-      }
-
-      logger.info("---------------------------------------------");
-    });
+    logger.info("Prisma: Messages saved to DB");  
   }
 };
 
@@ -158,7 +160,7 @@ mqtt.stream.on("error", (err) => {
   logger.error("MQTT error: ", err);
 });
 
-mqtt.on("message", (topic, message, /*packet*/) => {
+mqtt.on("message", (topic, message) => {
   const msg: string = message.toString();
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
     logger.warn("Invalid topic in net: " + topic);
@@ -176,8 +178,8 @@ mqtt.on("message", (topic, message, /*packet*/) => {
       val = msg === "true" || msg === "1";
     } else if (!isNaN(parseFloat(msg))) {
       valueType = MqttValueType.FLOAT;
-      // parseFloat and mathematicaly round to 1 decimal place
-      val = Math.round(parseFloat(msg) * 10) / 10;
+      // parseFloat and mathematicaly round to 3 decimal places
+      val = Math.round(parseFloat(msg) * 1000) / 1000;
     }
 
     logger.info(`MQTT: ${topic}: ${val} <${valueType}>`);

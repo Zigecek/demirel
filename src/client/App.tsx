@@ -142,7 +142,7 @@ export default function App() {
     <div className="bg-gray-100">
       <div className="flex flex-row flex-wrap gap-2 m-2">
         <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-          Logout
+          Odhlásit
         </button>
         <button onClick={handleNotifikace} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
           Notifikace
@@ -156,8 +156,8 @@ export default function App() {
       </div>
       <div>
         <Chart topic="zige/pozar0/cerpadlo/val" boolean={true}></Chart>
-        <Chart topic="zige/pozar0/temp/val"></Chart>
-        <Chart topic="zige/pozar1/temp/val"></Chart>
+        <Chart topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")}></Chart>
+        <Chart topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")}></Chart>
       </div>
       {snackbarConfig && <CustomSnackbar config={snackbarConfig} />}
     </div>

@@ -12,3 +12,4 @@ export const postMqttData = (requestData: postMqttDataRequest) => postAsync<ApiB
 // web-push subscription endpoint for Web Push Notifications
 export const postWebPushSubscribe = (data: PushSubscription) => postAsync<ApiBase<boolean>>("/api/push/subscribe", data);
 export const postWebPushSendNotification = () => postAsync<ApiBase<boolean>>("/api/push/send-notification");
+export const postMqttToday = (requestData: postMqttTodayRequest) => postAsync<ApiBase<postMqttTodayResponse>>("/api/mqtt/today", requestData);

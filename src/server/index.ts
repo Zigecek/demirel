@@ -5,6 +5,7 @@ import ws from "./ws-server";
 import "./mqtt-client";
 import { PrismaClient } from "@prisma/client";
 import ViteExpress from "vite-express";
+import { endClient } from "./mqtt-client";
 
 export const prisma = new PrismaClient();
 
@@ -37,14 +38,14 @@ if (env.NODE_ENV === "development") {
 
 ws(io);
 
-const onCloseSignal = () => {
+const onCloseSignal = async () => {
   logger.info("sigint received, shutting down");
-  prisma.$disconnect();
-  server.close(() => {
+  prisma.$disconnect()
+  Promise.all([io.close(), server.close(), endClient()]).then(() => {
     logger.info("server closed");
     process.exit();
   });
-  setTimeout(() => process.exit(1), 10000).unref(); // Force shutdown after 10s
+  setTimeout(() => process.exit(1), 3000).unref(); // Force shutdown after 10s
 };
 
 process.on("SIGINT", onCloseSignal);

@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
@@ -16,19 +17,19 @@ model session {
 }
 
 model user {
-  username String @id @unique(map: "username") @db.VarChar(255)
-  password String @db.VarChar
+  username String    @id @unique(map: "username") @db.VarChar(255)
+  password String    @db.VarChar
   webpush  webpush[]
 
   @@index([username])
 }
 
 model mqtt {
-  id         Int           @id @default(autoincrement())
-  topic      String
-  value      Json          @db.JsonB
-  timestamp  DateTime      @db.Timestamptz
-  valueType  MqttValueType @default(STRING)
+  id        Int           @id @default(autoincrement())
+  topic     String
+  value     Json          @db.JsonB
+  timestamp DateTime      @db.Timestamptz
+  valueType MqttValueType @default(STRING)
 
   @@unique([topic, timestamp])
   @@index([topic, timestamp])
@@ -42,12 +43,12 @@ enum MqttValueType {
 
 // webpush
 model webpush {
-  id         Int           @id @default(autoincrement())
-  data       Json          @db.JsonB
-  timestamp  DateTime      @db.Timestamptz
+  id        Int      @id @default(autoincrement())
+  data      Json     @db.JsonB
+  timestamp DateTime @db.Timestamptz
 
-  userId     String
-  user       user          @relation(fields: [userId], references: [username])
+  userId String
+  user   user   @relation(fields: [userId], references: [username])
 
   @@index([userId])
 }

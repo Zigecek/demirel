@@ -65,3 +65,25 @@ type postMqttDataRequest = {
   topic: string;
   boolean?: boolean;
 };
+
+type postMqttTodayRequest = {
+  topic: string;
+};
+
+type postMqttTodayResponse = {
+  topic: string;
+  valueType: MQTTMessage["valueType"];
+  // BOOLEAN
+  uptime: number | null; // in milliseconds
+  downtime: number | null; // in milliseconds
+
+  // FLOAT
+  min: number | null;
+  max: number | null;
+  avg: number | null;
+  count: number | null;
+
+  // STRING
+  first: string | null;
+  last: string | null;
+};

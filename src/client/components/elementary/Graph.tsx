@@ -5,12 +5,11 @@ import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
 import { useTopicValue } from "../../utils/topicHook";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Decimation } from "chart.js";
-import type { DecimationOptions } from "chart.js";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import { postMqttData } from "../../proxy/endpoints";
 
-ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Decimation);
+ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 type GraphProps = {
   topic: string;
@@ -75,7 +74,6 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
   useEffect(() => {
     if (boundsTimeout) clearTimeout(boundsTimeout);
 
-    
     if (bounds) {
       const days = (bounds.max - bounds.min) / (24 * 60 * 60 * 1000);
       const hours = (bounds.max - bounds.min) / (60 * 60 * 1000);
@@ -254,15 +252,11 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
         },
       },
       interaction: {
-        mode: "nearest",
-        axis: "x",
+        //mode: "nearest",
+        //axis: "x",
         intersect: false,
       },
       plugins: {
-        decimation: {
-          enabled: true,
-          algorithm: "min-max",
-        } as DecimationOptions,
         legend: {
           display: false,
         },
@@ -312,12 +306,22 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
   }, []);
 
   const updateChart = () => {
+    if (chartRef.current && chartRef.current.canvas && chartRef.current.canvas.style) {
+      chartRef.current.canvas.style.width = "100%";
+    }
     if (chartRef.current) {
       chartRef.current.update();
     }
   };
 
+  useEffect(() => {
+    if (data != undefined && options != undefined) {
+      updateChart();
+    }
+  }, [data, options]);
+
   useLayoutEffect(() => {
+    updateChart();
     window.addEventListener("resize", updateChart);
     //const interval = setInterval(updateChart, 2000);
     return () => {
@@ -370,5 +374,5 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
     };
   }, [dataPoints]);
 
-  return <div>{options != undefined && data != undefined && <Line style={style} ref={chartRef} data={data} options={options} />}</div>;
+  return <>{options != undefined && data != undefined && <Line style={style} ref={chartRef} data={data} options={options} />}</>;
 };
