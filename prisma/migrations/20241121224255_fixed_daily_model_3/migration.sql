@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "daily" ALTER COLUMN "date" SET DATA TYPE TIMESTAMPTZ;

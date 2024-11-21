@@ -32,7 +32,7 @@ declare module "express-session" {
   }
 }
 
-const sessionDBaccess = new pg.Pool({
+export const sessionDBaccess = new pg.Pool({
   connectionString: env.DATABASE_URL,
 });
 

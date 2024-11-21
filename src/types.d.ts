@@ -13,7 +13,7 @@ type MQTTMessage = {
   topic: string;
   value: string | number | boolean;
   timestamp: Date;
-  valueType: "STRING" | "FLOAT" | "BOOLEAN";
+  valueType: "FLOAT" | "BOOLEAN";
 };
 
 type Login = {
@@ -70,9 +70,13 @@ type postMqttTodayRequest = {
   topic: string;
 };
 
-type postMqttTodayResponse = {
+type postMqttTodayResponse = dailyStats;
+
+type dailyStats = {
   topic: string;
   valueType: MQTTMessage["valueType"];
+  date: Date;
+
   // BOOLEAN
   uptime: number | null; // in milliseconds
   downtime: number | null; // in milliseconds
@@ -82,8 +86,4 @@ type postMqttTodayResponse = {
   max: number | null;
   avg: number | null;
   count: number | null;
-
-  // STRING
-  first: string | null;
-  last: string | null;
-};
+}

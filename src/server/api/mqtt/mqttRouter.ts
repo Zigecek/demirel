@@ -5,6 +5,7 @@ import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
 import { ServiceResponse } from "../../common/models/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { prisma } from "../../index";
+import { calculateStats, getDayDates } from "../../common/utils/services/daily";
 
 export const mqttRegistry = new OpenAPIRegistry();
 export const mqttRouter: Router = express.Router();
@@ -102,8 +103,7 @@ mqttRouter.post("/today", async (req: Request, res: Response) => {
   }
 
   // get timestamp of start of today
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
+  const { start, end } = getDayDates(new Date());
 
   const { topic } = req.body as postMqttTodayRequest;
 
@@ -128,101 +128,8 @@ mqttRouter.post("/today", async (req: Request, res: Response) => {
     return handleServiceResponse(serviceResponse, res);
   }
 
-  // get type of values
-  const valueType = messages[0].valueType;
+  const returnObj = calculateStats(messages, start, end);
 
-  // BOOLEAN
-  let uptime: number | null = null;
-  let downtime: number | null = null;
-
-  if (valueType === "BOOLEAN") {
-    messages.unshift({
-      ...messages[0],
-      timestamp: start,
-    });
-    messages.push({
-      ...messages[messages.length - 1],
-      timestamp: new Date(),
-    });
-
-    // get duration the value was true
-    uptime = 0;
-    downtime = 0;
-    let lastUpTimestamp = null;
-    let lastDownTimestamp = null;
-    for (let i = 0; i < messages.length; i++) {
-      // uptime
-      if (messages[i].value === true && !lastUpTimestamp) {
-        lastUpTimestamp = messages[i].timestamp.getTime();
-        continue;
-      }
-      if (messages[Math.min(i + 1, messages.length - 1)].value === false && lastUpTimestamp) {
-        uptime += messages[i].timestamp.getTime() - lastUpTimestamp;
-        lastUpTimestamp = null;
-        continue;
-      }
-      if (i === messages.length - 1 && messages[i].value === true && lastUpTimestamp) {
-        uptime += new Date().getTime() - lastUpTimestamp;
-      }
-
-      // downtime
-      if (messages[i].value === false && !lastDownTimestamp) {
-        lastDownTimestamp = messages[i].timestamp.getTime();
-        continue;
-      }
-      if (messages[Math.min(i + 1, messages.length - 1)].value === true && lastDownTimestamp) {
-        downtime += messages[i].timestamp.getTime() - lastDownTimestamp;
-        lastDownTimestamp = null;
-        continue;
-      }
-      if (i === messages.length - 1 && messages[i].value === false && lastDownTimestamp) {
-        downtime += new Date().getTime() - lastDownTimestamp;
-      }
-    }
-  }
-
-  // FLOAT
-  let min: number | null = null;
-  let max: number | null = null;
-  let avg: number | null = null;
-  let count: number | null = null;
-
-  if (valueType === "FLOAT") {
-    const vals = messages.map((m) => m.value as number);
-    min = Math.min(...vals);
-    max = Math.max(...vals);
-    count = vals.length;
-    avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-  }
-
-  // STRING
-  let first: string | null = null;
-  let last: string | null = null;
-
-  if (valueType === "STRING") {
-    first = messages[0].value as string;
-    last = messages[messages.length - 1].value as string;
-  }
-
-  const retutnObj: postMqttTodayResponse = {
-    topic: topic,
-    valueType: valueType,
-
-    // BOOLEAN
-    uptime: uptime, // in milliseconds
-    downtime: downtime, // in milliseconds
-
-    // FLOAT
-    min: min,
-    max: max,
-    avg: avg,
-    count: count,
-
-    // STRING
-    first: first,
-    last: last,
-  };
-
-  const serviceResponse = ServiceResponse.success("Data here.", retutnObj, 200);
+  const serviceResponse = ServiceResponse.success("Data here.", returnObj, 200);
   return handleServiceResponse(serviceResponse, res);
 });

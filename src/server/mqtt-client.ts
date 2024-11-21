@@ -75,7 +75,7 @@ const checkQueue = async () => {
             data: { timestamp: msg.timestamp },
           });
         } else {
-          if (msg.valueType === "BOOLEAN") {
+          if (msg.valueType === MqttValueType.BOOLEAN) {
             // Pokud je to BOOLEAN, přidej ještě jeden záznam s opačnou hodnotou
             inserts.push({
               data: {
@@ -152,34 +152,37 @@ const checkQueue = async () => {
 //setIntervalAsync(checkQueue, mqConfig.wsInterval);
 
 mqtt.on("connect", () => {
-  logger.info("MQTT connected.");
+  logger.info("MQTT: Connected.");
   mqtt.subscribe(mqConfig.rootTopic);
 });
 
 mqtt.stream.on("error", (err) => {
-  logger.error("MQTT error: ", err);
+  logger.error("MQTT: Error: ", err.message);
 });
 
 mqtt.on("message", (topic, message) => {
   const msg: string = message.toString();
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
-    logger.warn("Invalid topic in net: " + topic);
+    logger.warn("MQTT: Invalid topic in net: " + topic);
     return;
   }
 
   if (regexes.basicVal.test(topic) || regexes.basicSet.test(topic)) {
     const when = new Date();
 
-    let valueType: MqttValueType = MqttValueType.STRING;
-    let val: string | number | boolean = msg;
+    let valueType: MqttValueType;
+    let val: string | number | boolean;
 
     if (msg === "true" || msg === "false" || msg === "1" || msg === "0") {
       valueType = MqttValueType.BOOLEAN;
       val = msg === "true" || msg === "1";
     } else if (!isNaN(parseFloat(msg))) {
       valueType = MqttValueType.FLOAT;
-      // parseFloat and mathematicaly round to 3 decimal places
-      val = Math.round(parseFloat(msg) * 1000) / 1000;
+      // parseFloat and mathematicaly round to 1 decimal place
+      val = Math.round(parseFloat(msg) * 10) / 10;
+    } else {
+      logger.warn("MQTT: Invalid value in net: " + msg);
+      return;
     }
 
     logger.info(`MQTT: ${topic}: ${val} <${valueType}>`);

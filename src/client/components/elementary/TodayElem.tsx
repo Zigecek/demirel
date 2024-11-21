@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { postMqttToday } from "../../proxy/endpoints";
 import { MaterialSymbol } from "react-material-symbols";
 import { format, addMinutes } from "date-fns";
+import { MqttValueType } from "@prisma/client";
 
 type TodayElemProps = {
   topic: string;
@@ -37,7 +38,7 @@ export const TodayElem: React.FC<TodayElemProps> = ({ topic, valueF }) => {
   return (
     <>
       {stats && <h3 className="text-xl font-nadpis mt-2">Dnes</h3>}
-      {stats && stats.valueType === "BOOLEAN" && (
+      {stats && stats.valueType === MqttValueType.BOOLEAN && (
         <>
           <p className="text-base mt-2">
             <MaterialSymbol icon="radio_button_checked" size={18} fill={false} grade={-25} color="green" />
@@ -51,7 +52,7 @@ export const TodayElem: React.FC<TodayElemProps> = ({ topic, valueF }) => {
         </>
       )}
 
-      {stats && stats.valueType === "FLOAT" && (
+      {stats && stats.valueType === MqttValueType.FLOAT && (
         <>
           <p className="text-base mt-2">
             <MaterialSymbol icon="call_made" size={18} fill={false} grade={-25} color="red" />

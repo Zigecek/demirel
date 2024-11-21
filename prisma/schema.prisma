@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["omitApi"]
 }
 
@@ -29,7 +29,7 @@ model mqtt {
   topic     String
   value     Json          @db.JsonB
   timestamp DateTime      @db.Timestamptz
-  valueType MqttValueType @default(STRING)
+  valueType MqttValueType @default(FLOAT)
 
   @@unique([topic, timestamp])
   @@index([topic, timestamp])
@@ -38,7 +38,6 @@ model mqtt {
 enum MqttValueType {
   FLOAT
   BOOLEAN
-  STRING
 }
 
 // webpush
@@ -51,4 +50,23 @@ model webpush {
   user   user   @relation(fields: [userId], references: [username])
 
   @@index([userId])
+}
+
+model daily {
+  id        Int           @id @default(autoincrement())
+  topic     String
+  valueType MqttValueType
+  date      DateTime      @db.Timestamptz
+
+  // FLOAT
+  max   Float?
+  min   Float?
+  avg   Float?
+  count Int?
+
+  // BOOLEAN
+  uptime   BigInt? @db.BigInt
+  downtime BigInt? @db.BigInt
+
+  @@index([topic, date])
 }

@@ -1,13 +1,31 @@
 import { env } from "./common/utils/envConfig";
-import { app, logger } from "./server";
+import { app, logger, sessionDBaccess } from "./server";
 import { Server } from "socket.io";
 import ws from "./ws-server";
 import "./mqtt-client";
 import { PrismaClient } from "@prisma/client";
 import ViteExpress from "vite-express";
 import { endClient } from "./mqtt-client";
+import { createDailyStats } from "./common/utils/services/daily";
+import { onEachDay } from "./common/utils/onEachDay";
 
 export const prisma = new PrismaClient();
+
+prisma
+  .$connect()
+  .then(async () => {
+    logger.info("Prisma: Connected.");
+
+    //await createDailyStats("all", "all");
+
+    // schedule daily stats creation
+    onEachDay(() => {
+      createDailyStats("all", "all");
+    });
+  })
+  .catch((e) => {
+    logger.error(`Prisma: Connection failed: ${e}`);
+  });
 
 ViteExpress.config({
   mode: (env.NODE_ENV as "development" | "production" | undefined) ?? "development",
@@ -40,8 +58,8 @@ ws(io);
 
 const onCloseSignal = async () => {
   logger.info("sigint received, shutting down");
-  prisma.$disconnect()
-  Promise.all([io.close(), server.close(), endClient()]).then(() => {
+  prisma.$disconnect();
+  Promise.all([io.close(), server.close(), endClient(), sessionDBaccess.end()]).then(() => {
     logger.info("server closed");
     process.exit();
   });
