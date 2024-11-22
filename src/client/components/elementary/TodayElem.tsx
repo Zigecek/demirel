@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { postMqttToday } from "../../proxy/endpoints";
 import { MaterialSymbol } from "react-material-symbols";
 import { format, addMinutes } from "date-fns";
+import { useMessages } from "../../utils/MessagesContext";
+import { calculateStats, getDayDates } from "../../../globals/daily";
 
 type TodayElemProps = {
   topic: string;
@@ -9,34 +11,30 @@ type TodayElemProps = {
 };
 
 export const TodayElem: React.FC<TodayElemProps> = ({ topic, valueF }) => {
-  const [stats, setStats] = useState<postMqttTodayResponse>();
+  const { history } = useMessages();
+  const [stats, setStats] = useState<dailyStats>();
 
-  const fetchToday = () => {
-    if (!topic) return;
-    postMqttToday({ topic }).then((res) => {
-      if (res.success) {
-        setStats(res.responseObject);
-      }
-    });
-  };
-
-  // periodically update stats
   useEffect(() => {
-    fetchToday();
-    const interval = setInterval(() => {
-      fetchToday();
-    }, 1000 * 60);
+    if (!history) return;
+    if (!topic) return;
+    if (!history[topic]) return;
 
-    return () => clearInterval(interval);
-  }, [topic]);
+    const { start, end } = getDayDates(new Date());
+    const todayMsgs = history[topic].filter((msg) => msg.timestamp > start && msg.timestamp < end);
+    if (todayMsgs.length == 0) return;
+
+    const calcs = calculateStats(todayMsgs, start, end);
+
+    setStats(calcs);
+  }, [history]);
 
   function formatTime(date: Date) {
-    return format(addMinutes(date, date.getTimezoneOffset()), 'HH:mm:ss');
+    return format(addMinutes(date, date.getTimezoneOffset()), "HH:mm:ss");
   }
 
   return (
     <>
-      {stats && <h3 className="text-xl font-nadpis mt-2">Dnes</h3>}
+      {stats && <h3 className="text-xl font-light mt-2">Dnes</h3>}
       {stats && stats.valueType === "BOOLEAN" && (
         <>
           <p className="text-base mt-2">

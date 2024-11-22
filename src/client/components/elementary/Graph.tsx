@@ -1,3 +1,5 @@
+// TODO: Remove duplicates from data fetching code
+
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
@@ -8,6 +10,7 @@ import { useTopicValue } from "../../utils/topicHook";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import { postMqttData } from "../../proxy/endpoints";
+import { useMessages } from "../../utils/MessagesContext";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -22,7 +25,9 @@ type Bounds = { min: number; max: number; minDefined: boolean; maxDefined: boole
 export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) => {
   const chartRef = useRef<any>(null);
 
-  const { value, timestamp, suspicious, lastMsgs } = useTopicValue(topic);
+  const { addToHistory } = useMessages();
+
+  const { value, timestamp, suspicious } = useTopicValue(topic);
   const [dataPoints, setDataPoints] = useState<{ value: number; timestamp: Date }[]>([]);
 
   // Bounds for data fetching and timeout for debouncing
@@ -42,20 +47,6 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
 
   // time unit
   const [timeUnit, setTimeUnit] = useState("day");
-
-  // only used when more than one message is received at once
-  useEffect(() => {
-    if (lastMsgs.length) {
-      const msgs = lastMsgs.map((msg) => ({ value: msg.value as number, timestamp: msg.timestamp }));
-      setDataPoints((prevData) =>
-        [...prevData, ...msgs]
-          // remove duplicates
-          .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
-          // sort by timestamp
-          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-      );
-    }
-  }, [lastMsgs]);
 
   useEffect(() => {
     if (value != undefined && timestamp) {
@@ -108,19 +99,23 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
         }).then((res) => {
           if (res.success) {
             setLoaded((prev) => ({ min: postMin, max: prev.max }));
-            const formattedData = res.responseObject.map((msg: MQTTMessageTransfer) => ({
-              value: msg.value as number,
-              timestamp: new Date(msg.timestamp),
-            }));
             setDataPoints((prevData) => {
               return (
-                [...prevData, ...formattedData]
+                [
+                  ...prevData,
+                  ...res.responseObject.map((msg: MQTTMessageTransfer) => ({
+                    value: msg.value as number,
+                    timestamp: new Date(msg.timestamp),
+                  })),
+                ]
                   // remove duplicates
                   .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
                   // sort by timestamp
                   .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
               );
             });
+
+            addToHistory(res.responseObject.map((msg: MQTTMessageTransfer) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
           }
         });
 
@@ -132,19 +127,23 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
         }).then((res) => {
           if (res.success) {
             setLoaded((prev) => ({ min: prev.min, max: postMax }));
-            const formattedData = res.responseObject.map((msg: MQTTMessageTransfer) => ({
-              value: msg.value as number,
-              timestamp: new Date(msg.timestamp),
-            }));
             setDataPoints((prevData) => {
               return (
-                [...prevData, ...formattedData]
+                [
+                  ...prevData,
+                  ...res.responseObject.map((msg: MQTTMessageTransfer) => ({
+                    value: msg.value as number,
+                    timestamp: new Date(msg.timestamp),
+                  })),
+                ]
                   // remove duplicates
                   .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
                   // sort by timestamp
                   .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
               );
             });
+
+            addToHistory(res.responseObject.map((msg: MQTTMessageTransfer) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
           }
         });
         return;
@@ -159,21 +158,24 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
         if (res.success) {
           // union loaded interval with new interval
           setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
-
-          const formattedData = res.responseObject.map((msg: MQTTMessageTransfer) => ({
-            value: msg.value as number,
-            timestamp: new Date(msg.timestamp),
-          }));
           // add new data to existing data
           setDataPoints((prevData) => {
             return (
-              [...prevData, ...formattedData]
+              [
+                ...prevData,
+                ...res.responseObject.map((msg: MQTTMessageTransfer) => ({
+                  value: msg.value as number,
+                  timestamp: new Date(msg.timestamp),
+                })),
+              ]
                 // remove duplicates
                 .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
                 // sort by timestamp
                 .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
             );
           });
+
+          addToHistory(res.responseObject.map((msg: MQTTMessageTransfer) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
         }
       });
     }, 100);
@@ -291,6 +293,8 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
       },
     });
   }, [dataPoints, isUserInteracting, timeUnit]);
+
+  useEffect(() => {}, [dataPoints]);
 
   useEffect(() => {
     if (bounds == undefined) {

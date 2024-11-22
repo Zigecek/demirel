@@ -39,12 +39,6 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
   
   // get one value of each topic
   const messages = await prisma.mqtt.findMany({
-    select: {
-      id: true,
-      topic: true,
-      value: true,
-      timestamp: true,
-    },
     orderBy: {
       timestamp: "desc",
     },

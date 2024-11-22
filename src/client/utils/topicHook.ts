@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { useWebSocket } from "./WebSocketContext";
+import { useMessages } from "./MessagesContext";
 import _ from "lodash";
 
 export const useTopicValue = (topic: string) => {
-  const { messages } = useWebSocket();
-  const [value, setValue] = useState<MQTTMessage["value"]>("");
-  const [lastMsgs, setLastMsgs] = useState<Omit<MQTTMessage, "topic">[]>([]);
+  const { messages, addToHistory } = useMessages();
+  const [value, setValue] = useState<MQTTMessage["value"]>(0);
   const [lastUpdated, setLastUpdated] = useState<number>();
   const [timestamp, setTimestamp] = useState<Date>();
   const [suspicious, setSuspicious] = useState<boolean>(false);
@@ -47,12 +46,13 @@ export const useTopicValue = (topic: string) => {
     const msg = topicMsgs.pop();
     if (!msg) return;
 
+    addToHistory([msg]);
+
     if (timestamp) {
       const interval = msg.timestamp.getTime() - timestamp.getTime();
       setLastMessageInterval(interval);
     }
 
-    if (topicMsgs.length > 0) setLastMsgs(topicMsgs);
     setValue(msg.value);
     setTimestamp(msg.timestamp);
   }, [messages, topic]);
@@ -68,5 +68,5 @@ export const useTopicValue = (topic: string) => {
     }
   }, [timestamp]);
 
-  return { value, lastUpdated, timestamp, suspicious, lastMsgs };
+  return { value, lastUpdated, timestamp, suspicious /*lastMsgs*/ };
 };

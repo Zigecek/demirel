@@ -5,7 +5,7 @@ import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
 import { ServiceResponse } from "../../common/models/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { prisma } from "../../index";
-import { calculateStats, getDayDates } from "../../common/utils/services/daily";
+import { calculateStats, getDayDates } from "../../../globals/daily";
 
 export const mqttRegistry = new OpenAPIRegistry();
 export const mqttRouter: Router = express.Router();
@@ -56,7 +56,6 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
     },
     omit: {
       id: true,
-      valueType: true,
     },
     orderBy: {
       timestamp: "asc",
@@ -74,7 +73,6 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
       },
       omit: {
         id: true,
-        valueType: true,
       },
       orderBy: {
         timestamp: "desc",

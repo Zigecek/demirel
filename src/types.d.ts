@@ -11,7 +11,7 @@ type SocketAuth = {
 
 type MQTTMessage = {
   topic: string;
-  value: string | number | boolean;
+  value: number | boolean;
   timestamp: Date;
   valueType: "FLOAT" | "BOOLEAN";
 };
@@ -86,4 +86,9 @@ type dailyStats = {
   max: number | null;
   avg: number | null;
   count: number | null;
+}
+
+type DataPoint = {
+  value: number;
+  timestamp: Date;
 }

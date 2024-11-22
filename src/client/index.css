@@ -5,9 +5,7 @@
 @tailwind utilities;
 
 @layer base {
-  .font-nadpis {
+  body {
     font-family: "Noto Sans", sans-serif;
-    font-style: initial;
-    font-weight: 300;
   }
 }

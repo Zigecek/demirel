@@ -6,7 +6,7 @@ import Login from "./Login";
 import Register from "./Register";
 import "./index.css";
 import "./ws-client";
-import { WebSocketProvider } from "./utils/WebSocketContext";
+import { MessagesProvider } from "./utils/MessagesContext";
 import { UserProvider } from "./utils/UserContext";
 import 'react-material-symbols/rounded';
 import 'react-material-symbols/outlined';
@@ -31,9 +31,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <UserProvider>
-      <WebSocketProvider>
+      <MessagesProvider>
         <RouterProvider router={router} />
-      </WebSocketProvider>
+      </MessagesProvider>
     </UserProvider>
   </StrictMode>
 );
