@@ -1,5 +1,5 @@
 import React from "react";
-import { useTopicValue } from "../utils/topicHook";
+import { useTopic } from "../utils/topicHook";
 import { TodayElem } from "./elementary/TodayElem";
 
 type TodayProps = {
@@ -8,7 +8,7 @@ type TodayProps = {
 };
 
 export const Today: React.FC<TodayProps> = ({ topic, valueF }) => {
-  const { value, suspicious } = useTopicValue(topic);
+  const { value, suspicious } = useTopic(topic);
 
   return (
     <div className="bg-gray-50 border border-gray-300 rounded-lg shadow-md p-2 m-1">

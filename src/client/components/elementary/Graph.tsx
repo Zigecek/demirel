@@ -6,7 +6,7 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
-import { useTopicValue } from "../../utils/topicHook";
+import { useTopic } from "../../utils/topicHook";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import { postMqttData } from "../../proxy/endpoints";
@@ -27,7 +27,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
 
   const { addToHistory } = useMessages();
 
-  const { value, timestamp, suspicious } = useTopicValue(topic);
+  const { value, timestamp, suspicious } = useTopic(topic);
   const [dataPoints, setDataPoints] = useState<{ value: number; timestamp: Date }[]>([]);
 
   // Bounds for data fetching and timeout for debouncing
@@ -61,6 +61,26 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
       });
     }
   }, [value]);
+
+  const processAndSetDataPoints = (responseObject: MQTTMessageTransfer[]) => {
+    setDataPoints((prevData) => {
+      return (
+        [
+          ...prevData,
+          ...responseObject.map((msg) => ({
+            value: msg.value as number,
+            timestamp: new Date(msg.timestamp),
+          })),
+        ]
+          // remove duplicates
+          .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
+          // sort by timestamp
+          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      );
+    });
+
+    addToHistory(responseObject.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
+  };
 
   useEffect(() => {
     if (boundsTimeout) clearTimeout(boundsTimeout);
@@ -99,23 +119,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
         }).then((res) => {
           if (res.success) {
             setLoaded((prev) => ({ min: postMin, max: prev.max }));
-            setDataPoints((prevData) => {
-              return (
-                [
-                  ...prevData,
-                  ...res.responseObject.map((msg: MQTTMessageTransfer) => ({
-                    value: msg.value as number,
-                    timestamp: new Date(msg.timestamp),
-                  })),
-                ]
-                  // remove duplicates
-                  .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
-                  // sort by timestamp
-                  .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-              );
-            });
-
-            addToHistory(res.responseObject.map((msg: MQTTMessageTransfer) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
+            processAndSetDataPoints(res.responseObject);
           }
         });
 
@@ -127,57 +131,23 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
         }).then((res) => {
           if (res.success) {
             setLoaded((prev) => ({ min: prev.min, max: postMax }));
-            setDataPoints((prevData) => {
-              return (
-                [
-                  ...prevData,
-                  ...res.responseObject.map((msg: MQTTMessageTransfer) => ({
-                    value: msg.value as number,
-                    timestamp: new Date(msg.timestamp),
-                  })),
-                ]
-                  // remove duplicates
-                  .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
-                  // sort by timestamp
-                  .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-              );
-            });
-
-            addToHistory(res.responseObject.map((msg: MQTTMessageTransfer) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
+            processAndSetDataPoints(res.responseObject);
           }
         });
-        return;
+      } else {
+        postMqttData({
+          start: postMin,
+          end: postMax,
+          topic,
+          boolean,
+        }).then((res) => {
+          if (res.success) {
+            // union loaded interval with new interval
+            setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
+            processAndSetDataPoints(res.responseObject);
+          }
+        });
       }
-
-      postMqttData({
-        start: postMin,
-        end: postMax,
-        topic,
-        boolean,
-      }).then((res) => {
-        if (res.success) {
-          // union loaded interval with new interval
-          setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
-          // add new data to existing data
-          setDataPoints((prevData) => {
-            return (
-              [
-                ...prevData,
-                ...res.responseObject.map((msg: MQTTMessageTransfer) => ({
-                  value: msg.value as number,
-                  timestamp: new Date(msg.timestamp),
-                })),
-              ]
-                // remove duplicates
-                .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
-                // sort by timestamp
-                .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-            );
-          });
-
-          addToHistory(res.responseObject.map((msg: MQTTMessageTransfer) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
-        }
-      });
     }, 100);
 
     setBoundsTimeout(timeout);
@@ -293,8 +263,6 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
       },
     });
   }, [dataPoints, isUserInteracting, timeUnit]);
-
-  useEffect(() => {}, [dataPoints]);
 
   useEffect(() => {
     if (bounds == undefined) {

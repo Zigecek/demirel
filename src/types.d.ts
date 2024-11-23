@@ -92,3 +92,9 @@ type DataPoint = {
   value: number;
   timestamp: Date;
 }
+
+type postMqttStatsRequest = {
+  topic: string;
+};
+
+type postMqttStatsResponse = dailyStats[];

@@ -3,11 +3,12 @@
 import { prisma } from "../../..";
 import { logger } from "../../../server";
 import { getDayDates, calculateStats } from "../../../../globals/daily";
+import { Prisma } from "@prisma/client";
 
 export async function createDailyStats(topic: string | "all", date: Date | "all") {
-  logger.info("Daily: Creating daily stats");
+  logger.info("Daily: Creating daily stats:", topic, date);
   // restrict the messages to the topic and date
-  let where = {};
+  let where: Prisma.mqttWhereInput = {};
   if (topic !== "all") {
     where = { topic };
   }

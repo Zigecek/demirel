@@ -5,6 +5,7 @@ import { Value } from "./components/Value";
 import { Chart } from "./components/Chart";
 import { postWebPushSendNotification, postWebPushSubscribe } from "./proxy/endpoints";
 import { socket } from "./ws-client";
+import { DailyHistory } from "./components/Stats";
 
 export default function App() {
   const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
@@ -156,8 +157,12 @@ export default function App() {
       </div>
       <div>
         <Chart topic="zige/pozar0/cerpadlo/val" boolean={true}></Chart>
+        <DailyHistory topic="zige/pozar0/cerpadlo/val" />
         <Chart topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")}></Chart>
+        <DailyHistory topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
         <Chart topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")}></Chart>
+        <DailyHistory topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
+        
       </div>
       {snackbarConfig && <CustomSnackbar config={snackbarConfig} />}
     </div>

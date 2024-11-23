@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMessages } from "./MessagesContext";
 import _ from "lodash";
 
-export const useTopicValue = (topic: string) => {
+export const useTopic = (topic: string) => {
   const { messages, addToHistory } = useMessages();
   const [value, setValue] = useState<MQTTMessage["value"]>(0);
   const [lastUpdated, setLastUpdated] = useState<number>();
@@ -17,7 +17,7 @@ export const useTopicValue = (topic: string) => {
       setLastUpdated(Math.round(timeSinceLastMessage));
 
       if (lastMessageInterval) {
-        const allowedInterval = lastMessageInterval * 1.5;
+        const allowedInterval = lastMessageInterval * 1.3;
         setSuspicious(now.getTime() - timestamp.getTime() > allowedInterval);
         return;
       }
@@ -68,5 +68,5 @@ export const useTopicValue = (topic: string) => {
     }
   }, [timestamp]);
 
-  return { value, lastUpdated, timestamp, suspicious /*lastMsgs*/ };
+  return { value, lastUpdated, timestamp, suspicious };
 };

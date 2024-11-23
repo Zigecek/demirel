@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { postMqttToday } from "../../proxy/endpoints";
+import React from "react";
 import { MaterialSymbol } from "react-material-symbols";
 import { format, addMinutes } from "date-fns";
-import { useMessages } from "../../utils/MessagesContext";
-import { calculateStats, getDayDates } from "../../../globals/daily";
+import { useToday } from "../../utils/todayHook";
 
 type TodayElemProps = {
   topic: string;
@@ -11,22 +9,7 @@ type TodayElemProps = {
 };
 
 export const TodayElem: React.FC<TodayElemProps> = ({ topic, valueF }) => {
-  const { history } = useMessages();
-  const [stats, setStats] = useState<dailyStats>();
-
-  useEffect(() => {
-    if (!history) return;
-    if (!topic) return;
-    if (!history[topic]) return;
-
-    const { start, end } = getDayDates(new Date());
-    const todayMsgs = history[topic].filter((msg) => msg.timestamp > start && msg.timestamp < end);
-    if (todayMsgs.length == 0) return;
-
-    const calcs = calculateStats(todayMsgs, start, end);
-
-    setStats(calcs);
-  }, [history]);
+  const { stats } = useToday({ topic, valueF });
 
   function formatTime(date: Date) {
     return format(addMinutes(date, date.getTimezoneOffset()), "HH:mm:ss");
@@ -34,7 +17,6 @@ export const TodayElem: React.FC<TodayElemProps> = ({ topic, valueF }) => {
 
   return (
     <>
-      {stats && <h3 className="text-xl font-light mt-2">Dnes</h3>}
       {stats && stats.valueType === "BOOLEAN" && (
         <>
           <p className="text-base mt-2">

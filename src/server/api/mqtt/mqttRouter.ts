@@ -131,3 +131,49 @@ mqttRouter.post("/today", async (req: Request, res: Response) => {
   const serviceResponse = ServiceResponse.success("Data here.", returnObj, 200);
   return handleServiceResponse(serviceResponse, res);
 });
+
+
+mqttRegistry.registerPath({
+  method: "post",
+  path: "/stats",
+  tags: ["MQTT"],
+  responses: createApiResponse(z.object({}), "Success"),
+});
+
+mqttRouter.post("/stats", async (req: Request, res: Response) => {
+  if (!req.session?.user) {
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  const { topic } = req.body as postMqttStatsRequest;
+
+  if (!topic) {
+    const serviceResponse = ServiceResponse.failure("No topic provided.", false, 400);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  const stats = await prisma.daily.findMany({
+    where: {
+      topic,
+    },
+    orderBy: {
+      date: "desc",
+    },
+    omit: {
+      id: true
+    }
+  });
+
+  // serialize bigint
+  const resp = stats.map((stat) => {
+    return {
+      ...stat,
+      uptime: stat.uptime ? Number(stat.uptime) : null,
+      downtime: stat.downtime ? Number(stat.downtime) : null,
+    }
+  });
+
+  const serviceResponse = ServiceResponse.success("Data here.", resp, 200);
+  return handleServiceResponse(serviceResponse, res);
+});
