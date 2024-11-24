@@ -1,12 +1,10 @@
-// TODO: Remove duplicates from data fetching code
-
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
-import { useTopic } from "../../utils/topicHook";
+import { useTopics } from "../../utils/topicsHook";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import { postMqttData } from "../../proxy/endpoints";
@@ -14,21 +12,27 @@ import { useMessages } from "../../utils/MessagesContext";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
+const colors = [
+  "rgba(80, 150, 220, 1)",
+  "rgba(80, 220, 150, 1)",
+  "rgba(220, 150, 80, 1)",
+  "rgba(220, 80, 150, 1)",
+  "rgba(150, 80, 220, 1)",
+  "rgba(150, 220, 80, 1)",
+]
+
 type GraphProps = {
-  topic: string;
+  topics: string[];
   style?: React.CSSProperties;
   boolean?: boolean;
 };
 
 type Bounds = { min: number; max: number; minDefined: boolean; maxDefined: boolean };
 
-export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) => {
+export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) => {
+  // GLOBAL STATES //
   const chartRef = useRef<any>(null);
-
   const { addToHistory } = useMessages();
-
-  const { value, timestamp, suspicious } = useTopic(topic);
-  const [dataPoints, setDataPoints] = useState<{ value: number; timestamp: Date }[]>([]);
 
   // Bounds for data fetching and timeout for debouncing
   const [bounds, setBounds] = useState<Bounds>();
@@ -48,38 +52,44 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
   // time unit
   const [timeUnit, setTimeUnit] = useState("day");
 
+  // TOPIC STATES //
+  const { values, timestamps, suspicious } = useTopics(topics);
+  const [dataPoints, setDataPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
+
   useEffect(() => {
-    if (value != undefined && timestamp) {
-      setDataPoints((prevData) => {
-        return (
-          [...prevData, { value: value as number, timestamp }]
+    topics.forEach((topic) => {
+      if (values[topic] != undefined && timestamps[topic]) {
+        setDataPoints((prevData) => {
+          const newData = { ...prevData };
+          newData[topic] = [...(newData[topic] || []), { value: values[topic] as number, timestamp: timestamps[topic] }]
             // remove duplicates
             .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
             // sort by timestamp
-            .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-        );
-      });
-    }
-  }, [value]);
+            .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+          return newData;
+        });
+      }
+    });
+  }, [values, timestamps]);
 
-  const processAndSetDataPoints = (responseObject: MQTTMessageTransfer[]) => {
+  const processAndSetDataPoints = (responseObject: MQTTMessageTransfer[], topic: string) => {
     setDataPoints((prevData) => {
-      return (
-        [
-          ...prevData,
-          ...responseObject.map((msg) => ({
-            value: msg.value as number,
-            timestamp: new Date(msg.timestamp),
-          })),
-        ]
-          // remove duplicates
-          .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
-          // sort by timestamp
-          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-      );
+      const newData = { ...prevData };
+      newData[topic] = [
+        ...(newData[topic] || []),
+        ...responseObject.map((msg) => ({
+          value: msg.value as number,
+          timestamp: new Date(msg.timestamp),
+        })),
+      ]
+        // remove duplicates
+        .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
+        // sort by timestamp
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      return newData;
     });
 
-    addToHistory(responseObject.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
+    addToHistory(responseObject.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) } as MQTTMessage)));
   };
 
   useEffect(() => {
@@ -111,41 +121,45 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
 
       // if the new interval contains the old one, post the difference (two intervals)
       if (postMin < loaded.min && postMax > loaded.max && loaded.min < loaded.max) {
-        postMqttData({
-          start: postMin,
-          end: loaded.min,
-          topic,
-          boolean,
-        }).then((res) => {
-          if (res.success) {
-            setLoaded((prev) => ({ min: postMin, max: prev.max }));
-            processAndSetDataPoints(res.responseObject);
-          }
-        });
+        topics.forEach((topic) => {
+          postMqttData({
+            start: postMin,
+            end: loaded.min,
+            topic,
+            boolean,
+          }).then((res) => {
+            if (res.success) {
+              setLoaded((prev) => ({ min: postMin, max: prev.max }));
+              processAndSetDataPoints(res.responseObject, topic);
+            }
+          });
 
-        postMqttData({
-          start: loaded.max,
-          end: postMax,
-          topic,
-          boolean,
-        }).then((res) => {
-          if (res.success) {
-            setLoaded((prev) => ({ min: prev.min, max: postMax }));
-            processAndSetDataPoints(res.responseObject);
-          }
+          postMqttData({
+            start: loaded.max,
+            end: postMax,
+            topic,
+            boolean,
+          }).then((res) => {
+            if (res.success) {
+              setLoaded((prev) => ({ min: prev.min, max: postMax }));
+              processAndSetDataPoints(res.responseObject, topic);
+            }
+          });
         });
       } else {
-        postMqttData({
-          start: postMin,
-          end: postMax,
-          topic,
-          boolean,
-        }).then((res) => {
-          if (res.success) {
-            // union loaded interval with new interval
-            setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
-            processAndSetDataPoints(res.responseObject);
-          }
+        topics.forEach((topic) => {
+          postMqttData({
+            start: postMin,
+            end: postMax,
+            topic,
+            boolean,
+          }).then((res) => {
+            if (res.success) {
+              // union loaded interval with new interval
+              setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
+              processAndSetDataPoints(res.responseObject, topic);
+            }
+          });
         });
       }
     }, 100);
@@ -175,7 +189,6 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
       return midnightAnnotations;
     };
 
-    //const minTimestamp = Math.min(...dataPoints.map((dp) => dp.timestamp.getTime()));
     const maxTimestamp = Date.now();
     const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
 
@@ -184,18 +197,18 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
 
     const midnightAnnotations = generateMidnightAnnotations(minX, maxX);
 
+    const datasets = topics.map((topic) => ({
+      label: topic,
+      data: dataPoints[topic] ? dataPoints[topic].map((dp) => ({ x: dp.timestamp.getTime(), y: dp.value })) : [],
+      borderColor: suspicious[topic] ? "rgba(220, 75, 75, 1)" : colors[topics.indexOf(topic) % colors.length],
+      borderWidth: 2,
+      fill: false,
+      pointRadius: 1,
+      animation: true,
+    }));
+
     setData({
-      datasets: [
-        {
-          label: "",
-          data: dataPoints ? [...new Set(dataPoints)].map((dp) => ({ x: dp.timestamp.getTime(), y: dp.value })) : [],
-          borderColor: suspicious ? "rgba(220, 75, 75, 1)" : "rgba(75, 220, 170, 1)",
-          borderWidth: 2,
-          fill: false,
-          pointRadius: 1,
-          animation: true,
-        },
-      ],
+      datasets,
     });
 
     setOptions({
@@ -204,8 +217,18 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
       animation: false,
       scales: {
         y: {
-          min: dataPoints ? Math.min(...dataPoints.map((dp) => dp.value)) * 0.9 : 0,
-          max: dataPoints ? Math.max(...dataPoints.map((dp) => dp.value)) * 1.1 : 100,
+          min:
+            Math.min(
+              ...Object.values(dataPoints)
+                .flat()
+                .map((dp) => dp.value)
+            ) * 0.9,
+          max:
+            Math.max(
+              ...Object.values(dataPoints)
+                .flat()
+                .map((dp) => dp.value)
+            ) * 1.1,
         },
         x: {
           type: "time",
@@ -224,13 +247,11 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
         },
       },
       interaction: {
-        //mode: "nearest",
-        //axis: "x",
         intersect: false,
       },
       plugins: {
         legend: {
-          display: false,
+          display: true,
         },
         zoom: {
           pan: {
@@ -295,10 +316,8 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
   useLayoutEffect(() => {
     updateChart();
     window.addEventListener("resize", updateChart);
-    //const interval = setInterval(updateChart, 2000);
     return () => {
       window.removeEventListener("resize", updateChart);
-      //clearInterval(interval);
     };
   }, []);
 
@@ -312,7 +331,7 @@ export const Graph: React.FC<GraphProps> = ({ topic, style, boolean = false }) =
   };
 
   const resetZoom = () => {
-    if (dataPoints.length > 0) {
+    if (Object.values(dataPoints).flat().length > 0) {
       setTimeUnit("day");
       const maxTimestamp = Date.now();
       const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;

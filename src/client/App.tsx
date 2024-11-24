@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
 import { number, unit, fix } from "./utils/values";
 import { Value } from "./components/Value";
-import { Chart } from "./components/Chart";
 import { postWebPushSendNotification, postWebPushSubscribe } from "./proxy/endpoints";
 import { socket } from "./ws-client";
 import { DailyHistory } from "./components/Stats";
+import { Chart } from "./components/Chart";
 
 export default function App() {
   const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
@@ -156,13 +156,12 @@ export default function App() {
         <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
       </div>
       <div>
-        <Chart topic="zige/pozar0/cerpadlo/val" boolean={true}></Chart>
+        <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} />
         <DailyHistory topic="zige/pozar0/cerpadlo/val" />
-        <Chart topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")}></Chart>
+
+        <Chart topics={["zige/pozar0/temp/val", "zige/pozar1/temp/val"]} />
         <DailyHistory topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
-        <Chart topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")}></Chart>
         <DailyHistory topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
-        
       </div>
       {snackbarConfig && <CustomSnackbar config={snackbarConfig} />}
     </div>

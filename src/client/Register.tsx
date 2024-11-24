@@ -72,14 +72,14 @@ export default function Register() {
     <>
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-lg md:max-w-lg">
-          <h2 className="text-2xl font-semibold text-center mb-6">Register</h2>
+          <h2 className="text-2xl font-semibold text-center mb-6">Registrace</h2>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <TextInput id="username" label="Username" value={username} onChange={setUsername} hasError={errors.username} />
-            <TextInput id="password" label="Password" type="password" value={password} onChange={setPassword} hasError={errors.password} />
-            <TextInput id="password2" label="Password again" type="password" value={password2} onChange={setPassword2} hasError={errors.password2} />
+            <TextInput id="username" label="Přihlašovací jméno" value={username} onChange={setUsername} hasError={errors.username} />
+            <TextInput id="password" label="Heslo" type="password" value={password} onChange={setPassword} hasError={errors.password} />
+            <TextInput id="password2" label="Heslo znovu" type="password" value={password2} onChange={setPassword2} hasError={errors.password2} />
             <div>
               <button type="submit" className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Register
+                Registrace
               </button>
             </div>
           </form>

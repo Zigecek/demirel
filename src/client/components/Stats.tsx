@@ -41,30 +41,30 @@ const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF }) => {
         <div className="space-y-4">
           <div className="flex gap-2 whitespace-nowrap">
             <FaArrowUp className="text-green-500" />
-            <span className="text-gray-500">Uptime:</span>
+            <span className="text-gray-500">1:</span>
             <span className="font-medium">{formatTime(new Date(stats.uptime as number))}</span>
           </div>
           <div className="flex gap-2 whitespace-nowrap">
             <FaArrowDown className="text-red-500" />
-            <span className="text-gray-500">Downtime:</span>
+            <span className="text-gray-500">0:</span>
             <span className="font-medium">{formatTime(new Date(stats.downtime as number))}</span>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <MdTrendingDown className="text-blue-500" />
-            <span className="text-gray-500">Min:</span>
-            <span className="font-medium">{valueF ? valueF(String(stats.min)) : stats.min}</span>
-          </div>
-          <div className="flex items-center space-x-2">
             <MdTrendingUp className="text-red-500" />
             <span className="text-gray-500">Max:</span>
             <span className="font-medium">{valueF ? valueF(String(stats.max)) : stats.max}</span>
           </div>
           <div className="flex items-center space-x-2">
+            <MdTrendingDown className="text-blue-500" />
+            <span className="text-gray-500">Min:</span>
+            <span className="font-medium">{valueF ? valueF(String(stats.min)) : stats.min}</span>
+          </div>
+          <div className="flex items-center space-x-2">
             <MdSpeed className="text-yellow-500" />
-            <span className="text-gray-500">Avg:</span>
+            <span className="text-gray-500">Průměr:</span>
             <span className="font-medium">{valueF ? valueF(String(stats.avg)) : stats.avg}</span>
           </div>
           <div className="flex items-center space-x-2">
