@@ -8,8 +8,6 @@ import "./index.css";
 import "./ws-client";
 import { MessagesProvider } from "./utils/MessagesContext";
 import { UserProvider } from "./utils/UserContext";
-import 'react-material-symbols/rounded';
-import 'react-material-symbols/outlined';
 
 const router = createBrowserRouter([
   {

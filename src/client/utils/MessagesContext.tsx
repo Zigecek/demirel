@@ -25,6 +25,7 @@ export const MessagesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [history, setHistory] = useState<MessagesContextType["history"]>({});
 
   const addToHistory = (msgs: MQTTMessage[]) => {
+    if (msgs.length === 0) return;
     setHistory((prev) => {
       const newHistory = { ...prev };
       newHistory[msgs[0].topic] = [...msgs, ...(newHistory[msgs[0].topic] || [])];
