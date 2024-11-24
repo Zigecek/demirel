@@ -98,3 +98,9 @@ type postMqttStatsRequest = {
 };
 
 type postMqttStatsResponse = dailyStats[];
+
+type postMqttNicknameRequest = {
+  topics: string[];
+};
+
+type postMqttNicknameResponse = Record<string, string>;

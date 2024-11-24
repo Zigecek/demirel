@@ -177,3 +177,40 @@ mqttRouter.post("/stats", async (req: Request, res: Response) => {
   const serviceResponse = ServiceResponse.success("Data here.", resp, 200);
   return handleServiceResponse(serviceResponse, res);
 });
+
+mqttRegistry.registerPath({
+  method: "post",
+  path: "/nickname",
+  tags: ["MQTT"],
+  responses: createApiResponse(z.object({}), "Success"),
+});
+
+mqttRouter.post("/nickname", async (req: Request, res: Response) => {
+  if (!req.session?.user) {
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  const { topics } = req.body as postMqttNicknameRequest;
+
+  if (!topics || !Array.isArray(topics)) {
+    const serviceResponse = ServiceResponse.failure("No topics provided.", false, 400);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  const dbNicknames = await prisma.nickname.findMany({});
+
+  const data: postMqttNicknameResponse = {};
+
+  topics.forEach((topic) => {
+    const nickname = dbNicknames.find((n) => n.topic === topic);
+    if (nickname) {
+      data[topic] = nickname.nickname;
+    } else {
+      data[topic] = topic;
+    }
+  });
+
+  const serviceResponse = ServiceResponse.success("Data here.", data, 200);
+  return handleServiceResponse(serviceResponse, res);
+});

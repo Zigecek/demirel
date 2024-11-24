@@ -7,6 +7,7 @@ import { getDayDates } from "../../globals/daily";
 import { useToday } from "../utils/todayHook";
 import { postMqttStats } from "../proxy/endpoints";
 import { format, addMinutes } from "date-fns";
+import { useNicknames } from "../utils/NicknamesContext";
 
 const formatDayDate = (date: Date): string => {
   const { start: startToday, end: endToday } = getDayDates(new Date());
@@ -85,6 +86,7 @@ type DailyHistoryProps = {
 
 export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF }) => {
   const { stats: todayStats } = useToday({ topic });
+  const { nickname } = useNicknames();
   const [fetched, setFetched] = useState<dailyStats[]>();
   const [history, setHistory] = useState<dailyStats[]>([]);
 
@@ -125,7 +127,7 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF }) => 
       <div className="flex items-center mb-2 gap-2">
         <h2 className="text-xl">
           <span className="font-semibold">Historie: </span>
-          {topic}
+          {nickname(topic)}
         </h2>
         <button className="text-gray-600 hover:text-gray-900 focus:outline-none" onClick={toggleVisibility}>
           {showAll ? (

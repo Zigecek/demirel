@@ -9,6 +9,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import { postMqttData } from "../../proxy/endpoints";
 import { useMessages } from "../../utils/MessagesContext";
+import { useNicknames } from "../../utils/NicknamesContext";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -33,6 +34,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   // GLOBAL STATES //
   const chartRef = useRef<any>(null);
   const { addToHistory } = useMessages();
+  const { nickname } = useNicknames();
 
   // Bounds for data fetching and timeout for debouncing
   const [bounds, setBounds] = useState<Bounds>();
@@ -198,7 +200,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     const midnightAnnotations = generateMidnightAnnotations(minX, maxX);
 
     const datasets = topics.map((topic) => ({
-      label: topic,
+      label: nickname(topic),
       data: dataPoints[topic] ? dataPoints[topic].map((dp) => ({ x: dp.timestamp.getTime(), y: dp.value })) : [],
       borderColor: suspicious[topic] ? "rgba(220, 75, 75, 1)" : colors[topics.indexOf(topic) % colors.length],
       borderWidth: 2,
@@ -251,7 +253,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       },
       plugins: {
         legend: {
-          display: true,
+          display: topics.length > 1,
         },
         zoom: {
           pan: {

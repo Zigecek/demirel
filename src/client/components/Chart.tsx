@@ -1,5 +1,6 @@
 import React from "react";
 import { Graph } from "./elementary/Graph";
+import { useNicknames } from "../utils/NicknamesContext";
 
 type ChartProps = {
   topics: string[];
@@ -7,11 +8,12 @@ type ChartProps = {
 };
 
 export const Chart: React.FC<ChartProps> = ({ topics, boolean = false }) => {
+  const { nickname } = useNicknames();
   return (
     <div className="bg-gray-50 border border-gray-300 rounded-lg shadow-md p-2 m-1">
       <h2 className="text-xl mb-2">
         <span className="font-semibold">Graf: </span>
-        {topics.join(", ")}
+        {topics.map(nickname).join(", ")}
       </h2>
 
       <div className="flex flex-row">

@@ -16,3 +16,5 @@ export const postWebPushSendNotification = () => postAsync<ApiBase<boolean>>("/a
 export const postMqttToday = (requestData: postMqttTodayRequest) => postAsync<ApiBase<postMqttTodayResponse>>("/api/mqtt/today", requestData);
 
 export const postMqttStats = (requestData: postMqttStatsRequest) => postAsync<ApiBase<postMqttStatsResponse>>("/api/mqtt/stats", requestData);
+
+export const postMqttNickname = (requestData: postMqttNicknameRequest) => postAsync<ApiBase<postMqttNicknameResponse>>("/api/mqtt/nickname", requestData);

@@ -70,3 +70,10 @@ model daily {
 
   @@index([topic, date])
 }
+
+model nickname {
+  topic    String @id @unique(map: "topic")
+  nickname String
+
+  @@index([topic])
+}

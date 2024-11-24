@@ -4,9 +4,7 @@ import { socket } from "../ws-client";
 interface MessagesContextType {
   messages: MQTTMessage[];
 
-  history: {
-    [topic: string]: MQTTMessage[];
-  };
+  history: Record<string, MQTTMessage[]>;
   addToHistory: (msgs: MQTTMessage[]) => void;
 }
 
@@ -15,13 +13,13 @@ const MessagesContext = createContext<MessagesContextType | undefined>(undefined
 export const useMessages = (): MessagesContextType => {
   const context = useContext(MessagesContext);
   if (!context) {
-    throw new Error("useWebSocket must be used within a WebSocketProvider");
+    throw new Error("useMessages must be used within a WMessagesProvider");
   }
   return context;
 };
 
 export const MessagesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [messages, setMessages] = useState<MQTTMessage[]>([]);
+  const [messages, setMessages] = useState<MessagesContextType["messages"]>([]);
   const [history, setHistory] = useState<MessagesContextType["history"]>({});
 
   const addToHistory = (msgs: MQTTMessage[]) => {
@@ -40,6 +38,7 @@ export const MessagesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     socket.on("messages", (msgs: MQTTMessageTransfer[]) => {
+      console.log("messages", msgs);
       setMessages(msgs.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
     });
 

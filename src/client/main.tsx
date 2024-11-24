@@ -8,6 +8,7 @@ import "./index.css";
 import "./ws-client";
 import { MessagesProvider } from "./utils/MessagesContext";
 import { UserProvider } from "./utils/UserContext";
+import { NicknamesProvider } from "./utils/NicknamesContext";
 
 const router = createBrowserRouter([
   {
@@ -30,7 +31,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <UserProvider>
       <MessagesProvider>
-        <RouterProvider router={router} />
+        <NicknamesProvider>
+          <RouterProvider router={router} />
+        </NicknamesProvider>
       </MessagesProvider>
     </UserProvider>
   </StrictMode>
