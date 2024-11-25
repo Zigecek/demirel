@@ -6,9 +6,9 @@ import Login from "./Login";
 import Register from "./Register";
 import "./index.css";
 import "./ws-client";
-import { MessagesProvider } from "./utils/MessagesContext";
-import { UserProvider } from "./utils/UserContext";
-import { NicknamesProvider } from "./utils/NicknamesContext";
+import { MessagesProvider } from "./contexts/MessagesContext";
+import { UserProvider } from "./contexts/UserContext";
+import { NicknamesProvider } from "./contexts/NicknamesContext";
 
 const router = createBrowserRouter([
   {

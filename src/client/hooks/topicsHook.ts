@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useMessages } from "./MessagesContext";
+import { useMessages } from "../contexts/MessagesContext";
 import _ from "lodash";
 
 export const useTopics = (topics: string[]) => {

@@ -5,7 +5,7 @@ type CustomSnackbarProps = {
   config: SnackBarConfig;
 };
 
-const CustomSnackbar: React.FC<CustomSnackbarProps> = ({ config }) => {
+export const CustomSnackbar: React.FC<CustomSnackbarProps> = ({ config }) => {
   return (
     <Snackbar open={config.open} autoHideDuration={config.autoHideDuration} onClose={config.handleClose}>
       <Alert onClose={config.handleClose} severity={config.severity} variant="filled" sx={{ width: "100%" }}>

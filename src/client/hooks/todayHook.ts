@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { useMessages } from "./MessagesContext";
+import { useMessages } from "../contexts/MessagesContext";
 import { calculateStats, getDayDates } from "../../globals/daily";
 
 type UseTodayProps = {
   topic: string;
-  valueF?: (msg: string) => string;
 };
 
-export const useToday = ({ topic, valueF }: UseTodayProps) => {
+export const useToday = ({ topic }: UseTodayProps) => {
   const { history } = useMessages();
   const [stats, setStats] = useState<dailyStats>();
 

@@ -4,12 +4,12 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
-import { useTopics } from "../../utils/topicsHook";
+import { useTopics } from "../../../hooks/topicsHook";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 import { eachDayOfInterval, startOfDay } from "date-fns";
-import { postMqttData } from "../../proxy/endpoints";
-import { useMessages } from "../../utils/MessagesContext";
-import { useNicknames } from "../../utils/NicknamesContext";
+import { postMqttData } from "../../../proxy/endpoints";
+import { useMessages } from "../../../contexts/MessagesContext";
+import { useNicknames } from "../../../contexts/NicknamesContext";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 

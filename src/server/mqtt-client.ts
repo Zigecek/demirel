@@ -1,7 +1,7 @@
 import { connect } from "mqtt";
 import { env } from "./common/utils/envConfig";
 import { logger } from "./server";
-import { io, prisma } from ".";
+import { io, prisma, Status, status } from ".";
 import { MqttValueType, Prisma } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 
@@ -45,10 +45,23 @@ const checkQueue = async () => {
     // rename message to value and add mqttValueType depending on the type of the message
 
     // Get the latest value from each topic
-    const lastValues = await prisma.mqtt.findMany({      
-      distinct: ["topic"],
-      orderBy: {
-        timestamp: "desc",
+    const latestTimestamps = await prisma.mqtt.groupBy({
+      by: ["topic"],
+      _max: {
+        timestamp: true,
+      },
+    });
+
+    const filters = latestTimestamps
+      .filter(({ _max }) => _max.timestamp !== null)
+      .map(({ topic, _max }) => ({
+        topic,
+        timestamp: _max.timestamp as Date,
+      }));
+
+    const lastValues = await prisma.mqtt.findMany({
+      where: {
+        OR: filters,
       },
     });
 
@@ -144,7 +157,7 @@ const checkQueue = async () => {
       await prisma.$transaction(updates.map((update) => prisma.mqtt.update(update)));
     }
 
-    logger.info("Prisma: Messages saved to DB");  
+    logger.info("Prisma: Messages saved to DB");
   }
 };
 
@@ -153,6 +166,7 @@ const checkQueue = async () => {
 mqtt.on("connect", () => {
   logger.info("MQTT: Connected.");
   mqtt.subscribe(mqConfig.rootTopic);
+  status.mqtt = Status.RUNNING;
 });
 
 mqtt.stream.on("error", (err) => {
@@ -160,6 +174,7 @@ mqtt.stream.on("error", (err) => {
 });
 
 mqtt.on("message", (topic, message) => {
+  if (status.db !== Status.RUNNING || status.mqtt !== Status.RUNNING || status.vite !== Status.RUNNING || status.ws !== Status.RUNNING) return;
   const msg: string = message.toString();
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
     logger.warn("MQTT: Invalid topic in net: " + topic);

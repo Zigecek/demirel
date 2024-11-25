@@ -3,11 +3,11 @@ import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { FaListOl } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { MdSpeed, MdTrendingUp, MdTrendingDown } from "react-icons/md";
-import { getDayDates } from "../../globals/daily";
-import { useToday } from "../utils/todayHook";
-import { postMqttStats } from "../proxy/endpoints";
+import { getDayDates } from "../../../globals/daily";
+import { useToday } from "../../hooks/todayHook";
+import { postMqttStats } from "../../proxy/endpoints";
 import { format, addMinutes } from "date-fns";
-import { useNicknames } from "../utils/NicknamesContext";
+import { useNicknames } from "../../contexts/NicknamesContext";
 
 const formatDayDate = (date: Date): string => {
   const { start: startToday, end: endToday } = getDayDates(new Date());

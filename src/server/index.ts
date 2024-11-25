@@ -9,12 +9,29 @@ import { endClient } from "./mqtt-client";
 import { createDailyStats } from "./common/utils/services/daily";
 import { onEachDay } from "./common/utils/onEachDay";
 
-export const prisma = new PrismaClient();
+export enum Status {
+  RUNNING,
+  OFFLINE,
+  ERROR,
+}
+
+export const status = {
+  ws: Status.OFFLINE,
+  mqtt: Status.OFFLINE,
+  db: Status.OFFLINE,
+  vite: Status.OFFLINE,
+  sessionStorage: Status.OFFLINE,
+};
+
+export const prisma = new PrismaClient({
+  //log: ["query", "info", "warn", "error"],
+});
 
 prisma
   .$connect()
   .then(async () => {
     logger.info("Prisma: Connected.");
+    status.db = Status.RUNNING;
 
     //await createDailyStats("all", "all");
 
@@ -25,6 +42,8 @@ prisma
   })
   .catch((e) => {
     logger.error(`Prisma: Connection failed: ${e}`);
+    status.db = Status.ERROR;
+    onCloseSignal();
   });
 
 ViteExpress.config({
@@ -33,7 +52,18 @@ ViteExpress.config({
 
 export const server = ViteExpress.listen(app, env.PORT, () => {
   const { NODE_ENV, HOST, PORT } = env;
-  logger.info(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}`);
+  logger.info(`VITE: Started ${NODE_ENV} on http://${HOST}:${PORT}`);
+  status.vite = Status.RUNNING;
+});
+server.on("error", (e) => {
+  logger.error(`VITE: Error: ${e}`);
+  status.vite = Status.ERROR;
+
+  // Try to close the server
+  server.close(() => {
+    logger.info("VITE: Server closed.");
+    onCloseSignal();
+  });
 });
 
 export const io = new Server(server, {
@@ -51,16 +81,18 @@ if (env.NODE_ENV === "development") {
     console.log(err.code); // the error code, for example 1
     console.log(err.message); // the error message, for example "Session ID unknown"
     console.log(err.context); // some additional error context
+    status.ws = Status.ERROR;
+    onCloseSignal();
   });
 }
 
 ws(io);
 
-const onCloseSignal = async () => {
-  logger.info("sigint received, shutting down");
+export const onCloseSignal = async () => {
+  logger.info("System: Closing server...");
   prisma.$disconnect();
   Promise.all([io.close(), server.close(), endClient(), sessionDBaccess.end()]).then(() => {
-    logger.info("server closed");
+    logger.info("System: Server closed.");
     process.exit();
   });
   setTimeout(() => process.exit(1), 3000).unref(); // Force shutdown after 10s

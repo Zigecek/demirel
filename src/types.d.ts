@@ -86,12 +86,12 @@ type dailyStats = {
   max: number | null;
   avg: number | null;
   count: number | null;
-}
+};
 
 type DataPoint = {
   value: number;
   timestamp: Date;
-}
+};
 
 type postMqttStatsRequest = {
   topic: string;
@@ -104,3 +104,8 @@ type postMqttNicknameRequest = {
 };
 
 type postMqttNicknameResponse = Record<string, string>;
+
+type PopupContentProps = {
+  showPopup: () => void;
+  closePopup: () => void;
+};

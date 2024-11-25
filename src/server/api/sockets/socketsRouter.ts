@@ -37,25 +37,37 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
     return handleServiceResponse(serviceResponse, res);
   }
 
+  logger.info("WS: Authorizing socket: " + gotSocket?.id);
+
   gotSocket.join("mqtt");
 
-  // get one value of each topic
-  const messages = await prisma.mqtt.findMany({
-    orderBy: {
-      timestamp: "desc",
+  // Get the latest value from each topic
+  const latestTimestamps = await prisma.mqtt.groupBy({
+    by: ['topic'],
+    _max: {
+      timestamp: true,
     },
-    distinct: ["topic"],
-  });
-  // get rid of ids
-  const messagesToSend = messages.map(({ id, ...rest }) => {
-    return {
-      ...rest,
-      timestamp: rest.timestamp.getTime(),
-    } as MQTTMessageTransfer;
   });
 
-  gotSocket.emit("messages", [...new Set([...messagesToSend])]);
-  logger.info("Socket Authenticated.");
+  const filters = latestTimestamps
+    .filter(({ _max }) => _max.timestamp !== null)
+    .map(({ topic, _max }) => ({
+      topic,
+      timestamp: _max.timestamp as Date,
+    }));
+
+  const messages = await prisma.mqtt.findMany({
+    where: {
+      OR: filters,
+    },
+    omit: {
+      id: true,
+    }
+  }) as MQTTMessage[];
+
+
+  gotSocket.emit("messages", [...new Set([...messages])]);
+  logger.info("WS: Socket Authenticated.");
 
   const serviceResponse = ServiceResponse.success("Socket Authenticated.", true);
   return handleServiceResponse(serviceResponse, res);

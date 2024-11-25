@@ -1,12 +1,10 @@
-// Service for managing daily stats from mqtt in db
-
 import { prisma } from "../../..";
 import { logger } from "../../../server";
 import { getDayDates, calculateStats } from "../../../../globals/daily";
 import { Prisma } from "@prisma/client";
 
-export async function createDailyStats(topic: string | "all", date: Date | "all") {
-  logger.info("Daily: Creating daily stats:", topic, date);
+export async function createDailyStats(topic: string | "all" = "all", date: Date | "all" = "all") {
+  logger.info("Daily: Creating daily stats: " + topic + " - " + date);
   // restrict the messages to the topic and date
   let where: Prisma.mqttWhereInput = {};
   if (topic !== "all") {
@@ -16,7 +14,7 @@ export async function createDailyStats(topic: string | "all", date: Date | "all"
     const { start, end } = getDayDates(date);
     where = { ...where, timestamp: { gte: start, lte: end } };
   } else {
-    // not today 
+    // not today
     const { start } = getDayDates(new Date());
     where = { ...where, timestamp: { lt: start } };
   }

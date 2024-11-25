@@ -16,6 +16,7 @@ import { user } from "@prisma/client";
 import ViteExpress from "vite-express";
 import { mqttRouter } from "./api/mqtt/mqttRouter";
 import { pushRouter } from "./api/push/pushRouter";
+import { onCloseSignal, Status, status } from ".";
 
 const logger = pino({ name: "api.demirel" });
 const app: Express = express();
@@ -34,6 +35,17 @@ declare module "express-session" {
 
 export const sessionDBaccess = new pg.Pool({
   connectionString: env.DATABASE_URL,
+});
+
+sessionDBaccess.on("error", (err) => {
+  logger.error(`SessionStorage: ${err}`);
+  status.sessionStorage = Status.ERROR;
+  onCloseSignal();
+});
+
+sessionDBaccess.on("connect", () => {
+  logger.info("SessionStorage: Connected.");
+  status.sessionStorage = Status.RUNNING;
 });
 
 app.use(
