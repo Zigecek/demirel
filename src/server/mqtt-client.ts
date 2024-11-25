@@ -45,8 +45,7 @@ const checkQueue = async () => {
     // rename message to value and add mqttValueType depending on the type of the message
 
     // Get the latest value from each topic
-    const lastValues = await prisma.mqtt.findMany({
-      select: { topic: true, value: true, id: true },
+    const lastValues = await prisma.mqtt.findMany({      
       distinct: ["topic"],
       orderBy: {
         timestamp: "desc",

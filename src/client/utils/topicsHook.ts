@@ -51,6 +51,8 @@ export const useTopics = (topics: string[]) => {
 
       const timestamp = timestamps[topic];
       if (timestamp) {
+        if (msg.timestamp.getTime() <= timestamp.getTime()) return;
+
         const interval = msg.timestamp.getTime() - timestamp.getTime();
         setLastMessageIntervals((prev) => ({ ...prev, [topic]: interval }));
       }

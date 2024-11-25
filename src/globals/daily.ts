@@ -36,13 +36,10 @@ export function calculateStats(messages: MQTTMessage[], start: Date, end: Date) 
         lastUpTimestamp = messages[i].timestamp.getTime();
         continue;
       }
-      if (messages[Math.min(i + 1, messages.length - 1)].value === false && lastUpTimestamp) {
+      if ((messages[Math.min(i + 1, messages.length - 1)].value === false || (i === messages.length - 1 && messages[i].value === true)) && lastUpTimestamp) {
         uptime += messages[i].timestamp.getTime() - lastUpTimestamp;
         lastUpTimestamp = null;
         continue;
-      }
-      if (i === messages.length - 1 && messages[i].value === true && lastUpTimestamp) {
-        uptime += new Date().getTime() - lastUpTimestamp;
       }
 
       // downtime
@@ -50,13 +47,10 @@ export function calculateStats(messages: MQTTMessage[], start: Date, end: Date) 
         lastDownTimestamp = messages[i].timestamp.getTime();
         continue;
       }
-      if (messages[Math.min(i + 1, messages.length - 1)].value === true && lastDownTimestamp) {
+      if ((messages[Math.min(i + 1, messages.length - 1)].value === true || (i === messages.length - 1 && messages[i].value === false)) && lastDownTimestamp) {
         downtime += messages[i].timestamp.getTime() - lastDownTimestamp;
         lastDownTimestamp = null;
         continue;
-      }
-      if (i === messages.length - 1 && messages[i].value === false && lastDownTimestamp) {
-        downtime += new Date().getTime() - lastDownTimestamp;
       }
     }
   }

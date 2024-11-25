@@ -49,6 +49,8 @@ export const useTopic = (topic: string) => {
     addToHistory([msg]);
 
     if (timestamp) {
+      if (msg.timestamp.getTime() <= timestamp.getTime()) return;
+
       const interval = msg.timestamp.getTime() - timestamp.getTime();
       setLastMessageInterval(interval);
     }

@@ -36,7 +36,9 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
     const serviceResponse = ServiceResponse.failure("Socket not found.", false, 404);
     return handleServiceResponse(serviceResponse, res);
   }
-  
+
+  gotSocket.join("mqtt");
+
   // get one value of each topic
   const messages = await prisma.mqtt.findMany({
     orderBy: {
@@ -51,8 +53,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
       timestamp: rest.timestamp.getTime(),
     } as MQTTMessageTransfer;
   });
-  
-  gotSocket.join("mqtt");
+
   gotSocket.emit("messages", [...new Set([...messagesToSend])]);
   logger.info("Socket Authenticated.");
 

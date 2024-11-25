@@ -13,14 +13,9 @@ import { useNicknames } from "../../utils/NicknamesContext";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const colors = [
-  "rgba(80, 150, 220, 1)",
-  "rgba(80, 220, 150, 1)",
-  "rgba(220, 150, 80, 1)",
-  "rgba(220, 80, 150, 1)",
-  "rgba(150, 80, 220, 1)",
-  "rgba(150, 220, 80, 1)",
-]
+const colors = ["rgba(80, 150, 220, 1)", "rgba(80, 220, 150, 1)", "rgba(220, 150, 80, 1)", "rgba(220, 80, 150, 1)", "rgba(150, 80, 220, 1)", "rgba(150, 220, 80, 1)"];
+
+const defaultBound = 1.5 * 24 * 60 * 60 * 1000;
 
 type GraphProps = {
   topics: string[];
@@ -192,9 +187,9 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     };
 
     const maxTimestamp = Date.now();
-    const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
+    const defaultView = maxTimestamp - defaultBound;
 
-    const minX = bounds?.minDefined ? bounds.min : twoDaysAgo;
+    const minX = bounds?.minDefined ? bounds.min : defaultView;
     const maxX = bounds?.maxDefined ? bounds.max : maxTimestamp;
 
     const midnightAnnotations = generateMidnightAnnotations(minX, maxX);
@@ -260,9 +255,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
             enabled: true,
             mode: "x",
             onPan: ({ chart }: { chart: ChartJS }) => {
-              setBounds(chart.scales.x.getUserBounds());
-              setIsUserInteracting(true);
-              resetActivityTimeout();
+              onZoomPan(chart);
             },
           },
           zoom: {
@@ -274,9 +267,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
             },
             mode: "x",
             onZoom: ({ chart }: { chart: ChartJS }) => {
-              setBounds(chart.scales.x.getUserBounds());
-              setIsUserInteracting(true);
-              resetActivityTimeout();
+              onZoomPan(chart);
             },
           },
         },
@@ -287,12 +278,18 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     });
   }, [dataPoints, isUserInteracting, timeUnit]);
 
+  const onZoomPan = (chart: ChartJS) => {
+    setBounds(chart.scales.x.getUserBounds());
+    setIsUserInteracting(true);
+    resetActivityTimeout();
+  }
+
   useEffect(() => {
     if (bounds == undefined) {
       const maxTimestamp = Date.now();
-      const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
+      const defaultView = maxTimestamp - defaultBound;
       setBounds({
-        min: twoDaysAgo,
+        min: defaultView,
         max: maxTimestamp,
         minDefined: true,
         maxDefined: true,
@@ -336,9 +333,9 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     if (Object.values(dataPoints).flat().length > 0) {
       setTimeUnit("day");
       const maxTimestamp = Date.now();
-      const twoDaysAgo = maxTimestamp - 2 * 24 * 60 * 60 * 1000;
+      const defualtView = maxTimestamp - defaultBound;
       setBounds({
-        min: twoDaysAgo,
+        min: defualtView,
         max: maxTimestamp,
         minDefined: true,
         maxDefined: true,
