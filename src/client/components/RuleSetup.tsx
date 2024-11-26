@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaUndo } from "react-icons/fa";
 import { getMqttFirstValues, getNotificationRules, postNotificationRules } from "../proxy/endpoints";
-import { validateCondition } from "../../globals/rules";
+import { validateExpression } from "../../globals/rules";
 import { useSnackbar } from "../hooks/useSnackbar";
+import { CircularProgress } from "@mui/material";
 
 const parseFetchedRules = (rules: Rule[]): RuleEditable[] => {
   return rules.map((rule) => {
@@ -44,7 +45,7 @@ const parseEditableRules = (rules: RuleEditable[]): SetRules => {
   };
 };
 
-export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
+export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
   const [snackbarConfig, SnackbarComponent] = useSnackbar();
   const [topics, setTopics] = useState<RuleTopics>({});
 
@@ -54,9 +55,7 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
   const [selectedRule, setSelectedRule] = useState<RuleEditable | null>(rules[0]);
   const [changes, setChanges] = useState<boolean>(false);
 
-  useEffect(() => {
-    console.log(topics);
-  }, [topics]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const init = async () => {
@@ -97,8 +96,12 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
       if (fetchedRules.length === 0) return;
 
       setInitRules(parseFetchedRules(fetchedRules));
+      setRules(parseFetchedRules(fetchedRules));
     };
-    init();
+    init().finally(() => {
+      setLoading(false);
+      setSelectedRule(rules.length > 0 ? rules[0] : null);
+    });
   }, []);
 
   // propagate selectedCondition changes to the conditions
@@ -127,20 +130,19 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
     setChanges(JSON.stringify(initRules) != JSON.stringify(rules));
   }, [rules]);
 
-  const validateAllConditions = (rs: RuleEditable[]): boolean => {
+  const validateExpressions = (rs: RuleEditable[]): boolean => {
     if (!rs) return false;
 
-    // validate using validateCondition
-
+    // validate all conditions
     return rs.every((rule) => {
       return rule.conditions.every((condition) => {
-        return validateCondition(condition.condition, topics);
+        return validateExpression(condition.condition, topics);
       });
     });
   };
 
   const sendRules = async () => {
-    const syntaxError = !validateAllConditions(rules);
+    const syntaxError = !validateExpressions(rules);
 
     if (syntaxError) {
       snackbarConfig?.showSnackbar({
@@ -218,7 +220,9 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
   const addNewRule = () => {
     const newRule: RuleEditable = {
       id: Date.now(),
-      name: "Velké teplo ale nehoří",
+      name: "Kuchyň zatopeno",
+      notificationTitle: "Nehoří, jen babička zatopila!",
+      notificationBody: "Babička zatopila v kuchyni na {zige/pozar0/temp/val}°C",
       severity: "INFO",
       conditions: [
         {
@@ -253,7 +257,7 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
         conditions: [
           ...prev.conditions,
           {
-            condition: "Nová podmínka",
+            condition: "",
             deleted: false,
             edited: false,
             isNew: true,
@@ -264,11 +268,16 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
   };
 
   return (
-    <>
-      <div className="flex gap-6 p-4">
+    <div className="flex flex-col h-full">
+      <div className="flex gap-3 p-2 flex-wrap md:flex-nowrap grow">
         {/* Left Panel */}
-        <div className="w-1/3 bg-gray-100 p-4 rounded-lg">
+        <div className="w-full md:w-1/3 bg-gray-100 p-4 rounded-lg">
           <h3 className="text-lg font-bold mb-4">Seznam podmínek</h3>
+          {loading && (
+            <div className="flex justify-center gap-3 m-2">
+              <CircularProgress />
+            </div>
+          )}
           <ul>
             {rules.map((rule) => (
               <li
@@ -286,19 +295,21 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
                   return "bg-white";
                 })()} p-2 mb-2 rounded-lg flex justify-between items-center`}
                 key={rule.id}>
-                <div
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setSelectedRule(rule);
-                  }}>
-                  {rule.name}
+                <div className="flex justify-between w-full">
+                  <div
+                    className="cursor-pointer flex-grow break-all"
+                    onClick={() => {
+                      setSelectedRule(rule);
+                    }}>
+                    {rule.name}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleRuleDeletion(rule.id)}
+                    className={`py-1 px-3 font-semibold rounded-md ${rule.deleted ? "bg-green-500" : "bg-red-500"} text-white ${rule.deleted ? "hover:bg-green-600" : "hover:bg-red-600"}`}>
+                    {rule.deleted ? <FaUndo /> : <FaTrash />}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => toggleRuleDeletion(rule.id)}
-                  className={`py-1 px-3 font-semibold rounded-md ${rule.deleted ? "bg-green-500" : "bg-red-500"} text-white ${rule.deleted ? "hover:bg-green-600" : "hover:bg-red-600"}`}>
-                  {rule.deleted ? <FaUndo /> : <FaTrash />}
-                </button>
               </li>
             ))}
           </ul>
@@ -313,7 +324,7 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
         </div>
 
         {/* Right Panel */}
-        <div className="w-2/3 bg-white p-6 rounded-lg shadow-lg">
+        <div className="w-full md:w-2/3 bg-white p-4 rounded-lg shadow-lg">
           {selectedRule && (
             <>
               {/* Název */}
@@ -321,6 +332,7 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
                 <label className={`block text-sm font-medium mb-2`}>Název</label>
                 <input
                   type="text"
+                  placeholder="Název pravidla"
                   className={`${(() => {
                     if (selectedRule.deleted) {
                       return "border-red-500 bg-red-100 line-through";
@@ -339,6 +351,64 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
                     setSelectedRule((prev) => {
                       if (!prev) return null;
                       return { ...prev, name: newName };
+                    });
+                  }}
+                />
+              </div>
+
+              {/* Nadpis v oznámení */}
+              <div className="mb-4">
+                <label className={`block text-sm font-medium mb-2`}>Nadpis v oznámení</label>
+                <input
+                  type="text"
+                  placeholder="Nadpis v oznámení"
+                  className={`${(() => {
+                    if (selectedRule.deleted) {
+                      return "border-red-500 bg-red-100 line-through";
+                    }
+                    if (selectedRule.isNew) {
+                      return "border-green-500 bg-green-100";
+                    }
+                    if (selectedRule.name !== initRules.find((x) => x.id == selectedRule.id)?.name) {
+                      return "border-yellow-500 bg-yellow-100";
+                    }
+                    return "";
+                  })()} w-full p-2 border rounded`}
+                  value={selectedRule.notificationTitle}
+                  onChange={(e) => {
+                    const newTitle = e.target.value;
+                    setSelectedRule((prev) => {
+                      if (!prev) return null;
+                      return { ...prev, notificationTitle: newTitle };
+                    });
+                  }}
+                />
+              </div>
+
+              {/* Popisek v oznámení */}
+              <div className="mb-4">
+                <label className={`block text-sm font-medium mb-2`}>Popisek v oznámení</label>
+                <input
+                  type="text"
+                  placeholder="Popisek v oznámení"
+                  className={`${(() => {
+                    if (selectedRule.deleted) {
+                      return "border-red-500 bg-red-100 line-through";
+                    }
+                    if (selectedRule.isNew) {
+                      return "border-green-500 bg-green-100";
+                    }
+                    if (selectedRule.name !== initRules.find((x) => x.id == selectedRule.id)?.name) {
+                      return "border-yellow-500 bg-yellow-100";
+                    }
+                    return "";
+                  })()} w-full p-2 border rounded`}
+                  value={selectedRule.notificationBody}
+                  onChange={(e) => {
+                    const newBody = e.target.value;
+                    setSelectedRule((prev) => {
+                      if (!prev) return null;
+                      return { ...prev, notificationBody: newBody };
                     });
                   }}
                 />
@@ -383,6 +453,7 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
                     <li className="flex items-center mb-2">
                       <input
                         type="text"
+                        placeholder="Podmínka"
                         className={`${(() => {
                           if (cond.deleted || selectedRule.deleted) {
                             return "border-red-500 bg-red-100 line-through";
@@ -429,7 +500,9 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
           )}
         </div>
       </div>
-      <div className="flex gap-4 w-full justify-center">
+
+      {/* Buttons */}
+      <div className="flex gap-3 w-full justify-center my-3">
         <button
           onClick={() => {
             sendRules();
@@ -449,6 +522,6 @@ export const NotificationSetup: React.FC<PopupContentProps> = ({ closePopup }) =
         </button>
       </div>
       {SnackbarComponent}
-    </>
+    </div>
   );
 };

@@ -114,6 +114,8 @@ type Rule = {
   id: number;
 
   name: string;
+  notificationTitle: string;
+  notificationBody: string;
   severity: import("@prisma/client").ruleSeverity;
 
   conditions: string[];
@@ -124,6 +126,8 @@ type RuleEditable = {
   id: number;
 
   name: string;
+  notificationTitle: string;
+  notificationBody: string;
   severity: import("@prisma/client").ruleSeverity;
 
   conditions: {
@@ -148,3 +152,34 @@ type SetRules = {
 
 type RuleTopics = Record<string, "number" | "boolean">;
 type RuleContext = Record<string, number | boolean>;
+
+type RuleNotifyState = {
+  [topic: string]: {
+    [severity: Rule["severity"]]: boolean;
+  };
+};
+
+type RuleWithId = Rule & { userId: string };
+
+type NotificationProps = {
+  actions?: NotificationAction[];
+  badge?: string;
+  body: string;
+  data?: Record<string, unknown>;
+  dir?: string;
+  icon?: string;
+  lang?: string;
+  renotify?: boolean;
+  requireInteraction?: boolean;
+  silent?: boolean | null;
+  tag?: string;
+  timestamp?: number;
+  title: string;
+  vibrate?: number[];
+};
+
+type NotificationAction = {
+  action: string;
+  title: string;
+  icon: string;
+};

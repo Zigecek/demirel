@@ -4,14 +4,14 @@ import { Value } from "./components/valueDisplays/Value";
 import { socket } from "./ws-client";
 import { DailyHistory } from "./components/valueDisplays/Stats";
 import { Chart } from "./components/valueDisplays/Chart";
-import { usePopup } from "./hooks/popupHook";
-import { NotificationSetup } from "./components/NotificationSetup";
+import { usePopup } from "./hooks/usePopup";
+import { RuleSetup } from "./components/RuleSetup";
 import { useNotification } from "./hooks/useNotification";
 import { useSnackbar } from "./hooks/useSnackbar";
 
 export default function App() {
   const [snackbarConfig, SnackbarComponent] = useSnackbar();
-  const { PopupComponent: NotificationPopup, showPopup } = usePopup(NotificationSetup);
+  const { PopupComponent: NotificationPopup, showPopup } = usePopup(RuleSetup);
   const { handleNotifikace } = useNotification(snackbarConfig);
 
   useEffect(() => {

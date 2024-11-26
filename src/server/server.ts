@@ -16,7 +16,7 @@ import ViteExpress from "vite-express";
 import { mqttRouter } from "./api/mqtt/mqttRouter";
 import { pushRouter } from "./api/push/pushRouter";
 import { onCloseSignal, Status, status } from ".";
-import { notificationRouter } from "./api/notofication/notificationRouter";
+import { ruleRouter } from "./api/rule/ruleRouter";
 
 const logger = pino({ name: "api.demirel" });
 const app: Express = express();
@@ -76,7 +76,7 @@ apiRouter.use("/sockets", socketsRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/mqtt", mqttRouter);
 apiRouter.use("/push", pushRouter);
-apiRouter.use("/notification", notificationRouter);
+apiRouter.use("/rule", ruleRouter);
 app.use("/api", apiRouter);
 
 // Secure static routes

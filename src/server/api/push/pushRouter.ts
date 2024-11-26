@@ -7,6 +7,7 @@ import { env } from "../../common/utils/envConfig";
 import { InputJsonObject } from "@prisma/client/runtime/library";
 import { logger } from "../../server";
 import { StatusCodes } from "http-status-codes";
+import { sendNotification } from "../../common/utils/webpush";
 
 export const pushRouter: Router = express.Router();
 
@@ -58,41 +59,11 @@ pushRouter.post("/send-notification", (req: Request, res: Response) => {
     badge: "/demirel-icon.webp",
     renotify: true,
     tag: "test-notification",
-  };
+  } as NotificationProps;
 
   // Získání všech subscriptions uživatele
-  prisma.webpush
-    .findMany({
-      where: {
-        userId: req.session.user.username,
-      },
-    })
-    .then((webpushes) => {
-      webpushes.forEach((webpush) => {
-        const data = webpush.data as unknown as PushSubscription;
-        webPush
-          .sendNotification(data, JSON.stringify(notificationPayload))
-          .then(() => {
-            logger.info("Webpush: Notified - " + data.endpoint);
-          })
-          .catch(async (err) => {
-            if (err.statusCode === 410) {
-              logger.info("Webpush: Unavailable - " + data.endpoint);
-              // Smazání neplatné subscription
-              await prisma.webpush
-                .delete({
-                  where: {
-                    id: webpush.id,
-                  },
-                })
-                .then(() => {
-                  logger.info("Webpush: Removed - " + data.endpoint);
-                });
-            }
-          });
-      });
-
-      const serviceResponse = ServiceResponse.success("Notification sent.", true, StatusCodes.OK);
-      return handleServiceResponse(serviceResponse, res);
-    });
+  sendNotification(req.session.user.username, notificationPayload).then(() => {
+    const serviceResponse = ServiceResponse.success("Notification sent.", true, StatusCodes.OK);
+    return handleServiceResponse(serviceResponse, res);
+  });
 });

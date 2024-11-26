@@ -1,4 +1,4 @@
-export const validateCondition = (expression: string, topics: RuleTopics): boolean => {
+export const validateExpression = (expression: string, topics: RuleTopics): boolean => {
   // Nahrazení topiců za typové informace
   let replacedExpression = expression;
   for (const [key, type] of Object.entries(topics)) {
@@ -20,7 +20,18 @@ export const validateCondition = (expression: string, topics: RuleTopics): boole
   }
 };
 
-function evaluateExpression(expression: string, context: RuleContext): boolean {
+export const replaceTopics = (expression: string, context: RuleContext): string => {
+  // Nahrazení topiců za typové informace
+  let replacedExpression = expression;
+  for (const [key, value] of Object.entries(context)) {
+    const regex = new RegExp(`\\{${key}\\}`, "g");
+    replacedExpression = replacedExpression.replace(regex, JSON.stringify(value));
+  }
+
+  return replacedExpression;
+};
+
+export const evaluateExpression = (expression: string, context: RuleContext): boolean => {
   // Nahrazení topiců za hodnoty z contextu
   let replacedExpression = expression;
   for (const [key, value] of Object.entries(context)) {
@@ -38,9 +49,9 @@ function evaluateExpression(expression: string, context: RuleContext): boolean {
       throw new Error("Invalid expression: unknown error");
     }
   }
-}
+};
 
-const extractTopics = (expression: string): string[] => {
+export const extractTopics = (expression: string): string[] => {
   // Regulární výraz pro vyhledání všech výrazů ve složených závorkách
   const topicRegex = /\{([^}]+)\}/g;
   const topics: string[] = [];

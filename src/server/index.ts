@@ -8,6 +8,7 @@ import ViteExpress from "vite-express";
 import { endClient } from "./mqtt-client";
 import { createDailyStats } from "./common/utils/services/daily";
 import { onEachDay } from "./common/utils/onEachDay";
+import { start } from "./common/utils/services/rules";
 
 export enum Status {
   RUNNING,
@@ -32,6 +33,7 @@ prisma
   .then(async () => {
     logger.info("Prisma: Connected.");
     status.db = Status.RUNNING;
+    start();
 
     //await createDailyStats("all", "all");
 

@@ -4,6 +4,7 @@ import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { prisma } from "../../index";
 import { calculateStats, getDayDates } from "../../../globals/daily";
 import { StatusCodes } from "http-status-codes";
+import { getFirstMessages } from "../../common/utils/getFirstMessages";
 
 export const mqttRouter: Router = express.Router();
 
@@ -73,7 +74,14 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
     }
   }
 
-  const serviceResponse = ServiceResponse.success("Data here.", messages, StatusCodes.OK);
+  const sendMessages: MQTTMessageTransfer[] = messages.map((msg) => {
+    return {
+      ...msg,
+      timestamp: msg.timestamp.getTime(),
+    } as MQTTMessageTransfer;
+  });
+
+  const serviceResponse = ServiceResponse.success("Data here.", sendMessages, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
 });
 
@@ -189,29 +197,15 @@ mqttRouter.get("/firstValues", async (req: Request, res: Response) => {
     return handleServiceResponse(serviceResponse, res);
   }
 
-  const latestTimestamps = await prisma.mqtt.groupBy({
-    by: ["topic"],
-    _max: {
-      timestamp: true,
-    },
+  const messages = await getFirstMessages();
+
+  const sendMessages: MQTTMessageTransfer[] = messages.map((msg) => {
+    return {
+      ...msg,
+      timestamp: msg.timestamp.getTime(),
+    } as MQTTMessageTransfer;
   });
 
-  const filters = latestTimestamps
-    .filter(({ _max }) => _max.timestamp !== null)
-    .map(({ topic, _max }) => ({
-      topic,
-      timestamp: _max.timestamp as Date,
-    }));
-
-  const messages = (await prisma.mqtt.findMany({
-    where: {
-      OR: filters,
-    },
-    omit: {
-      id: true,
-    },
-  })) as MQTTMessage[];
-
-  const serviceResponse = ServiceResponse.success("Data here.", messages, StatusCodes.OK);
+  const serviceResponse = ServiceResponse.success("Data here.", sendMessages, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
 });

@@ -4,6 +4,7 @@ import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { io, prisma } from "../../index";
 import { logger } from "../../server";
 import { StatusCodes } from "http-status-codes";
+import { getFirstMessages } from "../../common/utils/getFirstMessages";
 
 export const socketsRouter: Router = express.Router();
 
@@ -32,28 +33,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
   gotSocket.join("mqtt");
 
   // Get the latest value from each topic
-  const latestTimestamps = await prisma.mqtt.groupBy({
-    by: ["topic"],
-    _max: {
-      timestamp: true,
-    },
-  });
-
-  const filters = latestTimestamps
-    .filter(({ _max }) => _max.timestamp !== null)
-    .map(({ topic, _max }) => ({
-      topic,
-      timestamp: _max.timestamp as Date,
-    }));
-
-  const messages = (await prisma.mqtt.findMany({
-    where: {
-      OR: filters,
-    },
-    omit: {
-      id: true,
-    },
-  })) as MQTTMessage[];
+  const messages = await getFirstMessages();
 
   gotSocket.emit("messages", [...new Set([...messages])]);
   logger.info("WS: Socket Authenticated.");

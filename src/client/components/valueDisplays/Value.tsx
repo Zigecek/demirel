@@ -1,5 +1,5 @@
 import React from "react";
-import { useTopic } from "../../hooks/topicHook";
+import { useTopic } from "../../hooks/useTopic";
 import { useNicknames } from "../../contexts/NicknamesContext";
 
 type ValueProps = {

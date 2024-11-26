@@ -4,6 +4,8 @@ import { logger } from "./server";
 import { io, prisma, Status, status } from ".";
 import { MqttValueType, Prisma } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
+import { getFirstMessages } from "./common/utils/getFirstMessages";
+import { addMessage } from "./common/utils/services/rules";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -45,25 +47,7 @@ const checkQueue = async () => {
     // rename message to value and add mqttValueType depending on the type of the message
 
     // Get the latest value from each topic
-    const latestTimestamps = await prisma.mqtt.groupBy({
-      by: ["topic"],
-      _max: {
-        timestamp: true,
-      },
-    });
-
-    const filters = latestTimestamps
-      .filter(({ _max }) => _max.timestamp !== null)
-      .map(({ topic, _max }) => ({
-        topic,
-        timestamp: _max.timestamp as Date,
-      }));
-
-    const lastValues = await prisma.mqtt.findMany({
-      where: {
-        OR: filters,
-      },
-    });
+    const lastValues = await getFirstMessages({});
 
     // Map pro poslední hodnoty
     const lastValuesMap = new Map<string, { value: JsonValue; id: number }>();
@@ -174,7 +158,6 @@ mqtt.stream.on("error", (err) => {
 });
 
 mqtt.on("message", (topic, message) => {
-  if (status.db !== Status.RUNNING || status.mqtt !== Status.RUNNING || status.vite !== Status.RUNNING || status.ws !== Status.RUNNING) return;
   const msg: string = message.toString();
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
     logger.warn("MQTT: Invalid topic in net: " + topic);
@@ -199,6 +182,9 @@ mqtt.on("message", (topic, message) => {
       return;
     }
 
+    if (status.db !== Status.RUNNING) return;
+    if (status.ws !== Status.RUNNING) return;
+
     logger.info(`MQTT: ${topic}: ${val} <${valueType}>`);
 
     wsQueue.push({
@@ -208,5 +194,7 @@ mqtt.on("message", (topic, message) => {
       valueType,
     } as MQTTMessage);
     setTimeout(checkQueue, 100);
+
+    addMessage({ topic, value: val, timestamp: when, valueType } as MQTTMessage);
   }
 });

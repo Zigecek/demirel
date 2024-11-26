@@ -3,10 +3,12 @@ import { ServiceResponse } from "../../common/utils/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { StatusCodes } from "http-status-codes";
 import { prisma } from "../..";
+import { extractTopics } from "../../../globals/rules";
+import { updateRules } from "../../common/utils/services/rules";
 
-export const notificationRouter: Router = express.Router();
+export const ruleRouter: Router = express.Router();
 
-notificationRouter.post("/updateRules", async (req: Request, res: Response) => {
+ruleRouter.post("/updateRules", async (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user || !req.session?.user.username) {
     const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
@@ -36,7 +38,7 @@ notificationRouter.post("/updateRules", async (req: Request, res: Response) => {
           name: rule.name,
           severity: rule.severity,
           conditions: rule.conditions,
-          topics: rule.topics,
+          topics: [extractTopics(rule.notificationBody), extractTopics(rule.notificationTitle), ...rule.conditions.map((condition) => extractTopics(condition))].flat(),
         },
       })
     ),
@@ -45,7 +47,9 @@ notificationRouter.post("/updateRules", async (req: Request, res: Response) => {
         name: rule.name,
         severity: rule.severity,
         conditions: rule.conditions,
-        topics: rule.topics,
+        notificationTitle: rule.notificationTitle,
+        notificationBody: rule.notificationBody,
+        topics: [extractTopics(rule.notificationBody), extractTopics(rule.notificationTitle), ...rule.conditions.map((condition) => extractTopics(condition))].flat(),
         userId: username,
       })),
     }),
@@ -58,11 +62,13 @@ notificationRouter.post("/updateRules", async (req: Request, res: Response) => {
     ),
   ]);
 
+  await updateRules(username);
+
   const serviceResponse = ServiceResponse.success("Rules updated.", true, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
 });
 
-notificationRouter.get("/getRules", async (req: Request, res: Response) => {
+ruleRouter.get("/getRules", async (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user) {
     const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);

@@ -90,8 +90,10 @@ model rule {
   userId String
   user   user   @relation(fields: [userId], references: [username])
 
-  name     String
-  severity ruleSeverity @default(INFO)
+  name              String
+  notificationTitle String
+  notificationBody  String
+  severity          ruleSeverity @default(INFO)
 
   conditions String[]
   topics     String[]

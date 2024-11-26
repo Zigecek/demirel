@@ -4,7 +4,7 @@ import { FaListOl } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { MdSpeed, MdTrendingUp, MdTrendingDown } from "react-icons/md";
 import { getDayDates } from "../../../globals/daily";
-import { useToday } from "../../hooks/todayHook";
+import { useToday } from "../../hooks/useToday";
 import { postMqttStats } from "../../proxy/endpoints";
 import { format, addMinutes } from "date-fns";
 import { useNicknames } from "../../contexts/NicknamesContext";
