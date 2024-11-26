@@ -42,7 +42,7 @@ export default function Login() {
         })
         .catch((error) => {
           // show snackbar
-          if (error.response?.status === 401) {
+          if (error.response?.status === StatusCodes.UNAUTHORIZED) {
             snackbarConfig?.showSnackbar({
               text: "Invalid password",
               severity: "error",

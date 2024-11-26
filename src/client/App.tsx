@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
-import SnackBarConfig from "./components/CustomSnackbar";
+import { useEffect } from "react";
 import { number, unit, fix } from "./utils/values";
 import { Value } from "./components/valueDisplays/Value";
 import { socket } from "./ws-client";
@@ -9,17 +7,12 @@ import { Chart } from "./components/valueDisplays/Chart";
 import { usePopup } from "./hooks/popupHook";
 import { NotificationSetup } from "./components/NotificationSetup";
 import { useNotification } from "./hooks/useNotification";
+import { useSnackbar } from "./hooks/useSnackbar";
 
 export default function App() {
-  const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
-  const { PopupComponent: NotificationPopup, showPopup, closePopup } = usePopup(NotificationSetup);
+  const [snackbarConfig, SnackbarComponent] = useSnackbar();
+  const { PopupComponent: NotificationPopup, showPopup } = usePopup(NotificationSetup);
   const { handleNotifikace } = useNotification(snackbarConfig);
-
-  /*
-  useEffect(() => {
-    showPopup();
-  }, []);
-  */
 
   useEffect(() => {
     socket.connect();
@@ -27,10 +20,6 @@ export default function App() {
     return () => {
       socket.disconnect();
     };
-  }, []);
-
-  useEffect(() => {
-    setSnackbarConfig(createDefaultConfig(setSnackbarConfig));
   }, []);
 
   const handleLogout = () => {
@@ -45,7 +34,10 @@ export default function App() {
             Odhlásit
           </button>
           <button onClick={handleNotifikace} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
-            Notifikace
+            Zapnout notifikace
+          </button>
+          <button onClick={showPopup} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+            Programovatelné notifikace
           </button>
         </div>
         <div className="flex flex-row items-center justify-center box-border flex-wrap">
@@ -63,7 +55,7 @@ export default function App() {
           <DailyHistory topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
         </div>
       </div>
-      {snackbarConfig && <CustomSnackbar config={snackbarConfig} />}
+      {SnackbarComponent}
       {NotificationPopup}
     </>
   );

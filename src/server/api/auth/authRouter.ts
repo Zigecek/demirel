@@ -1,29 +1,15 @@
-import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Request, type Response, type Router } from "express";
-import { z } from "zod";
 
-import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
-import { ServiceResponse } from "../../common/models/serviceResponse";
+import { ServiceResponse } from "../../common/utils/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { logger } from "../../server";
 //import { io } from "../../index";
 import { prisma } from "../../index";
 import argon2 from "argon2";
 import { user } from "@prisma/client";
+import { StatusCodes } from "http-status-codes";
 
-export const ZUserSafe = z.object({
-  username: z.string(),
-});
-
-export const authRegistry = new OpenAPIRegistry();
 export const authRouter: Router = express.Router();
-
-authRegistry.registerPath({
-  method: "get",
-  path: "/loggedIn",
-  tags: ["Auth"],
-  responses: createApiResponse(z.boolean().or(ZUserSafe).or(z.null()), "Success"),
-});
 
 authRouter.get("/loggedIn", (req: Request, res: Response) => {
   // Check if express session is authenticated
@@ -36,19 +22,8 @@ authRouter.get("/loggedIn", (req: Request, res: Response) => {
 
   const { password, ...userSafe } = req.session.user;
 
-  const serviceResponse = ServiceResponse.success(
-    "User authenticated.",
-    userSafe as Omit<user, "password">,
-    200
-  );
+  const serviceResponse = ServiceResponse.success("User authenticated.", userSafe as Omit<user, "password">, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
-});
-
-authRegistry.registerPath({
-  method: "post",
-  path: "/login",
-  tags: ["Auth"],
-  responses: createApiResponse(z.boolean().or(ZUserSafe).or(z.null()), "Success"),
 });
 
 authRouter.post("/login", async (req: Request, res: Response) => {
@@ -78,7 +53,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
   const isPasswordCorrect = await argon2.verify(user.password, password);
 
   if (!isPasswordCorrect) {
-    const serviceResponse = ServiceResponse.failure("Password is incorrect.", false, 401);
+    const serviceResponse = ServiceResponse.failure("Password is incorrect.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -87,16 +62,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
   // set session user
   req.session.user = user;
 
-  const serviceResponse = ServiceResponse.success("Login successful.", true, 200);
+  const serviceResponse = ServiceResponse.success("Login successful.", true, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
-});
-
-// /logout
-authRegistry.registerPath({
-  method: "post",
-  path: "/logout",
-  tags: ["Auth"],
-  responses: createApiResponse(z.boolean().or(z.null()), "Success"),
 });
 
 authRouter.get("/logout", async (req: Request, res: Response) => {
@@ -118,14 +85,6 @@ authRouter.get("/logout", async (req: Request, res: Response) => {
   res.redirect("/login");
 });
 
-// /register
-authRegistry.registerPath({
-  method: "post",
-  path: "/register",
-  tags: ["Auth"],
-  responses: createApiResponse(z.boolean().or(ZUserSafe), "Success"),
-});
-
 authRouter.post("/register", async (req: Request, res: Response) => {
   // if session user exists
   if (req.session?.user) {
@@ -138,7 +97,7 @@ authRouter.post("/register", async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    const serviceResponse = ServiceResponse.failure("Please fill in all fields.", false, 400);
+    const serviceResponse = ServiceResponse.failure("Please fill in all fields.", false, StatusCodes.BAD_REQUEST);
     return handleServiceResponse(serviceResponse, res);
   }
 

@@ -109,3 +109,42 @@ type PopupContentProps = {
   showPopup: () => void;
   closePopup: () => void;
 };
+
+type Rule = {
+  id: number;
+
+  name: string;
+  severity: import("@prisma/client").ruleSeverity;
+
+  conditions: string[];
+  topics: string[];
+};
+
+type RuleEditable = {
+  id: number;
+
+  name: string;
+  severity: import("@prisma/client").ruleSeverity;
+
+  conditions: {
+    condition: string;
+
+    deleted: boolean;
+    edited: boolean;
+    isNew: boolean;
+  }[];
+  topics: string[];
+
+  deleted: boolean;
+  edited: boolean;
+  isNew: boolean;
+};
+
+type SetRules = {
+  added: Rule[];
+  edited: Rule[];
+  deleted: Rule[];
+};
+
+type RuleTopics = Record<string, "number" | "boolean">;
+type RuleContext = Record<string, number | boolean>;

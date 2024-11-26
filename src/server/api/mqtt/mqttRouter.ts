@@ -1,38 +1,28 @@
-import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Request, type Response, type Router } from "express";
-import { z } from "zod";
-import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
-import { ServiceResponse } from "../../common/models/serviceResponse";
+import { ServiceResponse } from "../../common/utils/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { prisma } from "../../index";
 import { calculateStats, getDayDates } from "../../../globals/daily";
+import { StatusCodes } from "http-status-codes";
 
-export const mqttRegistry = new OpenAPIRegistry();
 export const mqttRouter: Router = express.Router();
-
-mqttRegistry.registerPath({
-  method: "post",
-  path: "/data",
-  tags: ["MQTT"],
-  responses: createApiResponse(z.object({}), "Success"),
-});
 
 mqttRouter.post("/data", async (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
   if (!req.body) {
-    const serviceResponse = ServiceResponse.failure("No request body provided.", false, 400);
+    const serviceResponse = ServiceResponse.failure("No request body provided.", false, StatusCodes.BAD_REQUEST);
     return handleServiceResponse(serviceResponse, res);
   }
 
   // get request parameters
   const { start, end, topic, boolean } = req.body as postMqttDataRequest;
   if (!start || !end || !topic || typeof start !== "number" || typeof end !== "number" || typeof topic !== "string") {
-    const serviceResponse = ServiceResponse.failure("No start or end time provided.", false, 400);
+    const serviceResponse = ServiceResponse.failure("No start or end time provided.", false, StatusCodes.BAD_REQUEST);
     return handleServiceResponse(serviceResponse, res);
   }
   const s = new Date(start);
@@ -41,7 +31,7 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
   //const zoom = (e.getTime() - s.getTime()) / (24 * 60 * 60 * 1000);
 
   if (isNaN(s.getTime()) || isNaN(e.getTime())) {
-    const serviceResponse = ServiceResponse.failure("Invalid start or end time provided.", false, 400);
+    const serviceResponse = ServiceResponse.failure("Invalid start or end time provided.", false, StatusCodes.BAD_REQUEST);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -83,20 +73,13 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
     }
   }
 
-  const serviceResponse = ServiceResponse.success("Data here.", messages, 200);
+  const serviceResponse = ServiceResponse.success("Data here.", messages, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
-});
-
-mqttRegistry.registerPath({
-  method: "post",
-  path: "/today",
-  tags: ["MQTT"],
-  responses: createApiResponse(z.object({}), "Success"),
 });
 
 mqttRouter.post("/today", async (req: Request, res: Response) => {
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -128,28 +111,20 @@ mqttRouter.post("/today", async (req: Request, res: Response) => {
 
   const returnObj = calculateStats(messages, start, end);
 
-  const serviceResponse = ServiceResponse.success("Data here.", returnObj, 200);
+  const serviceResponse = ServiceResponse.success("Data here.", returnObj, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
-});
-
-
-mqttRegistry.registerPath({
-  method: "post",
-  path: "/stats",
-  tags: ["MQTT"],
-  responses: createApiResponse(z.object({}), "Success"),
 });
 
 mqttRouter.post("/stats", async (req: Request, res: Response) => {
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
   const { topic } = req.body as postMqttStatsRequest;
 
   if (!topic) {
-    const serviceResponse = ServiceResponse.failure("No topic provided.", false, 400);
+    const serviceResponse = ServiceResponse.failure("No topic provided.", false, StatusCodes.BAD_REQUEST);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -161,8 +136,8 @@ mqttRouter.post("/stats", async (req: Request, res: Response) => {
       date: "desc",
     },
     omit: {
-      id: true
-    }
+      id: true,
+    },
   });
 
   // serialize bigint
@@ -171,30 +146,23 @@ mqttRouter.post("/stats", async (req: Request, res: Response) => {
       ...stat,
       uptime: stat.uptime ? Number(stat.uptime) : null,
       downtime: stat.downtime ? Number(stat.downtime) : null,
-    }
+    };
   });
 
-  const serviceResponse = ServiceResponse.success("Data here.", resp, 200);
+  const serviceResponse = ServiceResponse.success("Data here.", resp, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
-});
-
-mqttRegistry.registerPath({
-  method: "post",
-  path: "/nickname",
-  tags: ["MQTT"],
-  responses: createApiResponse(z.object({}), "Success"),
 });
 
 mqttRouter.post("/nickname", async (req: Request, res: Response) => {
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
   const { topics } = req.body as postMqttNicknameRequest;
 
   if (!topics || !Array.isArray(topics)) {
-    const serviceResponse = ServiceResponse.failure("No topics provided.", false, 400);
+    const serviceResponse = ServiceResponse.failure("No topics provided.", false, StatusCodes.BAD_REQUEST);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -211,6 +179,39 @@ mqttRouter.post("/nickname", async (req: Request, res: Response) => {
     }
   });
 
-  const serviceResponse = ServiceResponse.success("Data here.", data, 200);
+  const serviceResponse = ServiceResponse.success("Data here.", data, StatusCodes.OK);
+  return handleServiceResponse(serviceResponse, res);
+});
+
+mqttRouter.get("/firstValues", async (req: Request, res: Response) => {
+  if (!req.session?.user) {
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    return handleServiceResponse(serviceResponse, res);
+  }
+
+  const latestTimestamps = await prisma.mqtt.groupBy({
+    by: ["topic"],
+    _max: {
+      timestamp: true,
+    },
+  });
+
+  const filters = latestTimestamps
+    .filter(({ _max }) => _max.timestamp !== null)
+    .map(({ topic, _max }) => ({
+      topic,
+      timestamp: _max.timestamp as Date,
+    }));
+
+  const messages = (await prisma.mqtt.findMany({
+    where: {
+      OR: filters,
+    },
+    omit: {
+      id: true,
+    },
+  })) as MQTTMessage[];
+
+  const serviceResponse = ServiceResponse.success("Data here.", messages, StatusCodes.OK);
   return handleServiceResponse(serviceResponse, res);
 });

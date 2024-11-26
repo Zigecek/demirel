@@ -1,32 +1,22 @@
-import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Request, type Response, type Router } from "express";
-import { z } from "zod";
-import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
-import { ServiceResponse } from "../../common/models/serviceResponse";
+import { ServiceResponse } from "../../common/utils/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { io, prisma } from "../../index";
 import { logger } from "../../server";
+import { StatusCodes } from "http-status-codes";
 
-export const socketsRegistry = new OpenAPIRegistry();
 export const socketsRouter: Router = express.Router();
-
-socketsRegistry.registerPath({
-  method: "post",
-  path: "/auth",
-  tags: ["Sockets"],
-  responses: createApiResponse(z.boolean(), "Success"),
-});
 
 socketsRouter.post("/auth", async (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
   const body = req.body as SocketAuth;
   if (!body.socketId) {
-    const serviceResponse = ServiceResponse.failure("No socket ID provided.", false, 400);
+    const serviceResponse = ServiceResponse.failure("No socket ID provided.", false, StatusCodes.BAD_REQUEST);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -43,7 +33,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
 
   // Get the latest value from each topic
   const latestTimestamps = await prisma.mqtt.groupBy({
-    by: ['topic'],
+    by: ["topic"],
     _max: {
       timestamp: true,
     },
@@ -56,15 +46,14 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
       timestamp: _max.timestamp as Date,
     }));
 
-  const messages = await prisma.mqtt.findMany({
+  const messages = (await prisma.mqtt.findMany({
     where: {
       OR: filters,
     },
     omit: {
       id: true,
-    }
-  }) as MQTTMessage[];
-
+    },
+  })) as MQTTMessage[];
 
   gotSocket.emit("messages", [...new Set([...messages])]);
   logger.info("WS: Socket Authenticated.");

@@ -39,7 +39,7 @@ export const corsMiddleware = (req: Request, res: Response, next: NextFunction) 
 
   // Odpovědět na preflight OPTIONS žádosti
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+    return res.sendStatus(StatusCodes.OK);
   }
 
   // Pokračovat v další logice

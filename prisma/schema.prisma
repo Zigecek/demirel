@@ -20,6 +20,7 @@ model user {
   username String    @id @unique(map: "username") @db.VarChar(255)
   password String    @db.VarChar
   webpush  webpush[]
+  rule     rule[]
 
   @@index([username])
 }
@@ -76,4 +77,22 @@ model nickname {
   nickname String
 
   @@index([topic])
+}
+
+enum ruleSeverity {
+  INFO
+  WARNING
+  SERIOUS
+}
+
+model rule {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   user   @relation(fields: [userId], references: [username])
+
+  name     String
+  severity ruleSeverity @default(INFO)
+
+  conditions String[]
+  topics     String[]
 }

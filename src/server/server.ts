@@ -1,7 +1,6 @@
 //import cors from "cors";
 import express, { type Express } from "express";
 import { pino } from "pino";
-import { openAPIRouter } from "./api-docs/openAPIRouter";
 import { healthCheckRouter } from "./api/healthCheck/healthCheckRouter";
 //import { rootRouter } from "@/api/rootRouter";
 import { socketsRouter } from "./api/sockets/socketsRouter";
@@ -17,6 +16,7 @@ import ViteExpress from "vite-express";
 import { mqttRouter } from "./api/mqtt/mqttRouter";
 import { pushRouter } from "./api/push/pushRouter";
 import { onCloseSignal, Status, status } from ".";
+import { notificationRouter } from "./api/notofication/notificationRouter";
 
 const logger = pino({ name: "api.demirel" });
 const app: Express = express();
@@ -76,10 +76,8 @@ apiRouter.use("/sockets", socketsRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/mqtt", mqttRouter);
 apiRouter.use("/push", pushRouter);
+apiRouter.use("/notification", notificationRouter);
 app.use("/api", apiRouter);
-
-// Swagger UI
-app.use(openAPIRouter);
 
 // Secure static routes
 app.get("/", (req: express.Request, res: express.Response, next: express.NextFunction) => {

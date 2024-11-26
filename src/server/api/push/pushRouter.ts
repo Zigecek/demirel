@@ -1,32 +1,22 @@
-import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Request, type Response, type Router } from "express";
-import { z } from "zod";
-import { createApiResponse } from "../../api-docs/openAPIResponseBuilders";
-import { ServiceResponse } from "../../common/models/serviceResponse";
+import { ServiceResponse } from "../../common/utils/serviceResponse";
 import { handleServiceResponse } from "../../common/utils/httpHandlers";
 import { prisma } from "../../index";
 import webPush from "web-push";
 import { env } from "../../common/utils/envConfig";
 import { InputJsonObject } from "@prisma/client/runtime/library";
 import { logger } from "../../server";
+import { StatusCodes } from "http-status-codes";
 
-export const pushRegistry = new OpenAPIRegistry();
 export const pushRouter: Router = express.Router();
 
 webPush.setVapidDetails("mailto:honza007cz@hotmail.com", env.VITE_VAPID_PUBLIC, env.VAPID_PRIVATE);
-
-pushRegistry.registerPath({
-  method: "post",
-  path: "/subscribe",
-  tags: ["MQTT"],
-  responses: createApiResponse(z.boolean(), "Success"),
-});
 
 // Endpoint pro přijetí subscription od klienta
 pushRouter.post("/subscribe", async (req: Request, res: Response) => {
   // check if user loggedIn
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -53,18 +43,11 @@ pushRouter.post("/subscribe", async (req: Request, res: Response) => {
   return handleServiceResponse(serviceResponse, res);
 });
 
-pushRegistry.registerPath({
-  method: "post",
-  path: "/send-notification",
-  tags: ["MQTT"],
-  responses: createApiResponse(z.boolean(), "Success"),
-});
-
 // Endpoint pro odeslání notifikace
 pushRouter.post("/send-notification", (req: Request, res: Response) => {
   // check if user loggedIn
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, 401);
+    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -109,7 +92,7 @@ pushRouter.post("/send-notification", (req: Request, res: Response) => {
           });
       });
 
-      const serviceResponse = ServiceResponse.success("Notification sent.", true, 200);
+      const serviceResponse = ServiceResponse.success("Notification sent.", true, StatusCodes.OK);
       return handleServiceResponse(serviceResponse, res);
     });
 });

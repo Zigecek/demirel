@@ -38,7 +38,7 @@ export default function Register() {
               text: "User already logged in.",
               severity: "warning",
             });
-          } else if (response.status === 200) {
+          } else if (response.status === StatusCodes.OK) {
             snackbarConfig?.showSnackbar({
               text: "Successfully registered.",
               severity: "success",
@@ -53,7 +53,7 @@ export default function Register() {
               text: "User already exists.",
               severity: "error",
             });
-          } else if (error.response?.status === 400) {
+          } else if (error.response?.status === StatusCodes.BAD_REQUEST) {
             snackbarConfig?.showSnackbar({
               text: "Please fill in all fields.",
               severity: "error",
