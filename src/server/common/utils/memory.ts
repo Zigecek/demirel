@@ -1,6 +1,6 @@
-import { logger } from "../../server";
-import { prisma } from "../..";
 import { EventEmitter } from "eventemitter3";
+import { prisma, Status, status } from "../..";
+import { logger } from "../../server";
 
 export const memory: Record<string, MQTTMessage> = {};
 const memoryEmitter = new EventEmitter();
@@ -58,4 +58,5 @@ export const addMessage = async (message: MQTTMessage) => {
 export const start = async () => {
   await loadMemory();
   logger.info("MQTT Memory: Memory loaded.");
+  status.memory = Status.RUNNING;
 };

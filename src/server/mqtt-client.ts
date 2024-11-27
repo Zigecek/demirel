@@ -1,10 +1,10 @@
-import { connect } from "mqtt";
-import { env } from "./common/utils/envConfig";
-import { logger } from "./server";
-import { io, prisma, Status, status } from ".";
 import { MqttValueType, Prisma } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
-import { getFromDB, addMessage } from "./common/utils/memory";
+import { connect } from "mqtt";
+import { io, prisma, Status, status } from ".";
+import { env } from "./common/utils/envConfig";
+import { addMessage, getFromDB } from "./common/utils/memory";
+import { logger } from "./server";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -183,6 +183,7 @@ mqtt.on("message", (topic, message) => {
 
     if (status.db !== Status.RUNNING) return;
     if (status.ws !== Status.RUNNING) return;
+    if (status.memory !== Status.RUNNING) return;
 
     logger.info(`MQTT: ${topic}: ${val} <${valueType}>`);
 

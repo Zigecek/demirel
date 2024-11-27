@@ -55,6 +55,7 @@ export const checkRule = async (topic: string) => {
     // 2. get vals from memory for all the rule topics
     const context: Record<string, MQTTMessage["value"]> = {};
     rule.topics.forEach((ruleTopic) => {
+      // memory ještě neobsahuje hodnotu
       context[ruleTopic] = memory[ruleTopic].value;
     });
 

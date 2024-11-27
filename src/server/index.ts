@@ -2,9 +2,10 @@ import { PrismaClient } from "@prisma/client";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import { env } from "./common/utils/envConfig";
+import { start as startMem } from "./common/utils/memory";
 import { onEachDay } from "./common/utils/onEachDay";
 import { createDailyStats } from "./common/utils/services/daily";
-import { start } from "./common/utils/services/rules";
+import { start as startRules } from "./common/utils/services/rules";
 import "./mqtt-client";
 import { endClient } from "./mqtt-client";
 import { connectClient, endTransceiver } from "./mqtt-transceiver";
@@ -30,6 +31,7 @@ export const status = {
   rules: Status.OFFLINE,
   daily: Status.OFFLINE,
   transceiver: Status.OFFLINE,
+  memory: Status.OFFLINE,
 };
 
 export const prisma = new PrismaClient({
@@ -41,7 +43,8 @@ prisma
   .then(async () => {
     logger.info("Prisma: Connected.");
     status.db = Status.RUNNING;
-    start();
+    startMem();
+    startRules();
 
     //await createDailyStats("all", "all");
 
