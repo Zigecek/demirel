@@ -1,5 +1,3 @@
-import "./mqtt-transceiver";
-
 import { PrismaClient } from "@prisma/client";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
@@ -9,9 +7,13 @@ import { createDailyStats } from "./common/utils/services/daily";
 import { start } from "./common/utils/services/rules";
 import "./mqtt-client";
 import { endClient } from "./mqtt-client";
-import { endTransceiver } from "./mqtt-transceiver";
+import { connectClient, endTransceiver } from "./mqtt-transceiver";
 import { app, logger, sessionDBaccess } from "./server";
 import ws from "./ws-server";
+
+if (env.RUNNER === "rpi") {
+  connectClient();
+}
 
 export enum Status {
   RUNNING,
