@@ -46,9 +46,8 @@ export default function App() {
           <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
         </div>
         <div>
-          <Chart topics={["zige/pozar0/fire/val"]} boolean={true} />
-          <Chart topics={["zige/pozar1/fire/val"]} boolean={true} />
-          <DailyHistory topic="zige/pozar0/cerpadlo/val" hidden={false} />
+          <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} />
+          <DailyHistory topic="zige/pozar0/cerpadlo/val" hidden={true} />
 
           <Chart topics={["zige/pozar0/temp/val", "zige/pozar1/temp/val"]} />
           <DailyHistory topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
