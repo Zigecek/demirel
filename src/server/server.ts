@@ -1,24 +1,26 @@
-//import cors from "cors";
-import express, { type Express } from "express";
-import { pino } from "pino";
-import { healthCheckRouter } from "./api/healthCheck/healthCheckRouter";
-//import { rootRouter } from "@/api/rootRouter";
-import { socketsRouter } from "./api/sockets/socketsRouter";
-import { authRouter } from "./api/auth/authRouter";
-//import { corsMiddleware } from "./common/utils/cors";
-import session from "express-session";
-import "express-session";
-import connectPgSimple from "connect-pg-simple";
-import { env } from "./common/utils/envConfig";
-import pg from "pg";
 import { user } from "@prisma/client";
+import connectPgSimple from "connect-pg-simple";
+import express, { type Express } from "express";
+import "express-session";
+import session from "express-session";
+import pg from "pg";
+import { pino } from "pino";
+import pretty from "pino-pretty";
 import ViteExpress from "vite-express";
+import { onCloseSignal, Status, status } from ".";
+import { authRouter } from "./api/auth/authRouter";
+import { healthCheckRouter } from "./api/healthCheck/healthCheckRouter";
 import { mqttRouter } from "./api/mqtt/mqttRouter";
 import { pushRouter } from "./api/push/pushRouter";
-import { onCloseSignal, Status, status } from ".";
 import { ruleRouter } from "./api/rule/ruleRouter";
+import { socketsRouter } from "./api/sockets/socketsRouter";
+import { env } from "./common/utils/envConfig";
 
-const logger = pino({ name: "api.demirel" });
+const logger = pino(
+  pretty({
+    ignore: "pid,hostname",
+  })
+);
 const app: Express = express();
 
 app.set("trust proxy", true);

@@ -4,12 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "nodemon -w src/server -x tsx src/server/index.ts | pino-pretty",
-    "start:tsx": "cross-env NODE_ENV=production tsx src/server/index.ts | pino-pretty",
+    "dev": "nodemon -w src/server -x tsx src/server/index.ts",
+    "start:tsx": "cross-env NODE_ENV=production tsx src/server/index.ts",
     "build:react": "vite build",
     "build:server": "tsup src/server/index.ts --dts --minify --format esm --outDir dist",
     "build": "npm run build:react && npm run build:server",
-    "start:node": "node dist/index.js | pino-pretty",
+    "start:node": "node dist/index.js",
     "start:pm2": "pm2 start dist/index.js --name demirel"
   },
   "dependencies": {
