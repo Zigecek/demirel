@@ -1,22 +1,22 @@
 import express, { type Request, type Response, type Router } from "express";
-import { ServiceResponse } from "../../common/utils/serviceResponse";
-import { handleServiceResponse } from "../../common/utils/httpHandlers";
-import { prisma } from "../../index";
-import { calculateStats, getDayDates } from "../../../globals/daily";
 import { StatusCodes } from "http-status-codes";
-import { getFirstMessages } from "../../common/utils/getFirstMessages";
+import { calculateStats, getDayDates } from "../../../globals/daily";
+import { handleServiceResponse } from "../../common/utils/httpHandlers";
+import { cloneMemory } from "../../common/utils/memory";
+import { ServiceResponse } from "../../common/utils/serviceResponse";
+import { prisma } from "../../index";
 
 export const mqttRouter: Router = express.Router();
 
 mqttRouter.post("/data", async (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
   if (!req.body) {
-    const serviceResponse = ServiceResponse.failure("No request body provided.", false, StatusCodes.BAD_REQUEST);
+    const serviceResponse = ServiceResponse.failure("Nebyla poskytnuta žádná data.", false, StatusCodes.BAD_REQUEST);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -87,7 +87,7 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
 
 mqttRouter.post("/today", async (req: Request, res: Response) => {
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -125,7 +125,7 @@ mqttRouter.post("/today", async (req: Request, res: Response) => {
 
 mqttRouter.post("/stats", async (req: Request, res: Response) => {
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -163,7 +163,7 @@ mqttRouter.post("/stats", async (req: Request, res: Response) => {
 
 mqttRouter.post("/nickname", async (req: Request, res: Response) => {
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -193,11 +193,11 @@ mqttRouter.post("/nickname", async (req: Request, res: Response) => {
 
 mqttRouter.get("/firstValues", async (req: Request, res: Response) => {
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
-  const messages = await getFirstMessages();
+  const messages = Object.values(await cloneMemory());
 
   const sendMessages: MQTTMessageTransfer[] = messages.map((msg) => {
     return {

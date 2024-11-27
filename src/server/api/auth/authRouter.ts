@@ -16,7 +16,7 @@ authRouter.get("/loggedIn", (req: Request, res: Response) => {
   if (!req.session?.user) {
     // User is not authenticated
     // then redirect to login page
-    const serviceResponse = ServiceResponse.success("User not authenticated.", false);
+    const serviceResponse = ServiceResponse.success("Uživatel není přihlášen.", false);
     return handleServiceResponse(serviceResponse, res);
   }
 

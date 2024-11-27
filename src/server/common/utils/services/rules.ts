@@ -1,12 +1,11 @@
 import { prisma } from "../../..";
 import { evaluateExpression, replaceTopics } from "../../../../globals/rules";
-import { getFirstMessages } from "../getFirstMessages";
 import { logger } from "../../../server";
+import { onMemoryChange, memory } from "../memory";
 import { sendNotification } from "../webpush";
 
 let rules: RuleWithId[] = [];
 const topicTypes: RuleTopics = {};
-const memory: Record<string, MQTTMessage> = {};
 
 const activeRules: RuleWithId[] = [];
 
@@ -31,13 +30,7 @@ export const loadRules = async () => {
   rules = await prisma.rule.findMany();
 };
 
-export const loadMemory = async () => {
-  // load memory from db
-  const firstVals = (await getFirstMessages()) as MQTTMessage[];
-  firstVals.forEach((msg) => {
-    memory[msg.topic] = msg;
-  });
-
+export const setTypes = async () => {
   // set topicTypes
   rules.forEach((rule) => {
     rule.topics.forEach((topic) => {
@@ -136,13 +129,11 @@ const deactivateRuleNotify = async (rule: RuleWithId) => {
   activeRules.splice(index, 1);
 };
 
-export const addMessage = async (message: MQTTMessage) => {
-  memory[message.topic] = message;
-  checkRule(message.topic);
-};
-
 export const start = async () => {
   logger.info("Rules: Starting rules service.");
   await loadRules();
-  await loadMemory();
+  await setTypes();
+  onMemoryChange((msg) => {
+    checkRule(msg.topic);
+  });
 };

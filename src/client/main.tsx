@@ -4,11 +4,12 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App";
 import Login from "./Login";
 import Register from "./Register";
+import { MessagesProvider } from "./contexts/MessagesContext";
+import { NicknamesProvider } from "./contexts/NicknamesContext";
+import { SnackbarProvider } from "./contexts/SnackbarContext";
+import { UserProvider } from "./contexts/UserContext";
 import "./index.css";
 import "./ws-client";
-import { MessagesProvider } from "./contexts/MessagesContext";
-import { UserProvider } from "./contexts/UserContext";
-import { NicknamesProvider } from "./contexts/NicknamesContext";
 
 const router = createBrowserRouter([
   {
@@ -32,7 +33,9 @@ createRoot(document.getElementById("root")!).render(
     <UserProvider>
       <MessagesProvider>
         <NicknamesProvider>
-          <RouterProvider router={router} />
+          <SnackbarProvider>
+            <RouterProvider router={router} />
+          </SnackbarProvider>
         </NicknamesProvider>
       </MessagesProvider>
     </UserProvider>

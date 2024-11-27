@@ -1,18 +1,17 @@
 import { useEffect } from "react";
-import { number, unit, fix } from "./utils/values";
-import { Value } from "./components/valueDisplays/Value";
-import { socket } from "./ws-client";
-import { DailyHistory } from "./components/valueDisplays/Stats";
-import { Chart } from "./components/valueDisplays/Chart";
-import { usePopup } from "./hooks/usePopup";
 import { RuleSetup } from "./components/RuleSetup";
+import { Chart } from "./components/valueDisplays/Chart";
+import { DailyHistory } from "./components/valueDisplays/Stats";
+import { Value } from "./components/valueDisplays/Value";
 import { useNotification } from "./hooks/useNotification";
-import { useSnackbar } from "./hooks/useSnackbar";
+import { usePopup } from "./hooks/usePopup";
+import { fix, number, unit } from "./utils/values";
+import { socket } from "./ws-client";
 
 export default function App() {
-  const [snackbarConfig, SnackbarComponent] = useSnackbar();
+  const { testNotification } = useNotification();
+
   const { PopupComponent: NotificationPopup, showPopup } = usePopup(RuleSetup);
-  const { handleNotifikace } = useNotification(snackbarConfig);
 
   useEffect(() => {
     socket.connect();
@@ -33,7 +32,7 @@ export default function App() {
           <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
             Odhlásit
           </button>
-          <button onClick={handleNotifikace} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+          <button onClick={testNotification} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
             Zapnout notifikace
           </button>
           <button onClick={showPopup} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
@@ -55,7 +54,6 @@ export default function App() {
           <DailyHistory topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
         </div>
       </div>
-      {SnackbarComponent}
       {NotificationPopup}
     </>
   );

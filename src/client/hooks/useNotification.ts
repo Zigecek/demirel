@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useSnackbarContext } from "../contexts/SnackbarContext";
 import { postWebPushSendNotification, postWebPushSubscribe } from "../proxy/endpoints";
-import SnackBarConfig from "../components/CustomSnackbar";
 
-export const useNotification = (snackbarConfig: SnackBarConfig | undefined) => {
+export const useNotification = () => {
+  const { showSnackbar } = useSnackbarContext();
   const [permission, setPermission] = useState<NotificationPermission>();
 
   useEffect(() => {
@@ -45,13 +46,13 @@ export const useNotification = (snackbarConfig: SnackBarConfig | undefined) => {
     registerServiceWorker();
   }, []);
 
-  const handleNotifikace = async () => {
+  const testNotification = async () => {
     try {
       const permission = await Notification.requestPermission();
       setPermission(permission);
 
       if (permission !== "granted") {
-        snackbarConfig?.showSnackbar({
+        showSnackbar({
           text: "You need to grant permission to send notifications",
           severity: "error",
         });
@@ -63,7 +64,7 @@ export const useNotification = (snackbarConfig: SnackBarConfig | undefined) => {
 
       if (!subscription) {
         if (!import.meta.env.VITE_VAPID_PUBLIC) {
-          snackbarConfig?.showSnackbar({
+          showSnackbar({
             text: "VAPID_PUBLIC not set",
             severity: "error",
           });
@@ -77,13 +78,13 @@ export const useNotification = (snackbarConfig: SnackBarConfig | undefined) => {
 
         postWebPushSubscribe(newSubscription).then((res) => {
           if (res.success) {
-            snackbarConfig?.showSnackbar({
+            showSnackbar({
               text: res.message,
               severity: "success",
             });
             sendNotification();
           } else {
-            snackbarConfig?.showSnackbar({
+            showSnackbar({
               text: res.message,
               severity: "error",
             });
@@ -100,14 +101,14 @@ export const useNotification = (snackbarConfig: SnackBarConfig | undefined) => {
 
   const sendNotification = () => {
     postWebPushSendNotification().then((res) => {
-      snackbarConfig?.showSnackbar({
+      showSnackbar({
         text: res.message,
         severity: res.success ? "success" : "error",
       });
     });
   };
 
-  return { handleNotifikace, permission };
+  return { testNotification, permission };
 };
 
 function urlBase64ToUint8Array(base64String: string) {

@@ -1,6 +1,6 @@
 import React from "react";
-import { useTopic } from "../../hooks/useTopic";
 import { useNicknames } from "../../contexts/NicknamesContext";
+import { useTopic } from "../../hooks/useTopic";
 
 type ValueProps = {
   topic: string;

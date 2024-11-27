@@ -17,7 +17,7 @@ webPush.setVapidDetails("mailto:honza007cz@hotmail.com", env.VITE_VAPID_PUBLIC, 
 pushRouter.post("/subscribe", async (req: Request, res: Response) => {
   // check if user loggedIn
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -48,7 +48,7 @@ pushRouter.post("/subscribe", async (req: Request, res: Response) => {
 pushRouter.post("/send-notification", (req: Request, res: Response) => {
   // check if user loggedIn
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 

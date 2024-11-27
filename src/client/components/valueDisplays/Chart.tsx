@@ -1,6 +1,6 @@
 import React from "react";
-import { Graph } from "./elementary/Graph";
 import { useNicknames } from "../../contexts/NicknamesContext";
+import { Graph } from "./elementary/Graph";
 
 type ChartProps = {
   topics: string[];

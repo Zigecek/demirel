@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useMessages } from "../contexts/MessagesContext";
 import { calculateStats, getDayDates } from "../../globals/daily";
+import { useMessages } from "../contexts/MessagesContext";
 
 type UseTodayProps = {
   topic: string;

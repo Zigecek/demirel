@@ -1,9 +1,9 @@
+import { CircularProgress } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaUndo } from "react-icons/fa";
-import { getMqttFirstValues, getNotificationRules, postNotificationRules } from "../proxy/endpoints";
 import { validateExpression } from "../../globals/rules";
-import { useSnackbar } from "../hooks/useSnackbar";
-import { CircularProgress } from "@mui/material";
+import { useSnackbarContext } from "../contexts/SnackbarContext";
+import { getMqttFirstValues, getNotificationRules, postNotificationRules } from "../proxy/endpoints";
 
 const parseFetchedRules = (rules: Rule[]): RuleEditable[] => {
   return rules.map((rule) => {
@@ -46,7 +46,7 @@ const parseEditableRules = (rules: RuleEditable[]): SetRules => {
 };
 
 export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
-  const [snackbarConfig, SnackbarComponent] = useSnackbar();
+  const { showSnackbar } = useSnackbarContext();
   const [topics, setTopics] = useState<RuleTopics>({});
 
   const [initRules, setInitRules] = useState<RuleEditable[]>([]);
@@ -62,7 +62,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
       const fv = await getMqttFirstValues();
 
       if (!fv.success) {
-        snackbarConfig?.showSnackbar({
+        showSnackbar({
           text: fv.message,
           severity: "error",
         });
@@ -83,7 +83,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
       const nr = await getNotificationRules();
 
       if (!nr.success) {
-        snackbarConfig?.showSnackbar({
+        showSnackbar({
           text: nr.message,
           severity: "error",
         });
@@ -145,7 +145,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
     const syntaxError = !validateExpressions(rules);
 
     if (syntaxError) {
-      snackbarConfig?.showSnackbar({
+      showSnackbar({
         text: "Chyba syntaxe v podmínkách.",
         severity: "error",
       });
@@ -158,12 +158,12 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
     const res = await postNotificationRules(rulesToSend);
 
     if (res.success) {
-      snackbarConfig?.showSnackbar({
+      showSnackbar({
         text: res.message,
         severity: "success",
       });
     } else {
-      snackbarConfig?.showSnackbar({
+      showSnackbar({
         text: res.message,
         severity: "error",
       });
@@ -220,9 +220,9 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
   const addNewRule = () => {
     const newRule: RuleEditable = {
       id: Date.now(),
-      name: "Kuchyň zatopeno",
-      notificationTitle: "Nehoří, jen babička zatopila!",
-      notificationBody: "Babička zatopila v kuchyni na {zige/pozar0/temp/val}°C",
+      name: "Kuchyň zatopeno (vzor, přepiš)",
+      notificationTitle: "Nehoří, jen babička zatopila! (vzor, přepiš)",
+      notificationBody: "Babička zatopila v kuchyni na {zige/pozar0/temp/val}°C (vzor, přepiš)",
       severity: "INFO",
       conditions: [
         {
@@ -272,7 +272,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
       <div className="flex gap-3 p-2 flex-wrap md:flex-nowrap grow">
         {/* Left Panel */}
         <div className="w-full md:w-1/3 bg-gray-100 p-4 rounded-lg">
-          <h3 className="text-lg font-bold mb-4">Seznam podmínek</h3>
+          <h3 className="text-lg font-bold mb-4">Seznam pravidel</h3>
           {loading && (
             <div className="flex justify-center gap-3 m-2">
               <CircularProgress />
@@ -327,9 +327,9 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
         <div className="w-full md:w-2/3 bg-white p-4 rounded-lg shadow-lg">
           {selectedRule && (
             <>
-              {/* Název */}
+              {/* Název pravidla */}
               <div className="mb-4">
-                <label className={`block text-sm font-medium mb-2`}>Název</label>
+                <label className={`block text-sm font-medium mb-2`}>Název pravidla</label>
                 <input
                   type="text"
                   placeholder="Název pravidla"
@@ -521,7 +521,6 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
           Zrušit
         </button>
       </div>
-      {SnackbarComponent}
     </div>
   );
 };

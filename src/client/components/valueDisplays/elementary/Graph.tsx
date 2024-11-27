@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
-import zoomPlugin from "chartjs-plugin-zoom";
-import annotationPlugin from "chartjs-plugin-annotation";
-import { Line } from "react-chartjs-2";
+import { CategoryScale, Chart as ChartJS, Legend, LinearScale, LineElement, PointElement, Title, Tooltip } from "chart.js";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
-import { useTopics } from "../../../hooks/useTopics";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+import annotationPlugin from "chartjs-plugin-annotation";
+import zoomPlugin from "chartjs-plugin-zoom";
 import { eachDayOfInterval, startOfDay } from "date-fns";
-import { postMqttData } from "../../../proxy/endpoints";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Line } from "react-chartjs-2";
 import { useMessages } from "../../../contexts/MessagesContext";
 import { useNicknames } from "../../../contexts/NicknamesContext";
+import { useTopics } from "../../../hooks/useTopics";
+import { postMqttData } from "../../../proxy/endpoints";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -282,7 +282,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     setBounds(chart.scales.x.getUserBounds());
     setIsUserInteracting(true);
     resetActivityTimeout();
-  }
+  };
 
   useEffect(() => {
     if (bounds == undefined) {

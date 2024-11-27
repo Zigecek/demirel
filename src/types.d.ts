@@ -16,6 +16,8 @@ type MQTTMessage = {
   valueType: "FLOAT" | "BOOLEAN";
 };
 
+type MQTTMessageID = MQTTMessage & { id: number };
+
 type Login = {
   username: string;
   password: string;

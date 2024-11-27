@@ -4,8 +4,7 @@ import { logger } from "./server";
 import { io, prisma, Status, status } from ".";
 import { MqttValueType, Prisma } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
-import { getFirstMessages } from "./common/utils/getFirstMessages";
-import { addMessage } from "./common/utils/services/rules";
+import { getFromDB, addMessage } from "./common/utils/memory";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -47,7 +46,7 @@ const checkQueue = async () => {
     // rename message to value and add mqttValueType depending on the type of the message
 
     // Get the latest value from each topic
-    const lastValues = await getFirstMessages({});
+    const lastValues = await getFromDB();
 
     // Map pro poslední hodnoty
     const lastValuesMap = new Map<string, { value: JsonValue; id: number }>();

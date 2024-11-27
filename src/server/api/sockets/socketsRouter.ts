@@ -1,17 +1,17 @@
 import express, { type Request, type Response, type Router } from "express";
-import { ServiceResponse } from "../../common/utils/serviceResponse";
-import { handleServiceResponse } from "../../common/utils/httpHandlers";
-import { io, prisma } from "../../index";
-import { logger } from "../../server";
 import { StatusCodes } from "http-status-codes";
-import { getFirstMessages } from "../../common/utils/getFirstMessages";
+import { handleServiceResponse } from "../../common/utils/httpHandlers";
+import { ServiceResponse } from "../../common/utils/serviceResponse";
+import { io } from "../../index";
+import { logger } from "../../server";
+import { cloneMemory } from "./../../common/utils/memory";
 
 export const socketsRouter: Router = express.Router();
 
 socketsRouter.post("/auth", async (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("User not authenticated.", false, StatusCodes.UNAUTHORIZED);
+    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
     return handleServiceResponse(serviceResponse, res);
   }
 
@@ -33,7 +33,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
   gotSocket.join("mqtt");
 
   // Get the latest value from each topic
-  const messages = await getFirstMessages();
+  const messages = Object.values(await cloneMemory());
 
   gotSocket.emit("messages", [...new Set([...messages])]);
   logger.info("WS: Socket Authenticated.");

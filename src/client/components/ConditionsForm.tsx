@@ -58,7 +58,7 @@ export const ConditionsForm: React.FC<ConditionsFormProps> = ({ existingConditio
         cond.id === conditionId
           ? {
               ...cond,
-              conditions: cond.conditions.map((rule, idx) => (idx === ruleIdx ? !rule.isDeleted ? { ...rule, isDeleted: true } : { ...rule } : rule)),
+              conditions: cond.conditions.map((rule, idx) => (idx === ruleIdx ? (!rule.isDeleted ? { ...rule, isDeleted: true } : { ...rule }) : rule)),
             }
           : cond
       )

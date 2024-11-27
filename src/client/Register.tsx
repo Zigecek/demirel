@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { StatusCodes } from "http-status-codes";
+import React, { useEffect, useState } from "react";
+import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
 import TextInput from "./components/TextInput";
 import { postRegister } from "./proxy/endpoints";
-import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
 
 export default function Register() {
   const [username, setUsername] = useState("");

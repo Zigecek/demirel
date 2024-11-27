@@ -1,6 +1,6 @@
-import "./axios";
-import { get, postAsync, getAsync } from "./axios";
 import { user } from "@prisma/client";
+import "./axios";
+import { get, getAsync, postAsync } from "./axios";
 
 export const postSocketAuth = (data: SocketAuth) => postAsync<ApiBase<boolean>>("/api/sockets/auth", data);
 export const getIfLoggedIn = get<ApiBase<Omit<user, "password">>>("/api/auth/loggedIn");

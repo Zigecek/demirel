@@ -38,7 +38,7 @@ export const MessagesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     socket.on("messages", (msgs: MQTTMessageTransfer[]) => {
-      setMessages(msgs.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) }) as MQTTMessage));
+      setMessages(msgs.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) } as MQTTMessage)));
     });
 
     return () => {

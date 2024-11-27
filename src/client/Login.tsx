@@ -1,7 +1,8 @@
+import { StatusCodes } from "http-status-codes";
 import React, { useEffect, useState } from "react";
+import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
 import TextInput from "./components/TextInput";
 import { postLogin } from "./proxy/endpoints";
-import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
 
 export default function Login() {
   const [username, setUsername] = useState("");
