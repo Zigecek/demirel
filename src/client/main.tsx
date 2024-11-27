@@ -1,9 +1,6 @@
-import { StrictMode } from "react";
+import React, { lazy, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import App from "./App";
-import Login from "./Login";
-import Register from "./Register";
 import { MessagesProvider } from "./contexts/MessagesContext";
 import { NicknamesProvider } from "./contexts/NicknamesContext";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
@@ -11,19 +8,43 @@ import { UserProvider } from "./contexts/UserContext";
 import "./index.css";
 import "./ws-client";
 
+type LazyLoaderProps = {
+  children: React.ReactNode;
+};
+
+const LazyLoader: React.FC<LazyLoaderProps> = ({ children }) => {
+  return <React.Suspense fallback={<div>Loading...</div>}>{children}</React.Suspense>;
+};
+
+const LazyApp = lazy(() => import("./pages/App"));
+const LazyLogin = lazy(() => import("./pages/Login"));
+const LazyRegister = lazy(() => import("./pages/Register"));
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: (
+      <LazyLoader>
+        <LazyApp />
+      </LazyLoader>
+    ),
   },
   {
     path: "/login",
-    element: <Login />,
+    element: (
+      <LazyLoader>
+        <LazyLogin />
+      </LazyLoader>
+    ),
   },
   import.meta.env.MODE === "development"
     ? {
         path: "/register",
-        element: <Register />,
+        element: (
+          <LazyLoader>
+            <LazyRegister />
+          </LazyLoader>
+        ),
       }
     : {},
 ]);

@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { RuleSetup } from "./components/RuleSetup";
-import { Chart } from "./components/valueDisplays/Chart";
-import { DailyHistory } from "./components/valueDisplays/Stats";
-import { Value } from "./components/valueDisplays/Value";
-import { useNotification } from "./hooks/useNotification";
-import { usePopup } from "./hooks/usePopup";
-import { fix, number, unit } from "./utils/values";
-import { socket } from "./ws-client";
+import { RuleSetup } from "../components/RuleSetup";
+import { Chart } from "../components/valueDisplays/Chart";
+import { DailyHistory } from "../components/valueDisplays/Stats";
+import { Value } from "../components/valueDisplays/Value";
+import { useNotification } from "../hooks/useNotification";
+import { usePopup } from "../hooks/usePopup";
+import { fix, number, unit } from "../utils/values";
+import { socket } from "../ws-client";
 
 export default function App() {
   const { testNotification } = useNotification();

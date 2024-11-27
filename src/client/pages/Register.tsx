@@ -1,13 +1,14 @@
 import { StatusCodes } from "http-status-codes";
 import React, { useEffect, useState } from "react";
-import CustomSnackbar, { createDefaultConfig } from "./components/CustomSnackbar";
-import TextInput from "./components/TextInput";
-import { postLogin } from "./proxy/endpoints";
+import CustomSnackbar, { createDefaultConfig } from "../components/CustomSnackbar";
+import TextInput from "../components/TextInput";
+import { postRegister } from "../proxy/endpoints";
 
-export default function Login() {
+export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({ username: false, password: false });
+  const [password2, setPassword2] = useState("");
+  const [errors, setErrors] = useState({ username: false, password: false, password2: false });
   const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
 
   useEffect(() => {
@@ -20,37 +21,42 @@ export default function Login() {
     // Validace: jestli jsou políčka prázdná, nastavíme error na true
     const hasUsernameError = username.trim() === "";
     const hasPasswordError = password.trim() === "";
+    const hasPassword2Error = password2.trim() === "" || password !== password2;
 
     setErrors({
       username: hasUsernameError,
       password: hasPasswordError,
+      password2: hasPassword2Error,
     });
 
     // Pokud nejsou žádné chyby, můžeš pokračovat s logikou přihlášení
-    if (!hasUsernameError && !hasPasswordError) {
-      postLogin({ username, password })
+    if (!hasUsernameError && !hasPasswordError && !hasPassword2Error) {
+      // axios to /auth/Register
+      postRegister({ username, password })
         .then((response) => {
-          if (response.success) {
-            // Přihlášení proběhlo úspěšně
+          if (response.status === 202) {
             snackbarConfig?.showSnackbar({
-              text: "Successfully logged in.",
+              text: "User already logged in.",
+              severity: "warning",
+            });
+          } else if (response.status === StatusCodes.OK) {
+            snackbarConfig?.showSnackbar({
+              text: "Successfully registered.",
               severity: "success",
             });
-
-            // Přesměrování na homepage
-            window.location.href = "/";
           }
+          window.location.href = "/";
         })
         .catch((error) => {
           // show snackbar
-          if (error.response?.status === StatusCodes.UNAUTHORIZED) {
+          if (error.response?.status === 409) {
             snackbarConfig?.showSnackbar({
-              text: "Invalid password",
+              text: "User already exists.",
               severity: "error",
             });
-          } else if (error.response?.status === 404) {
+          } else if (error.response?.status === StatusCodes.BAD_REQUEST) {
             snackbarConfig?.showSnackbar({
-              text: "User not found",
+              text: "Please fill in all fields.",
               severity: "error",
             });
           } else {
@@ -60,12 +66,6 @@ export default function Login() {
             });
           }
         });
-    } else {
-      // show snackbar
-      snackbarConfig?.showSnackbar({
-        text: "Please fill in all fields",
-        severity: "error",
-      });
     }
   };
 
@@ -73,13 +73,14 @@ export default function Login() {
     <>
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-lg md:max-w-lg">
-          <h2 className="text-2xl font-semibold text-center mb-6">Přihlášení</h2>
+          <h2 className="text-2xl font-semibold text-center mb-6">Registrace</h2>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <TextInput id="username" label="Přihlašovací jméno" value={username} onChange={setUsername} hasError={errors.username} />
             <TextInput id="password" label="Heslo" type="password" value={password} onChange={setPassword} hasError={errors.password} />
+            <TextInput id="password2" label="Heslo znovu" type="password" value={password2} onChange={setPassword2} hasError={errors.password2} />
             <div>
               <button type="submit" className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Přihlášení
+                Registrace
               </button>
             </div>
           </form>
