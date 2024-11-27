@@ -80,15 +80,16 @@ const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF }) => {
 type DailyHistoryProps = {
   topic: string;
   valueF?: (msg: string) => string;
+  hidden?: boolean;
 };
 
-export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF }) => {
+export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF, hidden = true }) => {
   const { stats: todayStats } = useToday({ topic });
   const { nickname } = useNicknames();
   const [fetched, setFetched] = useState<dailyStats[]>();
   const [history, setHistory] = useState<dailyStats[]>([]);
 
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(!hidden);
 
   const toggleVisibility = () => {
     setShowAll(!showAll);

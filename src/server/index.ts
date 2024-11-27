@@ -1,14 +1,17 @@
-import { env } from "./common/utils/envConfig";
-import { app, logger, sessionDBaccess } from "./server";
-import { Server } from "socket.io";
-import ws from "./ws-server";
-import "./mqtt-client";
+import "./mqtt-transceiver";
+
 import { PrismaClient } from "@prisma/client";
+import { Server } from "socket.io";
 import ViteExpress from "vite-express";
-import { endClient } from "./mqtt-client";
-import { createDailyStats } from "./common/utils/services/daily";
+import { env } from "./common/utils/envConfig";
 import { onEachDay } from "./common/utils/onEachDay";
+import { createDailyStats } from "./common/utils/services/daily";
 import { start } from "./common/utils/services/rules";
+import "./mqtt-client";
+import { endClient } from "./mqtt-client";
+import { endTransceiver } from "./mqtt-transceiver";
+import { app, logger, sessionDBaccess } from "./server";
+import ws from "./ws-server";
 
 export enum Status {
   RUNNING,
@@ -22,6 +25,9 @@ export const status = {
   db: Status.OFFLINE,
   vite: Status.OFFLINE,
   sessionStorage: Status.OFFLINE,
+  rules: Status.OFFLINE,
+  daily: Status.OFFLINE,
+  transceiver: Status.OFFLINE,
 };
 
 export const prisma = new PrismaClient({
@@ -41,6 +47,7 @@ prisma
     onEachDay(() => {
       createDailyStats("all", "all");
     });
+    status.daily = Status.RUNNING;
   })
   .catch((e) => {
     logger.error(`Prisma: Connection failed: ${e}`);
@@ -93,7 +100,7 @@ ws(io);
 export const onCloseSignal = async () => {
   logger.info("System: Closing server...");
   prisma.$disconnect();
-  Promise.all([io.close(), server.close(), endClient(), sessionDBaccess.end()]).then(() => {
+  Promise.all([io.close(), server.close(), endClient(), endTransceiver(), sessionDBaccess.end()]).then(() => {
     logger.info("System: Server closed.");
     process.exit();
   });

@@ -1,7 +1,7 @@
-import { prisma } from "../../..";
+import { prisma, Status, status } from "../../..";
 import { evaluateExpression, replaceTopics } from "../../../../globals/rules";
 import { logger } from "../../../server";
-import { onMemoryChange, memory } from "../memory";
+import { memory, onMemoryChange } from "../memory";
 import { sendNotification } from "../webpush";
 
 let rules: RuleWithId[] = [];
@@ -136,4 +136,5 @@ export const start = async () => {
   onMemoryChange((msg) => {
     checkRule(msg.topic);
   });
+  status.rules = Status.RUNNING;
 };
