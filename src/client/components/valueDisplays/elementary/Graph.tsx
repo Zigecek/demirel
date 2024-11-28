@@ -278,6 +278,13 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     });
   }, [dataPoints, isUserInteracting, timeUnit]);
 
+  useEffect(() => {
+    if (!dataPoints) return;
+    if (isUserInteracting) return;
+
+    resetZoom();
+  }, [isUserInteracting, dataPoints]);
+
   const onZoomPan = (chart: ChartJS) => {
     setBounds(chart.scales.x.getUserBounds());
     setIsUserInteracting(true);
@@ -332,6 +339,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   const resetZoom = () => {
     if (Object.values(dataPoints).flat().length > 0) {
       setTimeUnit("day");
+      // get timestamp from last value of all topics
       const maxTimestamp = Date.now();
       const defualtView = maxTimestamp - defaultBound;
       setBounds({

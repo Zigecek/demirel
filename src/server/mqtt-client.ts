@@ -22,6 +22,8 @@ const regexes = {
 };
 
 const wsQueue: MQTTMessage[] = [];
+let isProcessingQueue = false;
+let debounceTimer: NodeJS.Timeout | null = null;
 
 export const getNewClient = () => {
   return connect(`${mqConfig.url}`, {
@@ -34,54 +36,50 @@ export const getNewClient = () => {
 export const endClient = () => new Promise((resolve) => mqtt.end(false, {}, resolve));
 
 const mqtt = getNewClient();
-const checkQueue = async () => {
-  if (wsQueue.length > 0) {
-    const toSend = [...new Set(wsQueue)];
-    wsQueue.length = 0;
-    logger.info(`WS: Sending ${toSend.length} messages to WS`);
-    io.to("mqtt").emit("messages", toSend);
 
-    logger.info("WS: Messages sent to WS");
-    logger.info("Prisma: Saving messages to DB");
-    // rename message to value and add mqttValueType depending on the type of the message
+const processQueue = async () => {
+  if (isProcessingQueue) {
+    return;
+  }
 
-    // Get the latest value from each topic
-    const dbValuesMap = new Map<string, { value: JsonValue; id: number }>();
-    (await getFromDB()).forEach((val) => {
-      dbValuesMap.set(val.topic, { value: val.value, id: val.id });
-    });
+  isProcessingQueue = true;
 
-    // Příprava na vložení nových hodnot a aktualizace existujících
-    const updates: Array<Prisma.mqttUpdateArgs> = [];
-    const inserts: Array<Prisma.mqttCreateArgs> = [];
+  try {
+    while (wsQueue.length > 0) {
+      const toSend = [...new Set(wsQueue)];
+      wsQueue.length = 0;
 
-    // Filtrovat nové zprávy
-    toSend.forEach((msg) => {
-      const lastValue = dbValuesMap.get(msg.topic);
+      logger.info(`WS: Sending ${toSend.length} messages to WS`);
+      io.to("mqtt").emit("messages", toSend);
 
-      if (!lastValue) {
-        // Pokud neexistuje žádná poslední hodnota, přidej nový záznam
-        // Pro případ nového topicu, který se má začít zaznamenávat
-        // this will stay in place
-        inserts.push({
-          data: {
-            topic: msg.topic,
-            value: msg.value,
-            timestamp: new Date(msg.timestamp.getTime() - 1),
-            valueType: msg.valueType,
-          },
-        });
-      } else {
-        if (lastValue.value === msg.value) {
-          // Pokud se hodnota nezměnila, aktualizuj timestamp
-          updates.push({
-            where: { id: lastValue.id },
-            data: { timestamp: msg.timestamp },
+      logger.info("WS: Messages sent to WS");
+      logger.info("Prisma: Saving messages to DB");
+
+      // Prepare DB updates
+      const dbValuesMap = new Map<string, { value: JsonValue; id: number }>();
+      (await getFromDB()).forEach((val) => {
+        dbValuesMap.set(val.topic, { value: val.value, id: val.id });
+      });
+
+      const updates: Array<Prisma.mqttUpdateArgs> = [];
+      const inserts: Array<Prisma.mqttCreateArgs> = [];
+
+      toSend.forEach((msg) => {
+        const lastValue = dbValuesMap.get(msg.topic);
+
+        if (!lastValue) {
+          // New record
+          inserts.push({
+            data: {
+              topic: msg.topic,
+              value: msg.value,
+              timestamp: new Date(msg.timestamp.getTime() - 1),
+              valueType: msg.valueType,
+            },
           });
-          return; // IMPORTANT !
-        } else {
+        } else if (lastValue.value !== msg.value) {
+          // Update logic for BOOLEAN values
           if (msg.valueType === MqttValueType.BOOLEAN) {
-            // Pokud je to BOOLEAN, přidej ještě jeden záznam s opačnou hodnotou
             inserts.push({
               data: {
                 topic: msg.topic,
@@ -90,52 +88,59 @@ const checkQueue = async () => {
                 valueType: msg.valueType,
               },
             });
-
-            inserts.push({
-              data: {
-                topic: msg.topic,
-                value: msg.value,
-                timestamp: new Date(msg.timestamp.getTime() - 1),
-                valueType: msg.valueType,
-              },
-            });
           }
+          inserts.push({
+            data: {
+              topic: msg.topic,
+              value: msg.value,
+              timestamp: msg.timestamp,
+              valueType: msg.valueType,
+            },
+          });
+        } else {
+          // No change, just update timestamp
+          updates.push({
+            where: { id: lastValue.id },
+            data: { timestamp: msg.timestamp },
+          });
         }
+      });
+
+      const promises: Prisma.PrismaPromise<any>[] = [];
+
+      if (inserts.length > 0) {
+        logger.info("Prisma: Inserting new values. " + inserts.length);
+        promises.push(
+          prisma.mqtt.createMany({
+            data: inserts.map((insert) => insert.data),
+            skipDuplicates: true,
+          })
+        );
       }
 
-      // this will be updated
-      inserts.push({
-        data: {
-          topic: msg.topic,
-          value: msg.value,
-          timestamp: msg.timestamp,
-          valueType: msg.valueType,
-        },
-      });
-    });
+      if (updates.length > 0) {
+        logger.info("Prisma: Updating existing values. " + updates.length);
+        promises.push(...updates.map((update) => prisma.mqtt.update(update)));
+      }
 
-    const promises: Prisma.PrismaPromise<any>[] = [];
-
-    if (inserts.length > 0) {
-      logger.info("Prisma: Inserting new values. " + inserts.length);
-      promises.push(
-        prisma.mqtt.createMany({
-          data: inserts.map((insert) => insert.data),
-          skipDuplicates: true,
-        })
-      );
+      await prisma.$transaction(promises);
+      logger.info("Prisma: -- Messages saved to DB --");
     }
-
-    // Vykonání aktualizací a vkládání v transakci
-    if (updates.length > 0) {
-      logger.info("Prisma: Updating existing values. " + updates.length);
-      promises.push(...updates.map((update) => prisma.mqtt.update(update)));
-    }
-
-    await prisma.$transaction(promises);
-
-    logger.info("Prisma: -- Messages saved to DB --");
+  } catch (err) {
+    logger.error("Error processing queue:", err);
+  } finally {
+    isProcessingQueue = false; // Reset the flag
   }
+};
+
+const scheduleProcessing = () => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer); // Reset the timer
+  }
+
+  debounceTimer = setTimeout(() => {
+    processQueue(); // Process the queue after 100 ms
+  }, 100);
 };
 
 //setIntervalAsync(checkQueue, mqConfig.wsInterval);
@@ -187,7 +192,7 @@ mqtt.on("message", (topic, message) => {
       timestamp: when,
       valueType,
     } as MQTTMessage);
-    setTimeout(checkQueue, 100);
+    scheduleProcessing(); // Trigger processing with buffering
 
     addMessage({ topic, value: val, timestamp: when, valueType } as MQTTMessage);
   }

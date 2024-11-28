@@ -46,6 +46,7 @@ export default function App() {
           <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
         </div>
         <div>
+          <Chart topics={["zige/pozar0/fire/val"]} boolean={true} />
           <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} />
           <DailyHistory topic="zige/pozar0/cerpadlo/val" hidden={true} />
 
