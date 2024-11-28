@@ -42,8 +42,8 @@ const dimHexColor = (hex: string, factor: number = 0.7): string => {
 
 const dimmed = hexColors.map((hex) => chalk.hex(dimHexColor(hex, 0.55)));
 
-const moduleColors: Record<string, chalk.Chalk> = {};
-const messageColors: Record<string, chalk.Chalk> = {};
+const moduleColors: Record<string, typeof chalk> = {};
+const messageColors: Record<string, typeof chalk> = {};
 
 // Vlastní formátovací funkce
 const customPrettifier = pretty({
