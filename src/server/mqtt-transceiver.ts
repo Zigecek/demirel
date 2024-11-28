@@ -1,4 +1,4 @@
-import mqtt, { IClientOptions, MqttClient, Packet } from "mqtt";
+import { connect, MqttClient, Packet } from "mqtt";
 import { Status, status } from ".";
 import { env } from "./common/utils/envConfig";
 import { logger } from "./server";
@@ -16,18 +16,27 @@ function parseNumeric(val: string): number | string {
   return isNaN(num) ? val : num % 1 === 0 ? Math.round(num) : num;
 }
 
-const clientId = `transceiver-${Array.from({ length: 4 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("")}`;
-
-const options: IClientOptions = {
-  clientId: clientId,
+export const mqConfig = {
+  url: env.MQTT_URL,
   username: env.MQTT_USERNAME,
   password: env.MQTT_PASSWORD,
+  clientId: `transceiver-${Array.from({ length: 4 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("")}`,
 };
+
+export const getNewClient = () => {
+  return connect(`${mqConfig.url}`, {
+    username: mqConfig.username,
+    password: mqConfig.password,
+    clientId: mqConfig.clientId,
+  });
+};
+
+export const endTransceiver = () => new Promise((resolve) => client?.end(false, {}, resolve));
 
 let client: MqttClient;
 
 export const connectClient = () => {
-  client = mqtt.connect(env.MQTT_URL, options);
+  client = getNewClient();
 
   client.on("connect", () => {
     logger.info("TRANSCEIVER: Connected");
@@ -100,5 +109,3 @@ export const connectClient = () => {
     status.transceiver = Status.ERROR;
   });
 };
-
-export const endTransceiver = () => new Promise((resolve) => client.end(false, {}, resolve));

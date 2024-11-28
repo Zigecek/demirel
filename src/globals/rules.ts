@@ -33,11 +33,7 @@ export const replaceTopics = (expression: string, context: RuleContext): string 
 
 export const evaluateExpression = (expression: string, context: RuleContext): boolean => {
   // Nahrazení topiců za hodnoty z contextu
-  let replacedExpression = expression;
-  for (const [key, value] of Object.entries(context)) {
-    const regex = new RegExp(`\\{${key}\\}`, "g");
-    replacedExpression = replacedExpression.replace(regex, JSON.stringify(value));
-  }
+  const replacedExpression = replaceTopics(expression, context);
 
   // Vyhodnocení výrazu
   try {

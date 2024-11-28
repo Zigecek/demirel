@@ -46,12 +46,9 @@ const checkQueue = async () => {
     // rename message to value and add mqttValueType depending on the type of the message
 
     // Get the latest value from each topic
-    const lastValues = await getFromDB();
-
-    // Map pro poslední hodnoty
-    const lastValuesMap = new Map<string, { value: JsonValue; id: number }>();
-    lastValues.forEach((val) => {
-      lastValuesMap.set(val.topic, { value: val.value, id: val.id });
+    const dbValuesMap = new Map<string, { value: JsonValue; id: number }>();
+    (await getFromDB()).forEach((val) => {
+      dbValuesMap.set(val.topic, { value: val.value, id: val.id });
     });
 
     // Příprava na vložení nových hodnot a aktualizace existujících
@@ -60,15 +57,28 @@ const checkQueue = async () => {
 
     // Filtrovat nové zprávy
     toSend.forEach((msg) => {
-      const lastValue = lastValuesMap.get(msg.topic);
+      const lastValue = dbValuesMap.get(msg.topic);
 
-      if (lastValue) {
+      if (!lastValue) {
+        // Pokud neexistuje žádná poslední hodnota, přidej nový záznam
+        // Pro případ nového topicu, který se má začít zaznamenávat
+        // this will stay in place
+        inserts.push({
+          data: {
+            topic: msg.topic,
+            value: msg.value,
+            timestamp: new Date(msg.timestamp.getTime() - 1),
+            valueType: msg.valueType,
+          },
+        });
+      } else {
         if (lastValue.value === msg.value) {
           // Pokud se hodnota nezměnila, aktualizuj timestamp
           updates.push({
             where: { id: lastValue.id },
             data: { timestamp: msg.timestamp },
           });
+          return; // IMPORTANT !
         } else {
           if (msg.valueType === MqttValueType.BOOLEAN) {
             // Pokud je to BOOLEAN, přidej ještě jeden záznam s opačnou hodnotou
@@ -90,57 +100,41 @@ const checkQueue = async () => {
               },
             });
           }
-
-          // Pro ostatní typy hodnot přidej nový záznam
-          inserts.push({
-            data: {
-              topic: msg.topic,
-              value: msg.value,
-              timestamp: msg.timestamp,
-              valueType: msg.valueType,
-            },
-          });
         }
-      } else {
-        // Pokud neexistuje žádná poslední hodnota, přidej nový záznam
-
-        // this will stay in place
-        inserts.push({
-          data: {
-            topic: msg.topic,
-            value: msg.value,
-            timestamp: new Date(msg.timestamp.getTime() - 1),
-            valueType: msg.valueType,
-          },
-        });
-
-        // this will be updated
-        inserts.push({
-          data: {
-            topic: msg.topic,
-            value: msg.value,
-            timestamp: msg.timestamp,
-            valueType: msg.valueType,
-          },
-        });
       }
+
+      // this will be updated
+      inserts.push({
+        data: {
+          topic: msg.topic,
+          value: msg.value,
+          timestamp: msg.timestamp,
+          valueType: msg.valueType,
+        },
+      });
     });
+
+    const promises: Prisma.PrismaPromise<any>[] = [];
 
     if (inserts.length > 0) {
       logger.info("Prisma: Inserting new values. " + inserts.length);
-      await prisma.mqtt.createMany({
-        data: inserts.map((insert) => insert.data),
-        skipDuplicates: true,
-      });
+      promises.push(
+        prisma.mqtt.createMany({
+          data: inserts.map((insert) => insert.data),
+          skipDuplicates: true,
+        })
+      );
     }
 
     // Vykonání aktualizací a vkládání v transakci
     if (updates.length > 0) {
       logger.info("Prisma: Updating existing values. " + updates.length);
-      await prisma.$transaction(updates.map((update) => prisma.mqtt.update(update)));
+      promises.push(...updates.map((update) => prisma.mqtt.update(update)));
     }
 
-    logger.info("Prisma: Messages saved to DB");
+    await prisma.$transaction(promises);
+
+    logger.info("Prisma: -- Messages saved to DB --");
   }
 };
 

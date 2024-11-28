@@ -68,7 +68,7 @@ export const checkRule = async (topic: string) => {
     });
 
     if (result) {
-      logger.info(`Rules: Rule '${rule.name}' for topic '${topic}' passed.`);
+      logger.info(`Rules: Rule '${rule.name}' condition: '${replaceTopics(rule.conditions.join(" && "), context)}' passed.`);
 
       activateRuleNotify(rule);
     } else {
