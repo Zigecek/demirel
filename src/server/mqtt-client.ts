@@ -68,7 +68,7 @@ const processQueue = async () => {
         const lastValue = dbValuesMap.get(msg.topic);
 
         if (!lastValue) {
-          // New record
+          // Pokud neexistuje, přidej prvotní záznam, který zůstane v DB na místě
           inserts.push({
             data: {
               topic: msg.topic,
@@ -77,9 +77,17 @@ const processQueue = async () => {
               valueType: msg.valueType,
             },
           });
-        } else if (lastValue.value !== msg.value) {
-          // Update logic for BOOLEAN values
-          if (msg.valueType === MqttValueType.BOOLEAN) {
+        } else {
+          if (lastValue.value === msg.value) {
+            // Pokud se hodnota nezměnila, posune tento záznam
+            updates.push({
+              where: { id: lastValue.id },
+              data: { timestamp: msg.timestamp },
+            });
+            return; // IMPORTANT !
+          } else if (msg.valueType === MqttValueType.BOOLEAN) {
+            // Tyto dva záznamy zůstanou na místě, je to potřeba kvůli grafům
+
             inserts.push({
               data: {
                 topic: msg.topic,
@@ -88,22 +96,27 @@ const processQueue = async () => {
                 valueType: msg.valueType,
               },
             });
+
+            inserts.push({
+              data: {
+                topic: msg.topic,
+                value: msg.value,
+                timestamp: new Date(msg.timestamp.getTime() - 1),
+                valueType: msg.valueType,
+              },
+            });
           }
-          inserts.push({
-            data: {
-              topic: msg.topic,
-              value: msg.value,
-              timestamp: msg.timestamp,
-              valueType: msg.valueType,
-            },
-          });
-        } else {
-          // No change, just update timestamp
-          updates.push({
-            where: { id: lastValue.id },
-            data: { timestamp: msg.timestamp },
-          });
         }
+
+        // Tento záznam se bude posouvat, pokud se hodnota nezmění
+        inserts.push({
+          data: {
+            topic: msg.topic,
+            value: msg.value,
+            timestamp: msg.timestamp,
+            valueType: msg.valueType,
+          },
+        });
       });
 
       const promises: Prisma.PrismaPromise<any>[] = [];

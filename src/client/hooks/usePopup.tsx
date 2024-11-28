@@ -15,8 +15,8 @@ export const usePopup = (PopupContent: React.FC<PopupContentProps>): PopupHookRe
 
   const PopupComponent = isVisible
     ? ReactDOM.createPortal(
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-9">
-          <div className="bg-white p-3 rounded-lg shadow-lg relative w-full h-full">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 sm:p-9">
+          <div className="bg-white p-3 sm:rounded-lg shadow-lg relative w-full h-full">
             <PopupContent showPopup={showPopup} closePopup={closePopup} />
           </div>
         </div>,

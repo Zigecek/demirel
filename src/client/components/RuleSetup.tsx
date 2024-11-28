@@ -100,9 +100,14 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
     };
     init().finally(() => {
       setLoading(false);
-      setSelectedRule(rules.length > 0 ? rules[0] : null);
     });
   }, []);
+
+  useEffect(() => {
+    if (!initRules) return;
+
+    setSelectedRule(rules.length > 0 ? rules[0] : null);
+  }, [initRules]);
 
   // propagate selectedCondition changes to the conditions
   useEffect(() => {
@@ -268,7 +273,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-y-auto">
       <div className="flex gap-3 p-2 flex-wrap md:flex-nowrap grow">
         {/* Left Panel */}
         <div className="w-full md:w-1/3 bg-gray-100 p-4 rounded-lg">
@@ -293,7 +298,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
                   }
 
                   return "bg-white";
-                })()} p-2 mb-2 rounded-lg flex justify-between items-center`}
+                })()} p-2 mb-2 rounded-lg flex justify-between items-center border ${selectedRule?.id === rule.id ? "border-gray-700" : "border-white"}`}
                 key={rule.id}>
                 <div className="flex justify-between w-full">
                   <div
@@ -465,7 +470,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
                             return "border-yellow-500 bg-yellow-100";
                           }
                           return "";
-                        })()} flex-1 p-2 border rounded mr-2`}
+                        })()} w-full p-2 border rounded mr-2`}
                         value={cond.condition}
                         onChange={(e) => {
                           const newCondition = e.target.value;

@@ -89,23 +89,27 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     addToHistory(responseObject.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) } as MQTTMessage)));
   };
 
+  const setTimeUnitByBounds = (min: number, max: number) => {
+    const days = (max - min) / (24 * 60 * 60 * 1000);
+    const hours = (max - min) / (60 * 60 * 1000);
+    const minutes = (max - min) / (60 * 1000);
+
+    if (days > 4) {
+      setTimeUnit("day");
+    } else if (hours > 2.5) {
+      setTimeUnit("hour");
+    } else if (minutes > 2.5) {
+      setTimeUnit("minute");
+    } else {
+      setTimeUnit("second");
+    }
+  };
+
   useEffect(() => {
     if (boundsTimeout) clearTimeout(boundsTimeout);
 
     if (bounds) {
-      const days = (bounds.max - bounds.min) / (24 * 60 * 60 * 1000);
-      const hours = (bounds.max - bounds.min) / (60 * 60 * 1000);
-      const minutes = (bounds.max - bounds.min) / (60 * 1000);
-
-      if (days > 4) {
-        setTimeUnit("day");
-      } else if (hours > 2.5) {
-        setTimeUnit("hour");
-      } else if (minutes > 2.5) {
-        setTimeUnit("minute");
-      } else {
-        setTimeUnit("second");
-      }
+      setTimeUnitByBounds(bounds.min, bounds.max);
     }
 
     const timeout = setTimeout(() => {
@@ -115,6 +119,17 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       // get needed interval of timestamps for data fetching
       const postMin: number = bounds.min < loaded.min ? bounds.min : loaded.max;
       const postMax: number = bounds.max > loaded.max ? bounds.max : loaded.min;
+
+      // get newest data point from data points
+      const newestDataPoint = Math.max(
+        ...Object.values(dataPoints)
+          .flat()
+          .map((dp) => dp.timestamp.getTime())
+      );
+
+      if (postMax > newestDataPoint) {
+        setLoaded((prev) => ({ ...prev, max: Number.MAX_SAFE_INTEGER }));
+      }
 
       // if the new interval contains the old one, post the difference (two intervals)
       if (postMin < loaded.min && postMax > loaded.max && loaded.min < loaded.max) {
@@ -312,13 +327,13 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       chartRef.current.update();
     }
   };
-  /*
+
   useEffect(() => {
     if (data != undefined && options != undefined) {
       updateChart();
     }
   }, [data, options]);
-*/
+
   useLayoutEffect(() => {
     updateChart();
     window.addEventListener("resize", updateChart);
@@ -338,16 +353,20 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
 
   const resetZoom = () => {
     if (Object.values(dataPoints).flat().length > 0) {
-      setTimeUnit("day");
       // get timestamp from last value of all topics
-      const maxTimestamp = Date.now();
-      const defualtView = maxTimestamp - defaultBound;
+      const maxTimestamp = Math.max(
+        ...Object.values(dataPoints)
+          .flat()
+          .map((dp) => dp.timestamp.getTime())
+      );
+      const defaultView = maxTimestamp - defaultBound;
       setBounds({
-        min: defualtView,
+        min: defaultView,
         max: maxTimestamp,
         minDefined: true,
         maxDefined: true,
       });
+      setTimeUnitByBounds(defaultView, maxTimestamp);
       setIsUserInteracting(false);
     }
   };
