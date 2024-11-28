@@ -1,9 +1,9 @@
 import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { calculateStats, getDayDates } from "../../../globals/daily";
-import { handleServiceResponse } from "../../common/utils/httpHandlers";
-import { cloneMemory } from "../../common/utils/memory";
-import { ServiceResponse } from "../../common/utils/serviceResponse";
+import { handleServiceResponse } from "../../utils/httpHandlers";
+import { cloneMemory } from "../../utils/memory";
+import { ServiceResponse } from "../../utils/serviceResponse";
 import { prisma } from "../../index";
 
 export const mqttRouter: Router = express.Router();

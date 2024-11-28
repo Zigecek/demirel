@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
-import { cleanEnv, host, port, str, testOnly } from "envalid";
-import { ESModulesRunner } from "vite/runtime";
+import { cleanEnv, host, port, str } from "envalid";
 
 dotenv.config();
 

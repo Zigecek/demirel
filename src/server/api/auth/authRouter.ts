@@ -1,13 +1,13 @@
 import express, { type Request, type Response, type Router } from "express";
 
-import { ServiceResponse } from "../../common/utils/serviceResponse";
-import { handleServiceResponse } from "../../common/utils/httpHandlers";
-import { logger } from "../../server";
+import { handleServiceResponse } from "../../utils/httpHandlers";
+import { ServiceResponse } from "../../utils/serviceResponse";
 //import { io } from "../../index";
-import { prisma } from "../../index";
-import argon2 from "argon2";
 import { user } from "@prisma/client";
+import argon2 from "argon2";
 import { StatusCodes } from "http-status-codes";
+import { prisma } from "../../index";
+import logger from "../../utils/loggers";
 
 export const authRouter: Router = express.Router();
 
@@ -77,7 +77,7 @@ authRouter.get("/logout", async (req: Request, res: Response) => {
   // then delete session user
   req.session.destroy((err) => {
     if (err) {
-      logger.error("Error destroying session: ", err);
+      logger.root.error("Error destroying session: ", err);
     }
   });
 

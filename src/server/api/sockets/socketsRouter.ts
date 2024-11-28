@@ -1,10 +1,10 @@
 import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { handleServiceResponse } from "../../common/utils/httpHandlers";
-import { ServiceResponse } from "../../common/utils/serviceResponse";
 import { io } from "../../index";
-import { logger } from "../../server";
-import { cloneMemory } from "./../../common/utils/memory";
+import { handleServiceResponse } from "../../utils/httpHandlers";
+import logger from "../../utils/loggers";
+import { cloneMemory } from "../../utils/memory";
+import { ServiceResponse } from "../../utils/serviceResponse";
 
 export const socketsRouter: Router = express.Router();
 
@@ -28,7 +28,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
     return handleServiceResponse(serviceResponse, res);
   }
 
-  logger.info("WS: Authorizing socket: " + gotSocket?.id);
+  logger.ws.info("Authorizing socket: " + gotSocket?.id);
 
   gotSocket.join("mqtt");
 
@@ -36,7 +36,7 @@ socketsRouter.post("/auth", async (req: Request, res: Response) => {
   const messages = Object.values(await cloneMemory());
 
   gotSocket.emit("messages", [...new Set([...messages])]);
-  logger.info("WS: Socket Authenticated.");
+  logger.ws.info("Socket Authenticated.");
 
   const serviceResponse = ServiceResponse.success("Socket Authenticated.", true);
   return handleServiceResponse(serviceResponse, res);

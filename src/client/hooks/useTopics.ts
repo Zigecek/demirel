@@ -20,17 +20,23 @@ export const useTopics = (topics: string[]) => {
       const lastMessageInterval = lastMessageIntervals[topic];
       if (lastMessageInterval) {
         const allowedInterval = lastMessageInterval * 1.3;
-        setSuspicious((prev) => ({ ...prev, [topic]: now.getTime() - timestamp.getTime() > allowedInterval }));
+        if (suspicious[topic] !== now.getTime() - timestamp.getTime() > allowedInterval) {
+          setSuspicious((prev) => ({ ...prev, [topic]: now.getTime() - timestamp.getTime() > allowedInterval }));
+        }
         return;
       }
 
       const hardLimit = 2 * 60 * 1000;
       if (now.getTime() - timestamp.getTime() > hardLimit) {
-        setSuspicious((prev) => ({ ...prev, [topic]: true }));
+        if (!suspicious[topic]) {
+          setSuspicious((prev) => ({ ...prev, [topic]: true }));
+        }
         return;
       }
 
-      setSuspicious((prev) => ({ ...prev, [topic]: false }));
+      if (suspicious[topic]) {
+        setSuspicious((prev) => ({ ...prev, [topic]: false }));
+      }
     }
   };
 
@@ -40,6 +46,11 @@ export const useTopics = (topics: string[]) => {
     if (messages.length === 0) return;
     const clonnedMessages = _.cloneDeep(messages);
 
+    const newValues: Record<string, MQTTMessage["value"]> = {};
+    const newTimestamps: Record<string, Date> = {};
+    const newLastMessageIntervals: Record<string, number | undefined> = {};
+    const newMsgHistory: MQTTMessage[] = [];
+
     topics.forEach((topic) => {
       const topicMsgs = clonnedMessages.filter((msg) => msg.topic === topic);
       if (!topicMsgs || topicMsgs.length === 0) return;
@@ -47,19 +58,24 @@ export const useTopics = (topics: string[]) => {
       const msg = topicMsgs.pop();
       if (!msg) return;
 
-      addToHistory([msg]);
+      newMsgHistory.push(msg);
 
       const timestamp = timestamps[topic];
       if (timestamp) {
         if (msg.timestamp.getTime() <= timestamp.getTime()) return;
 
         const interval = msg.timestamp.getTime() - timestamp.getTime();
-        setLastMessageIntervals((prev) => ({ ...prev, [topic]: interval }));
+        newLastMessageIntervals[topic] = interval;
       }
 
-      setValues((prev) => ({ ...prev, [topic]: msg.value }));
-      setTimestamps((prev) => ({ ...prev, [topic]: msg.timestamp }));
+      newValues[topic] = msg.value;
+      newTimestamps[topic] = msg.timestamp;
     });
+
+    addToHistory(newMsgHistory);
+    setValues((prev) => ({ ...prev, ...newValues }));
+    setTimestamps((prev) => ({ ...prev, ...newTimestamps }));
+    setLastMessageIntervals((prev) => ({ ...prev, ...newLastMessageIntervals }));
   }, [messages, topics]);
 
   useEffect(() => {

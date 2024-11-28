@@ -2,10 +2,10 @@ import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { prisma } from "../..";
 import { extractTopics, validateExpression } from "../../../globals/rules";
-import { handleServiceResponse } from "../../common/utils/httpHandlers";
-import { cloneMemory } from "../../common/utils/memory";
-import { ServiceResponse } from "../../common/utils/serviceResponse";
-import { updateRules } from "../../common/utils/services/rules";
+import { handleServiceResponse } from "../../utils/httpHandlers";
+import { cloneMemory } from "../../utils/memory";
+import { ServiceResponse } from "../../utils/serviceResponse";
+import { updateRules } from "../../services/rules";
 
 export const ruleRouter: Router = express.Router();
 

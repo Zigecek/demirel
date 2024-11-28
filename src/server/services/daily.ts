@@ -1,10 +1,10 @@
-import { prisma } from "../../..";
-import { logger } from "../../../server";
-import { getDayDates, calculateStats } from "../../../../globals/daily";
 import { Prisma } from "@prisma/client";
+import { prisma } from "..";
+import { calculateStats, getDayDates } from "../../globals/daily";
+import logger from "../utils/loggers";
 
 export async function createDailyStats(topic: string | "all" = "all", date: Date | "all" = "all") {
-  logger.info("Daily: Creating daily stats: " + topic + " - " + date);
+  logger.daily.info("Creating daily stats: " + topic + " - " + date);
   // restrict the messages to the topic and date
   let where: Prisma.mqttWhereInput = {};
   if (topic !== "all") {
@@ -71,9 +71,9 @@ export async function createDailyStats(topic: string | "all" = "all", date: Date
   } while (messages.length > 0);
 
   // save the stats to the db
-  logger.info("Daily: Saving daily stats to db");
+  logger.daily.info("Saving daily stats to db");
   await prisma.daily.createMany({
     data: dailyStats,
   });
-  logger.info("Daily: Daily stats saved to db");
+  logger.daily.info("Daily stats saved to db");
 }

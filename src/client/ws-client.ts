@@ -1,9 +1,9 @@
 import { io } from "socket.io-client";
-import { API_URL } from "./utils/apiUrl";
 import { postSocketAuth } from "./proxy/endpoints";
+import { API_URL } from "./utils/apiUrl";
 //import EventEmitter from "eventemitter3";
 
-console.log("WS: Connecting (" + API_URL + ")");
+console.log("Connecting (" + API_URL + ")");
 
 //export const socketEE = new EventEmitter();
 export const socket = io(API_URL, {
@@ -16,7 +16,7 @@ export const socket = io(API_URL, {
 });
 
 socket.on("connect", async () => {
-  console.log("WS: Connected.");
+  console.log("Connected.");
 
   // connect socket to user session on expresse
   await postSocketAuth({
@@ -25,7 +25,7 @@ socket.on("connect", async () => {
 });
 
 socket.on("reconnect", async () => {
-  console.log("WS: Reconnected.");
+  console.log("Reconnected.");
 
   // connect socket to user session on expresse
   await postSocketAuth({

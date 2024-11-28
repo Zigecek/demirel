@@ -4,23 +4,15 @@ import express, { type Express } from "express";
 import "express-session";
 import session from "express-session";
 import pg from "pg";
-import { pino } from "pino";
-import pretty from "pino-pretty";
 import ViteExpress from "vite-express";
-import { onCloseSignal, Status, status } from ".";
 import { authRouter } from "./api/auth/authRouter";
 import { healthCheckRouter } from "./api/healthCheck/healthCheckRouter";
 import { mqttRouter } from "./api/mqtt/mqttRouter";
 import { pushRouter } from "./api/push/pushRouter";
 import { ruleRouter } from "./api/rule/ruleRouter";
 import { socketsRouter } from "./api/sockets/socketsRouter";
-import { env } from "./common/utils/envConfig";
+import { env } from "./utils/env";
 
-const logger = pino(
-  pretty({
-    ignore: "pid,hostname",
-  })
-);
 const app: Express = express();
 
 app.set("trust proxy", true);
@@ -37,17 +29,6 @@ declare module "express-session" {
 
 export const sessionDBaccess = new pg.Pool({
   connectionString: env.DATABASE_URL,
-});
-
-sessionDBaccess.on("error", (err) => {
-  logger.error(`SessionStorage: ${err}`);
-  status.sessionStorage = Status.ERROR;
-  onCloseSignal();
-});
-
-sessionDBaccess.on("connect", () => {
-  logger.info("SessionStorage: Connected.");
-  status.sessionStorage = Status.RUNNING;
 });
 
 app.use(
@@ -103,7 +84,4 @@ app.get("/login", (req: express.Request, res: express.Response, next: express.Ne
 // Vite Express
 app.use(ViteExpress.static());
 
-// Error handlers
-//app.use(errorHandler());
-
-export { app, logger };
+export { app };

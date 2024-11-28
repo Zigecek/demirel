@@ -1,10 +1,10 @@
 import { MqttValueType, Prisma } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 import { connect } from "mqtt";
-import { io, prisma, Status, status } from ".";
-import { env } from "./common/utils/envConfig";
-import { addMessage, getFromDB } from "./common/utils/memory";
-import { logger } from "./server";
+import { io, prisma, Status, status } from "..";
+import { env } from "../utils/env";
+import logger from "../utils/loggers";
+import { addMessage, getFromDB } from "../utils/memory";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -49,11 +49,11 @@ const processQueue = async () => {
       const toSend = [...new Set(wsQueue)];
       wsQueue.length = 0;
 
-      logger.info(`WS: Sending ${toSend.length} messages to WS`);
+      logger.ws.info(`Sending ${toSend.length} messages to WS`);
       io.to("mqtt").emit("messages", toSend);
 
-      logger.info("WS: Messages sent to WS");
-      logger.info("Prisma: Saving messages to DB");
+      logger.ws.info("Messages sent to WS");
+      logger.db.info("Saving messages to DB");
 
       // Prepare DB updates
       const dbValuesMap = new Map<string, { value: JsonValue; id: number }>();
@@ -122,7 +122,7 @@ const processQueue = async () => {
       const promises: Prisma.PrismaPromise<any>[] = [];
 
       if (inserts.length > 0) {
-        logger.info("Prisma: Inserting new values. " + inserts.length);
+        logger.db.info("Inserting new values. " + inserts.length);
         promises.push(
           prisma.mqtt.createMany({
             data: inserts.map((insert) => insert.data),
@@ -132,15 +132,15 @@ const processQueue = async () => {
       }
 
       if (updates.length > 0) {
-        logger.info("Prisma: Updating existing values. " + updates.length);
+        logger.db.info("Updating existing values. " + updates.length);
         promises.push(...updates.map((update) => prisma.mqtt.update(update)));
       }
 
       await prisma.$transaction(promises);
-      logger.info("Prisma: -- Messages saved to DB --");
+      logger.db.info("-- Messages saved to DB --");
     }
   } catch (err) {
-    logger.error("Error processing queue:", err);
+    logger.db.error("Error processing queue:", err);
   } finally {
     isProcessingQueue = false; // Reset the flag
   }
@@ -159,19 +159,19 @@ const scheduleProcessing = () => {
 //setIntervalAsync(checkQueue, mqConfig.wsInterval);
 
 mqtt.on("connect", () => {
-  logger.info("MQTT: Connected.");
+  logger.mqtt.info("Connected.");
   mqtt.subscribe(mqConfig.rootTopic);
   status.mqtt = Status.RUNNING;
 });
 
 mqtt.stream.on("error", (err) => {
-  logger.error("MQTT: Error: ", err.message);
+  logger.mqtt.error("Error: ", err.message);
 });
 
 mqtt.on("message", (topic, message) => {
   const msg: string = message.toString();
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
-    logger.warn("MQTT: Invalid topic in net: " + topic);
+    logger.mqtt.warn("Invalid topic in net: " + topic);
     return;
   }
 
@@ -189,7 +189,7 @@ mqtt.on("message", (topic, message) => {
       // parseFloat and mathematicaly round to 1 decimal place
       val = Math.round(parseFloat(msg) * 10) / 10;
     } else {
-      logger.warn("MQTT: Invalid value in net: " + msg);
+      logger.mqtt.warn("Invalid value in net: " + msg);
       return;
     }
 
@@ -197,7 +197,7 @@ mqtt.on("message", (topic, message) => {
     if (status.ws !== Status.RUNNING) return;
     if (status.memory !== Status.RUNNING) return;
 
-    logger.info(`MQTT: ${topic}: ${val} <${valueType}>`);
+    logger.mqtt.info(`${topic}: ${val} <${valueType}>`);
 
     wsQueue.push({
       topic,

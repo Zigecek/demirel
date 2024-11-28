@@ -1,13 +1,12 @@
-import express, { type Request, type Response, type Router } from "express";
-import { ServiceResponse } from "../../common/utils/serviceResponse";
-import { handleServiceResponse } from "../../common/utils/httpHandlers";
-import { prisma } from "../../index";
-import webPush from "web-push";
-import { env } from "../../common/utils/envConfig";
 import { InputJsonObject } from "@prisma/client/runtime/library";
-import { logger } from "../../server";
+import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { sendNotification } from "../../common/utils/webpush";
+import webPush from "web-push";
+import { prisma } from "../../index";
+import { env } from "../../utils/env";
+import { handleServiceResponse } from "../../utils/httpHandlers";
+import { ServiceResponse } from "../../utils/serviceResponse";
+import { sendNotification } from "../../utils/webpush";
 
 export const pushRouter: Router = express.Router();
 

@@ -1,7 +1,7 @@
 import express, { type Request, type Response, type Router } from "express";
 
-import { ServiceResponse } from "../common/utils/serviceResponse";
-import { handleServiceResponse } from "../common/utils/httpHandlers";
+import { ServiceResponse } from "../utils/serviceResponse";
+import { handleServiceResponse } from "../utils/httpHandlers";
 
 export const rootRouter: Router = express.Router();
 

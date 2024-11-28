@@ -1,8 +1,8 @@
-import { prisma, Status, status } from "../../..";
-import { evaluateExpression, replaceTopics } from "../../../../globals/rules";
-import { logger } from "../../../server";
-import { memory, onMemoryChange } from "../memory";
-import { sendNotification } from "../webpush";
+import { prisma, Status, status } from "..";
+import { evaluateExpression, replaceTopics } from "../../globals/rules";
+import logger from "../utils/loggers";
+import { memory, onMemoryChange } from "../utils/memory";
+import { sendNotification } from "../utils/webpush";
 
 let rules: RuleWithId[] = [];
 const topicTypes: RuleTopics = {};
@@ -26,7 +26,7 @@ export const updateRules = async (username: string) => {
 };
 
 export const loadRules = async () => {
-  logger.info("Rules: Updating rules.");
+  logger.rules.info("Updating rules.");
   rules = await prisma.rule.findMany();
 };
 
@@ -68,7 +68,7 @@ export const checkRule = async (topic: string) => {
     });
 
     if (result) {
-      logger.info(`Rules: Rule '${rule.name}' condition: '${replaceTopics(rule.conditions.join(" && "), context)}' passed.`);
+      logger.rules.info(`Rules: Rule '${rule.name}' condition: '${replaceTopics(rule.conditions.join(" && "), context)}' passed.`);
 
       activateRuleNotify(rule);
     } else {
@@ -131,7 +131,7 @@ const deactivateRuleNotify = async (rule: RuleWithId) => {
 };
 
 export const start = async () => {
-  logger.info("Rules: Starting rules service.");
+  logger.rules.info("Starting rules service.");
   await loadRules();
   await setTypes();
   onMemoryChange((msg) => {

@@ -1,7 +1,7 @@
-import { prisma } from "../..";
-import webPush from "web-push";
-import { logger } from "../../server";
 import { StatusCodes } from "http-status-codes";
+import webPush from "web-push";
+import { prisma } from "..";
+import logger from "./loggers";
 
 export const sendNotification = async (username: string, notificationPayload: Partial<NotificationProps>) => {
   notificationPayload = {
@@ -24,11 +24,11 @@ export const sendNotification = async (username: string, notificationPayload: Pa
     webPush
       .sendNotification(data, JSON.stringify(notificationPayload))
       .then(() => {
-        logger.info("Webpush: Notified - " + data.endpoint);
+        logger.webpush.info("Webpush: Notified - " + data.endpoint);
       })
       .catch(async (err) => {
         if (err.statusCode === StatusCodes.GONE) {
-          logger.info("Webpush: Unavailable - " + data.endpoint);
+          logger.webpush.info("Webpush: Unavailable - " + data.endpoint);
           // Smazání neplatné subscription
           await prisma.webpush
             .delete({
@@ -37,7 +37,7 @@ export const sendNotification = async (username: string, notificationPayload: Pa
               },
             })
             .then(() => {
-              logger.info("Webpush: Removed - " + data.endpoint);
+              logger.webpush.info("Webpush: Removed - " + data.endpoint);
             });
         }
       });

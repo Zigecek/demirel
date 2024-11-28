@@ -1,16 +1,16 @@
 import { PrismaClient } from "@prisma/client";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
-import { env } from "./common/utils/envConfig";
-import { start as startMem } from "./common/utils/memory";
-import { onEachDay } from "./common/utils/onEachDay";
-import { createDailyStats } from "./common/utils/services/daily";
-import { start as startRules } from "./common/utils/services/rules";
-import "./mqtt-client";
-import { endClient } from "./mqtt-client";
-import { connectClient, endTransceiver } from "./mqtt-transceiver";
-import { app, logger, sessionDBaccess } from "./server";
-import ws from "./ws-server";
+import { app, sessionDBaccess } from "./server";
+import { createDailyStats } from "./services/daily";
+import "./services/mqttClient";
+import { endClient } from "./services/mqttClient";
+import { connectClient, endTransceiver } from "./services/mqttTransceiver";
+import { start as startRules } from "./services/rules";
+import { env } from "./utils/env";
+import logger from "./utils/loggers";
+import { start as startMem } from "./utils/memory";
+import { onEachDay } from "./utils/schedulers";
 
 if (env.RUNNER === "rpi") {
   connectClient();
@@ -41,12 +41,10 @@ export const prisma = new PrismaClient({
 prisma
   .$connect()
   .then(async () => {
-    logger.info("Prisma: Connected.");
+    logger.db.info("Connected.");
     status.db = Status.RUNNING;
     startMem();
     startRules();
-
-    //await createDailyStats("all", "all");
 
     // schedule daily stats creation
     onEachDay(() => {
@@ -55,7 +53,7 @@ prisma
     status.daily = Status.RUNNING;
   })
   .catch((e) => {
-    logger.error(`Prisma: Connection failed: ${e}`);
+    logger.db.error(`Prisma: Connection failed: ${e}`);
     status.db = Status.ERROR;
     onCloseSignal();
   });
@@ -66,16 +64,16 @@ ViteExpress.config({
 
 export const server = ViteExpress.listen(app, env.PORT, () => {
   const { NODE_ENV, HOST, PORT } = env;
-  logger.info(`VITE: Started ${NODE_ENV} on http://${HOST}:${PORT}`);
+  logger.vite.info(`Started ${NODE_ENV} on http://${HOST}:${PORT}`);
   status.vite = Status.RUNNING;
 });
 server.on("error", (e) => {
-  logger.error(`VITE: Error: ${e}`);
+  logger.vite.error(`Error: ${e}`);
   status.vite = Status.ERROR;
 
   // Try to close the server
   server.close(() => {
-    logger.info("VITE: Server closed.");
+    logger.vite.warn("Server closed.");
     onCloseSignal();
   });
 });
@@ -89,24 +87,26 @@ export const io = new Server(server, {
   },
 });
 
-if (env.NODE_ENV === "development") {
-  io.engine.on("connection_error", (err) => {
+logger.ws.info("Started.");
+status.ws = Status.RUNNING;
+
+io.engine.on("connection_error", (err) => {
+  if (env.NODE_ENV === "development") {
     console.log(err.req); // the request object
     console.log(err.code); // the error code, for example 1
     console.log(err.message); // the error message, for example "Session ID unknown"
     console.log(err.context); // some additional error context
-    status.ws = Status.ERROR;
-    onCloseSignal();
-  });
-}
-
-ws(io);
+  }
+  logger.ws.error("Connection error: ", err);
+  status.ws = Status.ERROR;
+  onCloseSignal();
+});
 
 export const onCloseSignal = async () => {
-  logger.info("System: Closing server...");
+  logger.root.warn("System: Closing server...");
   prisma.$disconnect();
   Promise.all([io.close(), server.close(), endClient(), endTransceiver(), sessionDBaccess.end()]).then(() => {
-    logger.info("System: Server closed.");
+    logger.root.warn("System: Server closed.");
     process.exit();
   });
   setTimeout(() => process.exit(1), 3000).unref(); // Force shutdown after 10s
