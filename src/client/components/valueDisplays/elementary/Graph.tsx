@@ -312,13 +312,13 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       chartRef.current.update();
     }
   };
-
+  /*
   useEffect(() => {
     if (data != undefined && options != undefined) {
       updateChart();
     }
   }, [data, options]);
-
+*/
   useLayoutEffect(() => {
     updateChart();
     window.addEventListener("resize", updateChart);
