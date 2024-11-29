@@ -90,7 +90,7 @@ export const connectClient = () => {
         }
       });
     } else {
-      logger.transceiver.warn(`Unknown topic: ${topic}`);
+      //logger.transceiver.warn(`Unknown topic: ${topic}`);
     }
   });
 
