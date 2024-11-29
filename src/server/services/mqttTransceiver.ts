@@ -53,6 +53,8 @@ export const connectClient = () => {
   client.on("message", (topic, message: Buffer, packet: Packet) => {
     const payload = message.toString();
 
+    console.log(topic);
+
     if (topic.endsWith("/config")) {
       const parts = topic.split("/");
       if (parts.length !== 3) {
