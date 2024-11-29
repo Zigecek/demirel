@@ -90,18 +90,6 @@ export const io = new Server(server, {
 logger.ws.info("Started.");
 status.ws = Status.RUNNING;
 
-io.engine.on("connection_error", (err) => {
-  if (env.NODE_ENV === "development") {
-    console.log(err.req); // the request object
-    console.log(err.code); // the error code, for example 1
-    console.log(err.message); // the error message, for example "Session ID unknown"
-    console.log(err.context); // some additional error context
-  }
-  logger.ws.error("Connection error: ", err.message);
-  status.ws = Status.ERROR;
-  onCloseSignal();
-});
-
 export const onCloseSignal = async () => {
   logger.root.warn("System: Closing server...");
   prisma.$disconnect();
