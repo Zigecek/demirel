@@ -2,19 +2,16 @@ import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { prisma } from "../..";
 import { extractTopics, validateExpression } from "../../../globals/rules";
+import { authenticated } from "../../middlewares/authenticated";
+import { updateRules } from "../../services/rules";
 import { handleServiceResponse } from "../../utils/httpHandlers";
 import { cloneMemory } from "../../utils/memory";
 import { ServiceResponse } from "../../utils/serviceResponse";
-import { updateRules } from "../../services/rules";
 
 export const ruleRouter: Router = express.Router();
 
-ruleRouter.post("/updateRules", async (req: Request, res: Response) => {
-  // Check if express session is authenticated
-  if (!req.session?.user || !req.session?.user.username) {
-    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
-  }
+ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Response) => {
+  req.session.user = req.session.user!;
   const username = req.session.user.username;
 
   if (!req.body) {
@@ -99,12 +96,8 @@ ruleRouter.post("/updateRules", async (req: Request, res: Response) => {
   return handleServiceResponse(serviceResponse, res);
 });
 
-ruleRouter.get("/getRules", async (req: Request, res: Response) => {
-  // Check if express session is authenticated
-  if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
-  }
+ruleRouter.get("/getRules", authenticated, async (req: Request, res: Response) => {
+  req.session.user = req.session.user!;
 
   if (!req.query) {
     const serviceResponse = ServiceResponse.failure("Nebyla poskytnuta žádná data.", false, StatusCodes.BAD_REQUEST);

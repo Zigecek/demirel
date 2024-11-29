@@ -1,10 +1,11 @@
 import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { calculateStats, getDayDates } from "../../../globals/daily";
+import { prisma } from "../../index";
+import { authenticated } from "../../middlewares/authenticated";
 import { handleServiceResponse } from "../../utils/httpHandlers";
 import { cloneMemory } from "../../utils/memory";
 import { ServiceResponse } from "../../utils/serviceResponse";
-import { prisma } from "../../index";
 
 export const mqttRouter: Router = express.Router();
 
@@ -191,12 +192,7 @@ mqttRouter.post("/nickname", async (req: Request, res: Response) => {
   return handleServiceResponse(serviceResponse, res);
 });
 
-mqttRouter.get("/firstValues", async (req: Request, res: Response) => {
-  if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
-  }
-
+mqttRouter.get("/firstValues", authenticated, async (req: Request, res: Response) => {
   const messages = Object.values(await cloneMemory());
 
   const sendMessages: MQTTMessageTransfer[] = messages.map((msg) => {

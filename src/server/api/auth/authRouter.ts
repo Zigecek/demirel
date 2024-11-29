@@ -7,6 +7,7 @@ import { user } from "@prisma/client";
 import argon2 from "argon2";
 import { StatusCodes } from "http-status-codes";
 import { prisma } from "../../index";
+import { authenticated } from "../../middlewares/authenticated";
 import logger from "../../utils/loggers";
 
 export const authRouter: Router = express.Router();
@@ -66,13 +67,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
   return handleServiceResponse(serviceResponse, res);
 });
 
-authRouter.get("/logout", async (req: Request, res: Response) => {
-  // if session user does not exist
-  if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.success("User not logged in.", false);
-    return handleServiceResponse(serviceResponse, res);
-  }
-
+authRouter.get("/logout", authenticated, async (req: Request, res: Response) => {
   // if session user exists
   // then delete session user
   req.session.destroy((err) => {

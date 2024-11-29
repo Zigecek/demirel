@@ -3,6 +3,7 @@ import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import webPush from "web-push";
 import { prisma } from "../../index";
+import { authenticated } from "../../middlewares/authenticated";
 import { env } from "../../utils/env";
 import { handleServiceResponse } from "../../utils/httpHandlers";
 import { ServiceResponse } from "../../utils/serviceResponse";
@@ -13,12 +14,8 @@ export const pushRouter: Router = express.Router();
 webPush.setVapidDetails("mailto:honza007cz@hotmail.com", env.VITE_VAPID_PUBLIC, env.VAPID_PRIVATE);
 
 // Endpoint pro přijetí subscription od klienta
-pushRouter.post("/subscribe", async (req: Request, res: Response) => {
-  // check if user loggedIn
-  if (!req.session?.user) {
-    const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
-  }
+pushRouter.post("/subscribe", authenticated, async (req: Request, res: Response) => {
+  req.session.user = req.session.user!;
 
   const subscription = req.body;
 

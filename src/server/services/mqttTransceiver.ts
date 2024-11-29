@@ -39,13 +39,13 @@ export const connectClient = () => {
   client = getNewClient();
 
   client.on("connect", () => {
-    logger.transceiver.info("TRANSCEIVER: Connected");
+    logger.transceiver.info("Connected");
     status.transceiver = Status.RUNNING;
     client.subscribe("zige/#", (err) => {
       if (err) {
-        logger.transceiver.error("TRANSCEIVER: Error subscribing to zige/#", err);
+        logger.transceiver.error("Error subscribing to zige/#", err);
       } else {
-        logger.transceiver.info("TRANSCEIVER: Subscribed to zige/#");
+        logger.transceiver.info("Subscribed to zige/#");
       }
     });
   });
@@ -55,7 +55,10 @@ export const connectClient = () => {
 
     if (topic.endsWith("/config")) {
       const parts = topic.split("/");
-      if (parts.length !== 3) return;
+      if (parts.length !== 3) {
+        console.log("not 3 parts");
+        return;
+      }
 
       const device = parts[parts.length - 2];
       // Remove existing config for the device
@@ -65,14 +68,12 @@ export const connectClient = () => {
         if (index > -1) topicTable.splice(index, 1);
       });
 
-      logger.transceiver.info(`TRANSCEIVER: Config saved for ${device}`);
-      logger.transceiver.info(`TRANSCEIVER: Topics: ${payload}`);
+      logger.transceiver.info(`Config saved for ${device}`);
+      logger.transceiver.info(`Topics: ${payload}`);
 
       const topics = payload.split(";");
       topicTable.push({ device, topics });
-    }
-
-    if (topic.endsWith("/val")) {
+    } else if (topic.endsWith("/val")) {
       const parts = topic.split("/");
       if (parts.length !== 3) return;
 
@@ -80,16 +81,16 @@ export const connectClient = () => {
       const table = topicTable.find((config) => config.device === device);
 
       if (!table) {
-        logger.transceiver.warn(`TRANSCEIVER: No configuration found for device: ${device}`);
+        logger.transceiver.warn(`No configuration found for device: ${device}`);
         return;
       }
 
-      logger.transceiver.info(`TRANSCEIVER: Forwarding messages from ${device}`);
+      logger.transceiver.info(`Forwarding messages from ${device}`);
       const topics = table.topics;
       const values = payload.split(";").map(parseNumeric);
 
-      logger.transceiver.info(`TRANSCEIVER: Topics: ${topics}`);
-      logger.transceiver.info(`TRANSCEIVER: Values: ${values}`);
+      logger.transceiver.info(`Topics: ${topics}`);
+      logger.transceiver.info(`Values: ${values}`);
 
       topics.forEach((topic, index) => {
         if (values[index] !== undefined) {
@@ -97,15 +98,17 @@ export const connectClient = () => {
           client.publish(topic, String(values[index]), { qos: 0, retain: true });
         }
       });
+    } else {
+      logger.transceiver.info(`Unhandled message on topic: ${topic}`);
     }
   });
 
   client.on("error", (err) => {
-    logger.transceiver.error(`TRANSCEIVER: ${err.message}`);
+    logger.transceiver.error(`${err.message}`);
   });
 
   client.on("close", () => {
-    logger.transceiver.warn("TRANSCEIVER: Disconnected");
+    logger.transceiver.warn("Disconnected");
     status.transceiver = Status.ERROR;
   });
 };
