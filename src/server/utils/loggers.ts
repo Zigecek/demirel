@@ -2,6 +2,8 @@ import chalk from "chalk";
 import pino from "pino";
 import pretty from "pino-pretty";
 
+chalk.level = 3; // true-color
+
 // Original color array (converted to hex strings)
 const hexColors = [
   "#FF5733", // Jasně oranžová
@@ -41,6 +43,7 @@ const messageColors: Record<string, typeof chalk> = {};
 
 // Vlastní formátovací funkce
 const customPrettifier = pretty({
+  colorize: true,
   ignore: "pid,hostname",
   customPrettifiers: {
     time: (t) => {

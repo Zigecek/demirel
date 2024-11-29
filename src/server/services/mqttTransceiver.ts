@@ -52,16 +52,8 @@ export const connectClient = () => {
 
   client.on("message", (topic, message: Buffer, packet: Packet) => {
     const payload = message.toString();
-
-    console.log(topic);
-
-    if (topic.endsWith("/config")) {
-      const parts = topic.split("/");
-      if (parts.length !== 3) {
-        console.log("not 3 parts");
-        return;
-      }
-
+    const parts = topic.split("/");
+    if (topic.endsWith("/config") && parts.length === 3) {
       const device = parts[parts.length - 2];
       // Remove existing config for the device
       const existingConfigs = topicTable.filter((config) => config.device === device);
@@ -75,10 +67,7 @@ export const connectClient = () => {
 
       const topics = payload.split(";");
       topicTable.push({ device, topics });
-    } else if (topic.endsWith("/val")) {
-      const parts = topic.split("/");
-      if (parts.length !== 3) return;
-
+    } else if (topic.endsWith("/val") && parts.length === 3) {
       const device = parts[parts.length - 2];
       const table = topicTable.find((config) => config.device === device);
 
@@ -96,12 +85,12 @@ export const connectClient = () => {
 
       topics.forEach((topic, index) => {
         if (values[index] !== undefined) {
-          logger.transceiver.info(`TRANSCEIVER: Publishing to ${topic}: ${values[index]}`);
+          logger.transceiver.info(`Publishing to ${topic}: ${values[index]}`);
           client.publish(topic, String(values[index]), { qos: 0, retain: true });
         }
       });
     } else {
-      logger.transceiver.info(`Unhandled message on topic: ${topic}`);
+      logger.transceiver.warn(`Unknown topic: ${topic}`);
     }
   });
 
