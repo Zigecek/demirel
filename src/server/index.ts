@@ -97,7 +97,7 @@ io.engine.on("connection_error", (err) => {
     console.log(err.message); // the error message, for example "Session ID unknown"
     console.log(err.context); // some additional error context
   }
-  logger.ws.error("Connection error: ", err);
+  logger.ws.error("Connection error: ", err.message);
   status.ws = Status.ERROR;
   onCloseSignal();
 });

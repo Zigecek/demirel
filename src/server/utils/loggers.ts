@@ -40,8 +40,6 @@ const dimHexColor = (hex: string, factor: number = 0.7): string => {
   return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
 };
 
-const dimmed = hexColors.map((hex) => chalk.hex(dimHexColor(hex, 0.55)));
-
 const moduleColors: Record<string, typeof chalk> = {};
 const messageColors: Record<string, typeof chalk> = {};
 
