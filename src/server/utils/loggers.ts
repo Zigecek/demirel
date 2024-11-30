@@ -5,26 +5,10 @@ import pretty from "pino-pretty";
 chalk.level = 3; // true-color
 
 // Original color array (converted to hex strings)
-const hexColors = [
-  "#FF5733", // Jasně oranžová
-  "#33FF57", // Jasně zelená
-  "#3357FF", // Jasně modrá
-  "#FF33A8", // Fuchsiová
-  "#33FFF0", // Tyrkysová
-  "#FFC300", // Žlutá
-  "#C70039", // Tmavě červená
-  "#900C3F", // Vínová
-  "#581845", // Fialová
-  "#DAF7A6", // Světle zelená
-  "#FF6F61", // Lososová
-  "#6A5ACD", // Střední modrofialová
-  "#20B2AA", // Světle mořská zelená
-  "#FFD700", // Zlatá
-  "#FF4500", // Oranžově červená
-];
+const hexColors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A8", "#33FFF0", "#FFC300", "#C70039", "#900C3F", "#581845", "#DAF7A6", "#FF6F61", "#6A5ACD", "#20B2AA", "#FFD700", "#FF4500"];
 
 // Function to dim a color by reducing its brightness
-const dimHexColor = (hex: string, factor: number = 0.7): string => {
+const dimHexColor = (hex: string, factor: number = 0.6): string => {
   hex = hex.replace(/^#/, "");
 
   let r = parseInt(hex.substring(0, 2), 16);
@@ -63,7 +47,7 @@ const root = pino(customPrettifier);
 
 const getLogger = (module: string, color: string) => {
   moduleColors[module] = chalk.hex(color);
-  messageColors[module] = chalk.hex(dimHexColor(color, 0.75));
+  messageColors[module] = chalk.hex(dimHexColor(color, 0.6));
   return root.child({ module });
 };
 

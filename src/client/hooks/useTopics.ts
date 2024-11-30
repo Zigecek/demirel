@@ -49,7 +49,7 @@ export const useTopics = (topics: string[]) => {
     const newValues: Record<string, MQTTMessage["value"]> = {};
     const newTimestamps: Record<string, Date> = {};
     const newLastMessageIntervals: Record<string, number | undefined> = {};
-    const newMsgHistory: MQTTMessage[] = [];
+    const newMsgHistory: Record<string, MQTTMessage[]> = {};
 
     topics.forEach((topic) => {
       const topicMsgs = clonnedMessages.filter((msg) => msg.topic === topic);
@@ -58,7 +58,7 @@ export const useTopics = (topics: string[]) => {
       const msg = topicMsgs.pop();
       if (!msg) return;
 
-      newMsgHistory.push(msg);
+      newMsgHistory[topic] = [msg];
 
       const timestamp = timestamps[topic];
       if (timestamp) {
@@ -72,7 +72,8 @@ export const useTopics = (topics: string[]) => {
       newTimestamps[topic] = msg.timestamp;
     });
 
-    addToHistory(newMsgHistory);
+    Object.entries(newMsgHistory).forEach(([topic, msgs]) => addToHistory(msgs));
+
     setValues((prev) => ({ ...prev, ...newValues }));
     setTimestamps((prev) => ({ ...prev, ...newTimestamps }));
     setLastMessageIntervals((prev) => ({ ...prev, ...newLastMessageIntervals }));
