@@ -41,12 +41,12 @@ const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF }) => {
           <div className="flex gap-2 whitespace-nowrap">
             <FaArrowUp className="text-green-500" />
             <span className="text-gray-500">1:</span>
-            <span className="font-medium">{formatTime(new Date(stats.uptime as number))}</span>
+            <span className="font-medium">{formatTime(new Date(Math.round((stats.uptime as number) / 1000) * 1000))}</span>
           </div>
           <div className="flex gap-2 whitespace-nowrap">
             <FaArrowDown className="text-red-500" />
             <span className="text-gray-500">0:</span>
-            <span className="font-medium">{formatTime(new Date(stats.downtime as number))}</span>
+            <span className="font-medium">{formatTime(new Date(Math.round((stats.downtime as number) / 1000) * 1000))}</span>
           </div>
         </div>
       ) : (
