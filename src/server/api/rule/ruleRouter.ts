@@ -1,11 +1,12 @@
 import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { prisma } from "../..";
-import { extractTopics, validateExpression } from "../../../globals/rules";
+import { validateExpression } from "../../../globals/rules";
 import { authenticated } from "../../middlewares/authenticated";
 import { updateRules } from "../../services/rules";
 import { handleServiceResponse } from "../../utils/httpHandlers";
 import { cloneMemory } from "../../utils/memory";
+import { extractTopics } from "../../utils/rules";
 import { ServiceResponse } from "../../utils/serviceResponse";
 
 export const ruleRouter: Router = express.Router();
@@ -63,10 +64,10 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
     notificationBody: rule.notificationBody,
     severity: rule.severity,
     conditions: rule.conditions.map((condition) => condition.trim()),
-    topics: [extractTopics(rule.notificationBody), extractTopics(rule.notificationTitle), ...rule.conditions.map((condition) => extractTopics(condition))].flat(),
+    topics: [...new Set([...rule.conditions.map((condition) => extractTopics(condition))].flat())],
   });
 
-  await prisma.$transaction([
+  const transactionData = [
     ...edited.map((rule) =>
       prisma.rule.update({
         where: {
@@ -88,7 +89,9 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
         },
       })
     ),
-  ]);
+  ];
+
+  await prisma.$transaction(transactionData);
 
   await updateRules(username);
 

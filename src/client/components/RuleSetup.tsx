@@ -136,11 +136,14 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
   }, [rules]);
 
   const validateExpressions = (rs: RuleEditable[]): boolean => {
+    console.log("rules", rs);
     if (!rs) return false;
 
     // validate all conditions
     return rs.every((rule) => {
       return rule.conditions.every((condition) => {
+        console.log("condition", condition);
+        console.log("result", validateExpression(condition.condition, topics));
         return validateExpression(condition.condition, topics);
       });
     });

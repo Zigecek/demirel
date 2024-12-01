@@ -6,6 +6,7 @@ import { prisma } from "../../index";
 import { authenticated } from "../../middlewares/authenticated";
 import { env } from "../../utils/env";
 import { handleServiceResponse } from "../../utils/httpHandlers";
+import logger from "../../utils/loggers";
 import { ServiceResponse } from "../../utils/serviceResponse";
 import { sendNotification } from "../../utils/webpush";
 
@@ -19,9 +20,7 @@ pushRouter.post("/subscribe", authenticated, async (req: Request, res: Response)
 
   const subscription = req.body;
 
-  console.log("Subscription received:", subscription);
-
-  console.log("User:", req.session.user.username);
+  logger.webpush.info(`Subscription received from ${req.session.user.username}.`);
 
   // Uložení subscription do databáze
   await prisma.webpush.create({

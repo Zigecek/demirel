@@ -1,7 +1,7 @@
 import { prisma, Status, status } from "..";
-import { evaluateExpression, replaceTopics } from "../../globals/rules";
 import logger from "../utils/loggers";
 import { memory, onMemoryChange } from "../utils/memory";
+import { completeEval, replaceTopicsBasic } from "../utils/rules";
 import { sendNotification } from "../utils/webpush";
 
 let rules: RuleWithId[] = [];
@@ -51,24 +51,27 @@ export const checkRule = async (topic: string) => {
   // 1. get all rules for the topic
   const topicRules = rules.filter((rule) => rule.topics.includes(topic));
 
-  topicRules.forEach((rule) => {
+  topicRules.forEach(async (rule) => {
     // 2. get vals from memory for all the rule topics
-    const context: Record<string, MQTTMessage["value"]> = {};
-    rule.topics.forEach((ruleTopic) => {
-      // memory ještě neobsahuje hodnotu
-      context[ruleTopic] = memory[ruleTopic].value;
-    });
 
-    rule.notificationBody = replaceTopics(rule.notificationBody, context);
-    rule.notificationTitle = replaceTopics(rule.notificationTitle, context);
+    rule.notificationBody = replaceTopicsBasic(rule.notificationBody);
+    rule.notificationTitle = replaceTopicsBasic(rule.notificationTitle);
 
-    // 3. check the Rule
-    const result = rule.conditions.every((condition) => {
-      return evaluateExpression(condition, context);
-    });
+    // 3. check the rule
+    // call completeEval on each condition from conditions
+    // completeEval is async so we need to wait for all of them to finish
+    const results = await Promise.all(
+      rule.conditions.map(async (condition) => {
+        const result = await completeEval(condition);
+        return result;
+      })
+    );
+
+    // if all conditions are true, activate rule
+    const result = results.every((result) => result);
 
     if (result) {
-      logger.rules.info(`Rules: Rule '${rule.name}' condition: '${replaceTopics(rule.conditions.join(" && "), context)}' passed.`);
+      logger.rules.info(`Rules: Rule '${rule.name}' condition: '${replaceTopicsBasic(rule.conditions.join(" && "))}' passed.`);
 
       activateRuleNotify(rule);
     } else {
