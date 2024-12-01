@@ -53,7 +53,7 @@ const getLogger = (module: string, color: string) => {
 
 // Moduly
 const logger = {
-  root: getLogger("ROOT", hexColors[0]),
+  system: getLogger("SYSTEM", hexColors[0]),
   ws: getLogger("SOCKET", hexColors[1]),
   db: getLogger("PRISMA", hexColors[2]),
   mqtt: getLogger("MQTT", hexColors[3]),

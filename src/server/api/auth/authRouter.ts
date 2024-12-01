@@ -72,7 +72,7 @@ authRouter.get("/logout", authenticated, async (req: Request, res: Response) => 
   // then delete session user
   req.session.destroy((err) => {
     if (err) {
-      logger.root.error("Error destroying session: ", err);
+      logger.system.error("Error destroying session: ", err);
     }
   });
 

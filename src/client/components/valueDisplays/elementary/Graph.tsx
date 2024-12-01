@@ -13,7 +13,7 @@ import { postMqttData } from "../../../proxy/endpoints";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const colors = ["rgba(80, 150, 220, 1)", "rgba(80, 220, 150, 1)", "rgba(220, 150, 80, 1)", "rgba(220, 80, 150, 1)", "rgba(150, 80, 220, 1)", "rgba(150, 220, 80, 1)"];
+export const colors = ["rgba(80, 150, 220, 1)", "rgba(80, 220, 150, 1)", "rgba(220, 150, 80, 1)", "rgba(220, 80, 150, 1)", "rgba(150, 80, 220, 1)", "rgba(150, 220, 80, 1)"];
 
 const defaultBound = 1.5 * 24 * 60 * 60 * 1000;
 

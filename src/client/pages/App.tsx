@@ -49,7 +49,7 @@ export default function App() {
           <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} />
           <DailyHistory topic="zige/pozar0/cerpadlo/val" hidden={true} />
 
-          <Chart topics={["zige/pozar0/temp/val", "zige/pozar1/temp/val"]} />
+          <Chart topics={["zige/pozar0/temp/val", "zige/pozar1/temp/val"]} valueF={(v) => unit(fix(number(v), 1), "°C")} />
           <DailyHistory topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
           <DailyHistory topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
         </div>

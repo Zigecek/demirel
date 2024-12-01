@@ -91,10 +91,10 @@ logger.ws.info("Started.");
 status.ws = Status.RUNNING;
 
 export const onCloseSignal = async () => {
-  logger.root.warn("System: Closing server...");
+  logger.system.warn("System: Closing server...");
   prisma.$disconnect();
   Promise.all([io.close(), server.close(), endClient(), endTransceiver(), sessionDBaccess.end()]).then(() => {
-    logger.root.warn("System: Server closed.");
+    logger.system.warn("System: Server closed.");
     process.exit();
   });
   setTimeout(() => process.exit(1), 3000).unref(); // Force shutdown after 10s
