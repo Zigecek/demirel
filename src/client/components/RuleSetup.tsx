@@ -377,7 +377,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
                     if (selectedRule.isNew) {
                       return "border-green-500 bg-green-100";
                     }
-                    if (selectedRule.name !== initRules.find((x) => x.id == selectedRule.id)?.name) {
+                    if (selectedRule.notificationTitle !== initRules.find((x) => x.id == selectedRule.id)?.notificationTitle) {
                       return "border-yellow-500 bg-yellow-100";
                     }
                     return "";
@@ -406,7 +406,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
                     if (selectedRule.isNew) {
                       return "border-green-500 bg-green-100";
                     }
-                    if (selectedRule.name !== initRules.find((x) => x.id == selectedRule.id)?.name) {
+                    if (selectedRule.notificationBody !== initRules.find((x) => x.id == selectedRule.id)?.notificationBody) {
                       return "border-yellow-500 bg-yellow-100";
                     }
                     return "";
