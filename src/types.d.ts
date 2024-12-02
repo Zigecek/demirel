@@ -82,6 +82,8 @@ type dailyStats = {
   // BOOLEAN
   uptime: number | null; // in milliseconds
   downtime: number | null; // in milliseconds
+  risingCount: number | null;
+  fallingCount: number | null;
 
   // FLOAT
   min: number | null;

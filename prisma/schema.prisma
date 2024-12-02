@@ -66,8 +66,10 @@ model daily {
   count Int?
 
   // BOOLEAN
-  uptime   BigInt? @db.BigInt
-  downtime BigInt? @db.BigInt
+  uptime       BigInt? @db.BigInt
+  downtime     BigInt? @db.BigInt
+  risingCount  Int?
+  fallingCount Int?
 
   @@index([topic, date])
 }

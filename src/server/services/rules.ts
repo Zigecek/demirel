@@ -1,7 +1,7 @@
 import { prisma, Status, status } from "..";
 import logger from "../utils/loggers";
 import { memory, onMemoryChange } from "../utils/memory";
-import { completeEval, replaceTopicsBasic } from "../utils/rules";
+import { completeEval, replaceAll, replaceTopicsBasic } from "../utils/rules";
 import { sendNotification } from "../utils/webpush";
 
 let rules: RuleWithId[] = [];
@@ -54,8 +54,8 @@ export const checkRule = async (topic: string) => {
   topicRules.forEach(async (rule) => {
     // 2. get vals from memory for all the rule topics
 
-    rule.notificationBody = replaceTopicsBasic(rule.notificationBody);
-    rule.notificationTitle = replaceTopicsBasic(rule.notificationTitle);
+    rule.notificationBody = await replaceAll(rule.notificationBody);
+    rule.notificationTitle = await replaceAll(rule.notificationTitle);
 
     // 3. check the rule
     // call completeEval on each condition from conditions
@@ -68,7 +68,7 @@ export const checkRule = async (topic: string) => {
     );
 
     // if all conditions are true, activate rule
-    const result = results.every((result) => result);
+    const result = await results.every((result) => result);
 
     if (result) {
       logger.rules.info(`Rules: Rule '${rule.name}' condition: '${replaceTopicsBasic(rule.conditions.join(" && "))}' passed.`);

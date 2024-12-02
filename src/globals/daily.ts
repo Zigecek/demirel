@@ -14,6 +14,8 @@ export function calculateStats(messages: MQTTMessage[], start: Date, end: Date) 
   // BOOLEAN
   let uptime: number | null = null;
   let downtime: number | null = null;
+  let risingCount: number | null = null;
+  let fallingCount: number | null = null;
 
   if (valueType === "BOOLEAN") {
     messages.unshift({
@@ -28,9 +30,23 @@ export function calculateStats(messages: MQTTMessage[], start: Date, end: Date) 
     // get duration the value was true
     uptime = 0;
     downtime = 0;
+    risingCount = 0;
+    fallingCount = 0;
+
     let lastUpTimestamp = null;
     let lastDownTimestamp = null;
     for (let i = 0; i < messages.length; i++) {
+      if (i > 0) {
+        // rising count
+        if (messages[i].value === true && messages[i - 1].value === false) {
+          risingCount++;
+        }
+        // falling count
+        if (messages[i].value === false && messages[i - 1].value === true) {
+          fallingCount++;
+        }
+      }
+
       // uptime
       if (messages[i].value === true && !lastUpTimestamp) {
         lastUpTimestamp = messages[i].timestamp.getTime();
@@ -76,6 +92,8 @@ export function calculateStats(messages: MQTTMessage[], start: Date, end: Date) 
 
     uptime,
     downtime,
+    risingCount,
+    fallingCount,
     min,
     max,
     avg,

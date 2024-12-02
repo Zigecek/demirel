@@ -1,7 +1,6 @@
-// FUNCTIONS - RULES
-
 import { prisma } from "..";
 import { POSLEDNIregex, TRVAregex, validateExpression, ZMENAregex } from "../../globals/rules";
+import logger from "./loggers";
 import { memory } from "./memory";
 
 const getContext = (expression: string): RuleContext => {
@@ -27,8 +26,7 @@ const replaceTopics = (expression: string, context: RuleContext): string => {
 };
 
 export const replaceTopicsBasic = (expression: string): string => {
-  const context = getContext(expression);
-  return replaceTopics(expression, context);
+  return replaceTopics(expression, getContext(expression));
 };
 
 const evaluateExpression = (expression: string, context: RuleContext): boolean => {
@@ -39,28 +37,33 @@ const evaluateExpression = (expression: string, context: RuleContext): boolean =
   try {
     return Function(`return (${replacedExpression});`)();
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Invalid expression: ${error.message}`);
-    } else {
-      throw new Error("Invalid expression: unknown error");
-    }
+    logger.rules.error(`Error while evaluating expression: ${expression}`);
+    logger.rules.error(error);
+    return false;
   }
 };
 
 export const completeEval = async (expression: string) => {
   // call all functions in expression
-
-  let newExpression = expression;
-  // run all async functions on the newExpression
-  newExpression = await ZMENA(newExpression);
-  newExpression = await TRVA(newExpression);
-  newExpression = await POSLEDNI(newExpression);
-
-  newExpression = replaceTopicsBasic(newExpression);
-
+  const newExpression = await replaceFunctions(expression);
   const result = evaluateExpression(newExpression, getContext(newExpression));
 
   return result;
+};
+
+export const replaceFunctions = async (expression: string) => {
+  let newExpression = expression;
+  newExpression = await ZMENA(newExpression);
+  newExpression = await TRVA(newExpression);
+  newExpression = await POSLEDNI(newExpression);
+  return newExpression;
+};
+
+export const replaceAll = async (expression: string) => {
+  let newExpression = expression;
+  newExpression = await replaceFunctions(newExpression);
+  newExpression = replaceTopicsBasic(newExpression);
+  return newExpression;
 };
 
 export const extractTopics = (expression: string): string[] => {

@@ -1,6 +1,7 @@
 import { addMinutes, format } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { FaArrowDown, FaArrowUp, FaChevronDown, FaChevronUp, FaListOl } from "react-icons/fa";
+import { FaArrowsUpDown } from "react-icons/fa6";
 import { MdSpeed, MdTrendingDown, MdTrendingUp } from "react-icons/md";
 import { getDayDates } from "../../../globals/daily";
 import { useNicknames } from "../../contexts/NicknamesContext";
@@ -30,7 +31,7 @@ type DayHistoryProps = {
   valueF?: (msg: string) => string;
 };
 
-const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF }) => {
+const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF = (msg: string) => msg }) => {
   const isBooleanStats = stats.uptime !== null || stats.downtime !== null;
 
   return (
@@ -38,6 +39,11 @@ const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF }) => {
       <h3 className="text-lg font-semibold text-gray-700 mb-4">{formatDayDate(stats.date)}</h3>
       {isBooleanStats ? (
         <div className="space-y-4">
+          <div className="flex gap-2 whitespace-nowrap">
+            <FaArrowsUpDown className="text-orange-200" />
+            <span className="text-gray-500">Počet:</span>
+            <span className="font-medium">{stats.risingCount}</span>
+          </div>
           <div className="flex gap-2 whitespace-nowrap">
             <FaArrowUp className="text-green-500" />
             <span className="text-gray-500">1:</span>
@@ -54,17 +60,17 @@ const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF }) => {
           <div className="flex items-center space-x-2">
             <MdTrendingUp className="text-red-500" />
             <span className="text-gray-500">Max:</span>
-            <span className="font-medium">{valueF ? valueF(String(stats.max)) : stats.max}</span>
+            <span className="font-medium">{valueF(String(stats.max))}</span>
           </div>
           <div className="flex items-center space-x-2">
             <MdTrendingDown className="text-blue-500" />
             <span className="text-gray-500">Min:</span>
-            <span className="font-medium">{valueF ? valueF(String(stats.min)) : stats.min}</span>
+            <span className="font-medium">{valueF(String(stats.min))}</span>
           </div>
           <div className="flex items-center space-x-2">
             <MdSpeed className="text-yellow-500" />
             <span className="text-gray-500">Průměr:</span>
-            <span className="font-medium">{valueF ? valueF(String(stats.avg)) : stats.avg}</span>
+            <span className="font-medium">{valueF(String(stats.avg))}</span>
           </div>
           <div className="flex items-center space-x-2">
             <FaListOl className="text-purple-500" />
@@ -83,7 +89,7 @@ type DailyHistoryProps = {
   hidden?: boolean;
 };
 
-export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF, hidden = true }) => {
+export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF = (msg: string) => msg, hidden = true }) => {
   const { stats: todayStats } = useToday({ topic });
   const { nickname } = useNicknames();
   const [fetched, setFetched] = useState<dailyStats[]>();

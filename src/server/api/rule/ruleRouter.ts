@@ -30,7 +30,7 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
   // validate all rules
   const allRules = [...added, ...edited];
   for (const rule of allRules) {
-    if (!rule.name || !rule.notificationTitle || !rule.notificationBody || !rule.severity || !rule.conditions || !rule.topics) {
+    if (!rule.name || rule.notificationTitle == undefined || rule.notificationBody == undefined || !rule.severity || !rule.conditions || !rule.topics) {
       const serviceResponse = ServiceResponse.failure("Pravidlu chybí požadovaná data.", false, StatusCodes.BAD_REQUEST);
       return handleServiceResponse(serviceResponse, res);
     }
