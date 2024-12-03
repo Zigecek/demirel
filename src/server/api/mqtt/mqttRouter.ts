@@ -13,19 +13,22 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user) {
     const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   if (!req.body) {
     const serviceResponse = ServiceResponse.failure("Nebyla poskytnuta žádná data.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // get request parameters
   const { start, end, topic, boolean } = req.body as postMqttDataRequest;
   if (!start || !end || !topic || typeof start !== "number" || typeof end !== "number" || typeof topic !== "string") {
     const serviceResponse = ServiceResponse.failure("No start or end time provided.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
   const s = new Date(start);
   const e = new Date(end);
@@ -34,7 +37,8 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
 
   if (isNaN(s.getTime()) || isNaN(e.getTime())) {
     const serviceResponse = ServiceResponse.failure("Invalid start or end time provided.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // get all messages between start and end
@@ -83,13 +87,15 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
   });
 
   const serviceResponse = ServiceResponse.success("Data here.", sendMessages, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });
 
 mqttRouter.post("/today", async (req: Request, res: Response) => {
   if (!req.session?.user) {
     const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // get timestamp of start of today
@@ -115,26 +121,30 @@ mqttRouter.post("/today", async (req: Request, res: Response) => {
   // Preventive statements
   if (messages.length === 0) {
     const serviceResponse = ServiceResponse.failure("No data for today.", false, 404);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const returnObj = calculateStats(messages, start, end);
 
   const serviceResponse = ServiceResponse.success("Data here.", returnObj, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });
 
 mqttRouter.post("/stats", async (req: Request, res: Response) => {
   if (!req.session?.user) {
     const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const { topic } = req.body as postMqttStatsRequest;
 
   if (!topic) {
     const serviceResponse = ServiceResponse.failure("No topic provided.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const stats = await prisma.daily.findMany({
@@ -159,20 +169,23 @@ mqttRouter.post("/stats", async (req: Request, res: Response) => {
   });
 
   const serviceResponse = ServiceResponse.success("Data here.", resp, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });
 
 mqttRouter.post("/nickname", async (req: Request, res: Response) => {
   if (!req.session?.user) {
     const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const { topics } = req.body as postMqttNicknameRequest;
 
   if (!topics || !Array.isArray(topics)) {
     const serviceResponse = ServiceResponse.failure("No topics provided.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const dbNicknames = await prisma.nickname.findMany({});
@@ -189,7 +202,8 @@ mqttRouter.post("/nickname", async (req: Request, res: Response) => {
   });
 
   const serviceResponse = ServiceResponse.success("Data here.", data, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });
 
 mqttRouter.get("/firstValues", authenticated, async (req: Request, res: Response) => {
@@ -203,5 +217,6 @@ mqttRouter.get("/firstValues", authenticated, async (req: Request, res: Response
   });
 
   const serviceResponse = ServiceResponse.success("Data here.", sendMessages, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });

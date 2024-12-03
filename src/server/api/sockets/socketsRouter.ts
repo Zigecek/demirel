@@ -13,14 +13,16 @@ socketsRouter.post("/auth", authenticated, async (req: Request, res: Response) =
   const body = req.body as SocketAuth;
   if (!body.socketId) {
     const serviceResponse = ServiceResponse.failure("No socket ID provided.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const gotSocket = io?.sockets.sockets.get(body.socketId);
 
   if (!gotSocket) {
     const serviceResponse = ServiceResponse.failure("Socket not found.", false, 404);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   logger.ws.info("Authorizing socket: " + gotSocket?.id);
@@ -34,5 +36,6 @@ socketsRouter.post("/auth", authenticated, async (req: Request, res: Response) =
   logger.ws.info("Socket Authenticated.");
 
   const serviceResponse = ServiceResponse.success("Socket Authenticated.", true);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });

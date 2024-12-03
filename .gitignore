@@ -29,3 +29,5 @@ src/prisma/*
 *.njsproj
 *.sln
 *.sw?
+
+src/generated-prisma-client

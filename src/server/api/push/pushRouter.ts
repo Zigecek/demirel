@@ -36,7 +36,8 @@ pushRouter.post("/subscribe", authenticated, async (req: Request, res: Response)
   });
 
   const serviceResponse = ServiceResponse.success("Subscription added.", true, 201);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });
 
 // Endpoint pro odeslání notifikace
@@ -44,7 +45,8 @@ pushRouter.post("/send-notification", (req: Request, res: Response) => {
   // check if user loggedIn
   if (!req.session?.user) {
     const serviceResponse = ServiceResponse.failure("Uživatel není přihlášen.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const notificationPayload = {
@@ -59,6 +61,7 @@ pushRouter.post("/send-notification", (req: Request, res: Response) => {
   // Získání všech subscriptions uživatele
   sendNotification(req.session.user.username, notificationPayload).then(() => {
     const serviceResponse = ServiceResponse.success("Notification sent.", true, StatusCodes.OK);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   });
 });
