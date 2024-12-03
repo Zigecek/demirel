@@ -19,6 +19,7 @@ dist-ssr
 *.local
 .env*
 src/prisma/*
+prisma/client
 
 # Editor directories and files
 !.vscode/extensions.json
@@ -31,3 +32,5 @@ src/prisma/*
 *.sw?
 
 src/generated-prisma-client
+
+pnpm-lock.yaml

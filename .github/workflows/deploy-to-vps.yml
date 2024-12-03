@@ -24,7 +24,17 @@ jobs:
           nvm install 20.17.0
           nvm use 20.17.0
           echo "$NVM_DIR/versions/node/$(nvm version)/bin" >> $GITHUB_PATH
-          npm i -g npm@latest
+          corepack enable
+          corepack enable pnpm
+          pnpm setup
+
+      - name: Cache pnpm store
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Debug Environment
         run: |
@@ -54,16 +64,16 @@ jobs:
           echo VITE_VAPID_PUBLIC=${{ secrets.VITE_VAPID_PUBLIC }} >> .env
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Apply Prisma migrations
-        run: npx prisma migrate deploy
+        run: pnpm prisma migrate deploy
 
       - name: Generate Prisma client
-        run: npx prisma generate
+        run: pnpm prisma generate
 
       - name: Build
-        run: npm run build
+        run: pnpm build
 
       - name: PM2 delete process
         continue-on-error: true
@@ -72,7 +82,7 @@ jobs:
 
       - name: PM2 start process
         run: |
-          npm run start:pm2
+          pnpm start:pm2
 
       - name: PM2 save
         run: |

@@ -1,4 +1,4 @@
-import { InputJsonObject } from "@prisma/client/runtime/library";
+import { type InputJsonObject } from "@prisma/client/runtime/library";
 import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import webPush from "web-push";

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import Prisma from "@prisma/client";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import { app, sessionDBaccess } from "./server";
@@ -11,6 +11,7 @@ import { env } from "./utils/env";
 import logger from "./utils/loggers";
 import { start as startMem } from "./utils/memory";
 import { onEachDay } from "./utils/schedulers";
+const { PrismaClient } = Prisma;
 
 if (env.RUNNER === "rpi") {
   connectClient();

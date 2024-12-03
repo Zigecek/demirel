@@ -1,5 +1,5 @@
 import { MqttValueType, Prisma } from "@prisma/client";
-import { JsonValue } from "@prisma/client/runtime/library";
+import { type JsonValue } from "@prisma/client/runtime/library";
 import { connect } from "mqtt";
 import { io, prisma, Status, status } from "..";
 import { env } from "../utils/env";
