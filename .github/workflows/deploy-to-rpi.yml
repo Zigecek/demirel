@@ -21,8 +21,7 @@ jobs:
           nvm install 20.17.0
           nvm use 20.17.0
           echo "$NVM_DIR/versions/node/$(nvm version)/bin" >> $GITHUB_PATH
-          corepack enable
-          yarn set version berry
+          npm i -g npm@latest
 
       - name: Debug Environment
         run: |
@@ -52,16 +51,16 @@ jobs:
           echo VITE_VAPID_PUBLIC=${{ secrets.VITE_VAPID_PUBLIC }} >> .env
 
       - name: Install dependencies
-        run: yarn install
+        run: npm install
 
       - name: Apply Prisma migrations
-        run: yarn prisma migrate deploy
+        run: npx prisma migrate deploy
 
       - name: Generate Prisma client
-        run: yarn prisma generate
+        run: npx prisma generate
 
       - name: Build
-        run: yarn build
+        run: npm run build
 
       - name: PM2 delete process
         continue-on-error: true
@@ -70,7 +69,7 @@ jobs:
 
       - name: PM2 start process
         run: |
-          yarn start:pm2
+          npm run start:pm2
 
       - name: PM2 save
         run: |
