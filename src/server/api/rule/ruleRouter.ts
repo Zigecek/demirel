@@ -17,14 +17,16 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
 
   if (!req.body) {
     const serviceResponse = ServiceResponse.failure("Nebyla poskytnuta žádná data.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const { added, edited, deleted } = req.body as SetRules;
 
   if (!added || !edited || !deleted) {
     const serviceResponse = ServiceResponse.failure("Nebyla poskytnuta žádná pravidla.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // validate all rules
@@ -32,7 +34,8 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
   for (const rule of allRules) {
     if (!rule.name || rule.notificationTitle == undefined || rule.notificationBody == undefined || !rule.severity || !rule.conditions || !rule.topics) {
       const serviceResponse = ServiceResponse.failure("Pravidlu chybí požadovaná data.", false, StatusCodes.BAD_REQUEST);
-      return handleServiceResponse(serviceResponse, res);
+      handleServiceResponse(serviceResponse, res);
+      return;
     }
   }
 
@@ -41,7 +44,8 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
     for (const condition of rule.conditions) {
       if (!condition) {
         const serviceResponse = ServiceResponse.failure("Podmínka je prázdná.", false, StatusCodes.BAD_REQUEST);
-        return handleServiceResponse(serviceResponse, res);
+        handleServiceResponse(serviceResponse, res);
+        return;
       }
 
       const fv = Object.values(await cloneMemory());
@@ -53,7 +57,8 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
 
       if (!validateExpression(condition, topics)) {
         const serviceResponse = ServiceResponse.failure("Podmínka je neplatná.", false, StatusCodes.BAD_REQUEST);
-        return handleServiceResponse(serviceResponse, res);
+        handleServiceResponse(serviceResponse, res);
+        return;
       }
     }
   }
@@ -96,7 +101,8 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
   await updateRules(username);
 
   const serviceResponse = ServiceResponse.success("Pravidla uložena.", true, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });
 
 ruleRouter.get("/getRules", authenticated, async (req: Request, res: Response) => {
@@ -104,7 +110,8 @@ ruleRouter.get("/getRules", authenticated, async (req: Request, res: Response) =
 
   if (!req.query) {
     const serviceResponse = ServiceResponse.failure("Nebyla poskytnuta žádná data.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const rules = (await prisma.rule.findMany({
@@ -119,5 +126,6 @@ ruleRouter.get("/getRules", authenticated, async (req: Request, res: Response) =
   })) as Rule[];
 
   const serviceResponse = ServiceResponse.success("Pravidla poskytnuta.", rules, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });

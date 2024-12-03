@@ -18,20 +18,23 @@ authRouter.get("/loggedIn", (req: Request, res: Response) => {
     // User is not authenticated
     // then redirect to login page
     const serviceResponse = ServiceResponse.success("Uživatel není přihlášen.", false);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   const { password, ...userSafe } = req.session.user;
 
   const serviceResponse = ServiceResponse.success("User authenticated.", userSafe as Omit<user, "password">, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });
 
 authRouter.post("/login", async (req: Request, res: Response) => {
   // if session user exists
   if (req.session?.user) {
     const serviceResponse = ServiceResponse.success("User already logged in.", true, 202);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // if session user does not exist
@@ -47,7 +50,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
 
   if (!user) {
     const serviceResponse = ServiceResponse.failure("User not found.", false, 404);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // check if password is correct
@@ -55,7 +59,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
 
   if (!isPasswordCorrect) {
     const serviceResponse = ServiceResponse.failure("Password is incorrect.", false, StatusCodes.UNAUTHORIZED);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // login was successful
@@ -64,7 +69,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
   req.session.user = user;
 
   const serviceResponse = ServiceResponse.success("Login successful.", true, StatusCodes.OK);
-  return handleServiceResponse(serviceResponse, res);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });
 
 authRouter.get("/logout", authenticated, async (req: Request, res: Response) => {
@@ -84,7 +90,8 @@ authRouter.post("/register", async (req: Request, res: Response) => {
   // if session user exists
   if (req.session?.user) {
     const serviceResponse = ServiceResponse.success("User already logged in.", true, 202);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // if session user does not exist
@@ -93,7 +100,8 @@ authRouter.post("/register", async (req: Request, res: Response) => {
 
   if (!username || !password) {
     const serviceResponse = ServiceResponse.failure("Please fill in all fields.", false, StatusCodes.BAD_REQUEST);
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // chceck if username exists
@@ -111,7 +119,8 @@ authRouter.post("/register", async (req: Request, res: Response) => {
       },
       409
     );
-    return handleServiceResponse(serviceResponse, res);
+    handleServiceResponse(serviceResponse, res);
+    return;
   }
 
   // hash password
