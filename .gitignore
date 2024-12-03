@@ -10,11 +10,15 @@ lerna-debug.log*
 coverage
 node_modules
 package_lock.json
+yarn.lock
+.pnp.*
+.yarn
 dist
 build
 dist-ssr
 *.local
 .env*
+src/prisma/*
 
 # Editor directories and files
 !.vscode/extensions.json
