@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon -w src/server -x tsx src/server/index.ts",
     "start:tsx": "cross-env NODE_ENV=production tsx src/server/index.ts",
-    "build:react": "vite build",
+    "build:react": "vite build --config vite.client.config.ts",
     "build:server": "tsup",
     "build": "npm run build:react && npm run build:server",
     "start:node": "node ./dist/index.js",
@@ -52,6 +52,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-typescript": "^12.1.1",
     "@types/chartjs-plugin-crosshair": "^1.1.4",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/cors": "^2.8.17",
@@ -70,6 +74,7 @@
     "nodemon": "^3.1.7",
     "postcss": "^8.4.49",
     "prisma": "^6.0.1",
+    "rollup": "^4.28.0",
     "tailwindcss": "^3.4.15",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
