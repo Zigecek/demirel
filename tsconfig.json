@@ -14,12 +14,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx" /*,
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@prisma/client": ["./src/generated-prisma-client/index"],
-      "@prisma/client/*": ["./src/generated-prisma-client/*"]
-    }*/
+      "@prisma/client": ["./prisma/client"],
+      "@prisma/client/*": ["./prisma/client/*"]
+    }
   },
   "include": ["src/**/*"]
 }
