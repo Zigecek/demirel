@@ -5,7 +5,6 @@ import { memory } from "./memory";
 
 const getContext = (expression: string): RuleContext => {
   const context: RuleContext = {};
-  console.log(Object.keys(memory).join(", "));
   extractTopics(expression).forEach((ruleTopic) => {
     if (memory[ruleTopic]) {
       context[ruleTopic] = memory[ruleTopic].value;
@@ -19,7 +18,7 @@ const replaceTopics = (expression: string, context: RuleContext): string => {
   // Nahrazení topiců za typové informace
   let replacedExpression = expression;
   for (const [key, value] of Object.entries(context)) {
-    const regex = new RegExp(`\\{${key}\\}`, "g");
+    const regex = new RegExp(`{${key}}`, "g");
     replacedExpression = replacedExpression.replace(regex, JSON.stringify(value));
   }
 
@@ -48,16 +47,19 @@ const evaluateExpression = (expression: string, context: RuleContext): boolean =
 
 export const completeEval = async (expression: string) => {
   // call all functions in expression
-  logger.rules.info(`Replacing expression: ${expression}`);
+
+  const evalID = Array.from({ length: 4 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
+
+  logger.rules.info(`${evalID} Replacing expression: ${expression}`);
 
   let newExpression = await replaceFunctions(expression);
   newExpression = replaceTopicsBasic(newExpression);
 
-  logger.rules.info(`-- Evaluating: ${newExpression}`);
+  logger.rules.info(`${evalID} Evaluating: ${newExpression}`);
 
   const result = evaluateExpression(newExpression, {});
 
-  logger.rules.info(`-- Resulted in: ${result}`);
+  logger.rules.info(`${evalID} Resulted in: ${result}`);
 
   return result;
 };
@@ -87,6 +89,7 @@ export const extractTopics = (expression: string): string[] => {
   while ((match = topicRegex.exec(expression)) !== null) {
     expression = expression.replace(match[0], ""); // Nahradíme nalezený výraz za prázdný řetězec
     topics.push(match[1]); // Přidáme pouze obsah složených závorek
+    topicRegex.lastIndex = 0; // IMPORTANT !!!!!
   }
 
   // extract from all functions
@@ -200,6 +203,7 @@ async function ZMENA(expression: string) {
 
       replacedExpression = replacedExpression.replace(fullMatch, changes.toString());
     }
+    ZMENAregex.lastIndex = 0;
   }
 
   return replacedExpression;
@@ -271,6 +275,7 @@ async function TRVA(expression: string) {
     });
 
     replacedExpression = replacedExpression.replace(fullMatch, result.toString());
+    TRVAregex.lastIndex = 0;
   }
 
   return replacedExpression;
@@ -310,6 +315,7 @@ const POSLEDNI = async (expression: string) => {
     });
 
     replacedExpression = replacedExpression.replace(fullMatch, String(dbHistory?.value ?? "null"));
+    POSLEDNIregex.lastIndex = 0;
   }
 
   return replacedExpression;
