@@ -7,5 +7,5 @@ export default defineConfig({
   minify: true,
   splitting: true,
   sourcemap: true,
-  platform: "neutral",
+  platform: "node",
 });
