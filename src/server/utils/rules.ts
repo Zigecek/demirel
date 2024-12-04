@@ -33,8 +33,6 @@ const evaluateExpression = (expression: string, context: RuleContext): boolean =
   // Nahrazení topiců za hodnoty z contextu
   const replacedExpression = replaceTopics(expression, context);
 
-  logger.rules.info(`Evaluating expression: ${replacedExpression}`);
-
   // Vyhodnocení výrazu
   try {
     return Function(`return (${replacedExpression});`)();
@@ -45,21 +43,21 @@ const evaluateExpression = (expression: string, context: RuleContext): boolean =
   }
 };
 
-export const completeEval = async (expression: string) => {
+export const completeEval = async (expression: string, username?: string) => {
   // call all functions in expression
 
   const evalID = Array.from({ length: 4 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
 
-  logger.rules.info(`${evalID} Replacing expression: ${expression}`);
+  logger.rules.info(`${evalID}${username ? `:${username}` : ""} Replacing expression: ${expression}`);
 
   let newExpression = await replaceFunctions(expression);
   newExpression = replaceTopicsBasic(newExpression);
 
-  logger.rules.info(`${evalID} Evaluating: ${newExpression}`);
+  logger.rules.info(`${evalID}${username ? `:${username}` : ""} Evaluating: ${newExpression}`);
 
   const result = evaluateExpression(newExpression, {});
 
-  logger.rules.info(`${evalID} Resulted in: ${result}`);
+  logger.rules.info(`${evalID}${username ? `:${username}` : ""} Resulted in: ${result}`);
 
   return result;
 };

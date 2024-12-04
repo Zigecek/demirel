@@ -60,15 +60,16 @@ export const checkRule = async (topic: string) => {
     // 3. check the rule
     // call completeEval on each condition from conditions
     // completeEval is async so we need to wait for all of them to finish
-    const results = await Promise.all(
-      rule.conditions.map(async (condition) => {
-        const result = await completeEval(condition);
-        return result;
-      })
-    );
+    async function areAllConditionsTrue(conditions: string[]) {
+      for (const condition of conditions) {
+        if (!(await completeEval(condition, rule.userId))) {
+          return false; // Okamžitý návrat, pokud je podmínka nepravdivá
+        }
+      }
+      return true; // Všechny podmínky jsou pravdivé
+    }
 
-    // if all conditions are true, activate rule
-    const result = await results.every((result) => result);
+    const result = await areAllConditionsTrue(rule.conditions);
 
     if (result) {
       logger.rules.info(`Rules: Rule '${rule.name}' condition: '${replaceTopicsBasic(rule.conditions.join(" && "))}' passed.`);
