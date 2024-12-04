@@ -5,7 +5,7 @@ import { memory } from "./memory";
 
 const getContext = (expression: string): RuleContext => {
   const context: RuleContext = {};
-  console.log(JSON.stringify(memory));
+  console.log(Object.keys(memory).join(", "));
   extractTopics(expression).forEach((ruleTopic) => {
     if (memory[ruleTopic]) {
       context[ruleTopic] = memory[ruleTopic].value;

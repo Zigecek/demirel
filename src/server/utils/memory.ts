@@ -47,7 +47,7 @@ export const loadMemory = async () => {
   firstVals.forEach((msg) => {
     memory[msg.topic] = msg;
   });
-  console.log("Memory loaded from DB. ", JSON.stringify(memory));
+  console.log("Memory loaded from DB. ", console.log(Object.keys(memory).join(", ")));
 };
 
 export const addMessage = async (message: MQTTMessage) => {
