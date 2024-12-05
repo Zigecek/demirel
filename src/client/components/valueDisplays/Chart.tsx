@@ -32,7 +32,7 @@ export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = 
       </h2>
 
       <div className="flex flex-row">
-        <div className="flex-1 w-full max-w-full" style={{ height: "StatusCodes.OKpx" }}>
+        <div className="flex-1 w-full max-w-full" style={{ height: boolean ? "200px" : topics.length * 30 + 300 }}>
           <Graph topics={topics} boolean={boolean} />
         </div>
       </div>
