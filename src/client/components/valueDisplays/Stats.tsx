@@ -28,10 +28,10 @@ function formatTime(date: Date) {
 
 type DayHistoryProps = {
   stats: dailyStats;
-  valueF?: (msg: string) => string;
+  valueF?: (msg: any) => string;
 };
 
-const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF = (msg: string) => msg }) => {
+const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF = (msg: any) => msg }) => {
   const isBooleanStats = stats.uptime !== null || stats.downtime !== null;
 
   return (
@@ -85,11 +85,11 @@ const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF = (msg: string) =
 
 type DailyHistoryProps = {
   topic: string;
-  valueF?: (msg: string) => string;
+  valueF?: (msg: any) => string;
   hidden?: boolean;
 };
 
-export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF = (msg: string) => msg, hidden = true }) => {
+export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF = (msg: any) => msg, hidden = true }) => {
   const { stats: todayStats } = useToday({ topic });
   const { nickname } = useNicknames();
   const [fetched, setFetched] = useState<dailyStats[]>();

@@ -7,7 +7,7 @@ export const number = (val: string) => parseFloat(val);
 
 export const fix = (val: number, fix: number) => {
   if (isNaN(val)) {
-    return "---";
+    return undefined;
   }
   return val.toFixed(fix);
 };
@@ -26,6 +26,10 @@ export const unit = (val: number | string, unit: string, afix: Afix = Afix.suffi
 
 export const bool = (val: string | boolean, on: string, off: string, invert: boolean = false) => {
   return parseBoolean(val) !== invert ? on : off;
+};
+
+export const unundefined = (val: string | number | boolean | undefined, def: string) => {
+  return val != undefined || val != null ? String(val) : def;
 };
 
 function parseBoolean(value: number | string | boolean): boolean {

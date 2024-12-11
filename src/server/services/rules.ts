@@ -62,8 +62,13 @@ export const checkRule = async (topic: string) => {
     // completeEval is async so we need to wait for all of them to finish
     async function areAllConditionsTrue(conditions: string[]) {
       for (const condition of conditions) {
-        if (!(await completeEval(condition, rule.userId))) {
-          return false; // Okamžitý návrat, pokud je podmínka nepravdivá
+        try {
+          if (!(await completeEval(condition, rule.userId))) {
+            return false; // Okamžitý návrat, pokud je podmínka nepravdivá
+          }
+        } catch (error) {
+          logger.rules.error(`Rules: Rule '${rule.name}' condition: '${replaceTopicsBasic(condition)}' failed with error: ${error}`);
+          return false;
         }
       }
       return true; // Všechny podmínky jsou pravdivé

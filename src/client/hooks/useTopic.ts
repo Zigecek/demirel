@@ -4,7 +4,7 @@ import { useMessages } from "../contexts/MessagesContext";
 
 export const useTopic = (topic: string) => {
   const { messages, addToHistory } = useMessages();
-  const [value, setValue] = useState<MQTTMessage["value"]>(0);
+  const [value, setValue] = useState<MQTTMessage["value"]>();
   const [lastUpdated, setLastUpdated] = useState<number>();
   const [timestamp, setTimestamp] = useState<Date>();
   const [suspicious, setSuspicious] = useState<boolean>(false);

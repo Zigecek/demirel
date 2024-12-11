@@ -5,7 +5,7 @@ import { DailyHistory } from "../components/valueDisplays/Stats";
 import { Value } from "../components/valueDisplays/Value";
 import { useNotification } from "../hooks/useNotification";
 import { usePopup } from "../hooks/usePopup";
-import { fix, number, unit } from "../utils/values";
+import { fix, number, unit, unundefined } from "../utils/values";
 import { socket } from "../ws-client";
 
 export default function App() {
@@ -40,18 +40,18 @@ export default function App() {
           </button>
         </div>
         <div className="flex flex-row items-center justify-center box-border flex-wrap">
-          <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
-          <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
-          <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
-          <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(fix(number(v), 1), "V")} />
+          <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
+          <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
+          <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
+          <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
         </div>
         <div>
-          <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} />
-          <DailyHistory topic="zige/pozar0/cerpadlo/val" hidden={true} />
+          <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} valueF={(v) => unundefined(v, "---")} />
+          <DailyHistory topic="zige/pozar0/cerpadlo/val" hidden={true} valueF={(v) => unundefined(v, "---")} />
 
-          <Chart topics={["zige/pozar0/temp/val", "zige/pozar1/temp/val"]} valueF={(v) => unit(fix(number(v), 1), "°C")} />
-          <DailyHistory topic="zige/pozar0/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
-          <DailyHistory topic="zige/pozar1/temp/val" valueF={(v) => unit(fix(number(v), 1), "°C")} />
+          <Chart topics={["zige/pozar0/temp/val", "zige/pozar1/temp/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
+          <DailyHistory topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
+          <DailyHistory topic="zige/pozar1/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
         </div>
       </div>
       {NotificationPopup}

@@ -46,18 +46,12 @@ const evaluateExpression = (expression: string, context: RuleContext): boolean =
 export const completeEval = async (expression: string, username?: string) => {
   // call all functions in expression
 
-  const evalID = Array.from({ length: 4 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
-
-  logger.rules.info(`${evalID}${username ? `:${username}` : ""} Replacing expression: ${expression}`);
-
   let newExpression = await replaceFunctions(expression);
   newExpression = replaceTopicsBasic(newExpression);
 
-  logger.rules.info(`${evalID}${username ? `:${username}` : ""} Evaluating: ${newExpression}`);
-
   const result = evaluateExpression(newExpression, {});
 
-  logger.rules.info(`${evalID}${username ? `:${username}` : ""} Resulted in: ${result}`);
+  logger.rules.info(`${username ? `(${username})` : ""} Expression: ${expression} | Replaced: ${newExpression} | Result: ${result}`);
 
   return result;
 };
@@ -172,11 +166,15 @@ async function ZMENA(expression: string) {
       const min = Math.min(...vals);
       const max = Math.max(...vals);
 
-      let result = max - min;
+      let result: number = 0;
+      if (direction === "+") {
+        result = max - min;
+      }
       if (direction === "-") {
-        result = -result;
-      } else if (direction === "*") {
-        result = Math.abs(result);
+        result = min - max;
+      }
+      if (direction === "*") {
+        result = Math.abs(max - min);
       }
 
       replacedExpression = replacedExpression.replace(fullMatch, result.toString());
@@ -187,12 +185,12 @@ async function ZMENA(expression: string) {
       // smer == - => sestupna hrana
       // smer == * => jakakoliv zmena
 
-      for (let i = 0; i < dbHistory.length - 1; i++) {
+      for (let i = 0; i < dbHistory.length - 2; i++) {
         if (dbHistory[i].value !== dbHistory[i + 1].value) {
           if (
-            direction === "*" ||
-            (direction === "+" && dbHistory[i].value === false && dbHistory[i + 1].value === true) ||
-            (direction === "-" && dbHistory[i].value === true && dbHistory[i + 1].value === false)
+            direction == "*" ||
+            (direction == "+" && dbHistory[i].value == false && dbHistory[i + 1].value == true) ||
+            (direction == "-" && dbHistory[i].value == true && dbHistory[i + 1].value == false)
           ) {
             changes++;
           }

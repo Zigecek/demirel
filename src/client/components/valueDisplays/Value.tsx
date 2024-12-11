@@ -4,7 +4,7 @@ import { useTopic } from "../../hooks/useTopic";
 
 type ValueProps = {
   topic: string;
-  valueF: (msg: string) => string;
+  valueF: (msg: any) => string;
 };
 
 export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
@@ -17,7 +17,7 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
         <span className="font-semibold">Aktuálně: </span>
         {nickname(topic)}
       </h2>
-      <p className={`text-2xl font-bold ${suspicious ? "text-red-600 font-bold" : "text-blue-500"}`}>{valueF(value.toString())}</p>
+      <p className={`text-2xl font-bold ${suspicious ? "text-red-600 font-bold" : "text-blue-500"}`}>{valueF(String(value))}</p>
 
       {lastUpdated != undefined && (
         <p className="text-xs text-gray-500 mt-2">

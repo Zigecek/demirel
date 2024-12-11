@@ -6,10 +6,10 @@ import { colors, Graph } from "./elementary/Graph";
 type ChartProps = {
   topics: string[];
   boolean?: boolean;
-  valueF?: (msg: string) => string;
+  valueF?: (msg: any) => string;
 };
 
-export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = (msg: string) => msg }) => {
+export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = (msg: any) => msg }) => {
   const { nickname } = useNicknames();
   const { values } = useTopics(topics);
   return (
@@ -23,7 +23,7 @@ export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = 
                 {nickname(t)}
                 <span className="font-semibold" style={{ color: colors[i] }}>
                   {" "}
-                  {valueF(String(values[t]))}{" "}
+                  {valueF(values[t])}{" "}
                 </span>
               </span>
             </>
