@@ -10,13 +10,6 @@ type TopicConfig = {
 
 const topicTable: TopicConfig[] = [];
 
-// Helper function to parse numeric values
-function parseNumeric(val: string): number | string {
-  const num = parseFloat(val);
-  if (isNaN(num)) return val;
-  return num;
-}
-
 export const mqConfig = {
   url: env.MQTT_URL,
   username: env.MQTT_USERNAME,
@@ -79,7 +72,7 @@ export const connectClient = () => {
 
       logger.transceiver.info(`Forwarding messages from ${device}`);
       const topics = table.topics;
-      const values = payload.split(";").map(parseNumeric);
+      const values = payload.split(";");
 
       logger.transceiver.info(`Topics: ${topics}`);
       logger.transceiver.info(`Values: ${values}`);

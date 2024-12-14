@@ -181,9 +181,12 @@ mqtt.on("message", (topic, message) => {
     let valueType: MqttValueType;
     let val: string | number | boolean;
 
-    if (msg === "true" || msg === "false" || msg === "1" || msg === "0") {
+    if (msg === "true" || msg === "1") {
       valueType = MqttValueType.BOOLEAN;
-      val = msg === "true" || msg === "1";
+      val = true;
+    } else if (msg === "false" || msg === "0") {
+      valueType = MqttValueType.BOOLEAN;
+      val = false;
     } else if (!isNaN(parseFloat(msg))) {
       valueType = MqttValueType.FLOAT;
       // parseFloat and mathematicaly round to 1 decimal place
