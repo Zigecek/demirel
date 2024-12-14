@@ -27,7 +27,7 @@ socketsRouter.post("/auth", authenticated, async (req: Request, res: Response) =
 
   logger.ws.info("Authorizing socket: " + gotSocket?.id);
 
-  gotSocket.join("mqtt");
+  gotSocket.join("auth");
 
   // Get the latest value from each topic
   const messages = Object.values(await cloneMemory());

@@ -13,7 +13,8 @@ const topicTable: TopicConfig[] = [];
 // Helper function to parse numeric values
 function parseNumeric(val: string): number | string {
   const num = parseFloat(val);
-  return isNaN(num) ? val : num % 1 === 0 ? Math.round(num) : num;
+  if (isNaN(num)) return val;
+  return num;
 }
 
 export const mqConfig = {

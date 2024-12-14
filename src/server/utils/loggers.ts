@@ -31,7 +31,7 @@ const customPrettifier = pretty({
   ignore: "pid,hostname",
   customPrettifiers: {
     time: (t) => {
-      return chalk.rgb(0, 255, 0)("[") + chalk.rgb(255, 255, 255)(t) + chalk.rgb(0, 255, 0)("]");
+      return chalk.rgb(0, 255, 0)("[") + chalk.rgb(230, 230, 230)(t) + chalk.rgb(0, 255, 0)("]");
     },
   },
   hideObject: true,
@@ -63,6 +63,7 @@ const logger = {
   memory: getLogger("MEMORY", hexColors[7]),
   vite: getLogger("VITE", hexColors[8]),
   webpush: getLogger("WEBPUSH", hexColors[9]),
+  pgMon: getLogger("PGMON", hexColors[10]),
 };
 
 export default logger;

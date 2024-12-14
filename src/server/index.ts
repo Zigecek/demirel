@@ -6,6 +6,7 @@ import { createDailyStats } from "./services/daily";
 import "./services/mqttClient";
 import { endClient } from "./services/mqttClient";
 import { connectClient, endTransceiver } from "./services/mqttTransceiver";
+import { start as startPgMon } from "./services/pgMon";
 import { start as startRules } from "./services/rules";
 import { env } from "./utils/env";
 import logger from "./utils/loggers";
@@ -33,6 +34,7 @@ export const status = {
   daily: Status.OFFLINE,
   transceiver: Status.OFFLINE,
   memory: Status.OFFLINE,
+  pgMon: Status.OFFLINE,
 };
 
 export const prisma = new PrismaClient({
@@ -46,6 +48,7 @@ prisma
     status.db = Status.RUNNING;
     startMem();
     startRules();
+    startPgMon();
 
     // schedule daily stats creation
     onEachDay(() => {

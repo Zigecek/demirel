@@ -50,7 +50,7 @@ const processQueue = async () => {
       wsQueue.length = 0;
 
       logger.ws.info(`Sending ${toSend.length} messages to WS`);
-      io.to("mqtt").emit("messages", toSend);
+      io.to("auth").emit("messages", toSend);
 
       logger.ws.info("Messages sent to WS");
       logger.db.info("Saving messages to DB");

@@ -187,3 +187,15 @@ type NotificationAction = {
   title: string;
   icon: string;
 };
+
+interface PgMonStats {
+  database_name: string;
+  total_transactions: number;
+  disk_reads: number;
+  cache_hits: number;
+  cache_hit_ratio: number;
+  rows_inserted: number;
+  rows_updated: number;
+  rows_deleted: number;
+  current_time: Date;
+}
