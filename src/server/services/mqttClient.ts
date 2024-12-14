@@ -169,6 +169,10 @@ mqtt.stream.on("error", (err) => {
 });
 
 mqtt.on("message", (topic, message) => {
+  if (status.db !== Status.RUNNING) return;
+  if (status.ws !== Status.RUNNING) return;
+  if (status.memory !== Status.RUNNING) return;
+
   const msg: string = message.toString();
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
     logger.mqtt.warn("Invalid topic in net: " + topic);
@@ -187,22 +191,18 @@ mqtt.on("message", (topic, message) => {
     } else if (msg === "false" || msg === "0") {
       valueType = MqttValueType.BOOLEAN;
       val = false;
-    } else if (!isNaN(parseFloat(msg))) {
-      valueType = MqttValueType.FLOAT;
-      // parseFloat and mathematicaly round to 1 decimal place
-      val = Math.round(parseFloat(msg) * 10) / 10;
     } else if (msg === "null" || msg === "-1") {
       val = "null";
       logger.mqtt.warn(`${topic}: ${val} <NULL>`);
       return;
+    } else if (!isNaN(parseFloat(msg))) {
+      valueType = MqttValueType.FLOAT;
+      // parseFloat and mathematicaly round to 1 decimal place
+      val = Math.round(parseFloat(msg) * 10) / 10;
     } else {
       logger.mqtt.warn("Invalid value in net: " + msg);
       return;
     }
-
-    if (status.db !== Status.RUNNING) return;
-    if (status.ws !== Status.RUNNING) return;
-    if (status.memory !== Status.RUNNING) return;
 
     logger.mqtt.info(`${topic}: ${val} <${valueType}>`);
 
