@@ -191,6 +191,10 @@ mqtt.on("message", (topic, message) => {
       valueType = MqttValueType.FLOAT;
       // parseFloat and mathematicaly round to 1 decimal place
       val = Math.round(parseFloat(msg) * 10) / 10;
+    } else if (msg === "null" || msg === "-1") {
+      val = "null";
+      logger.mqtt.warn(`${topic}: ${val} <NULL>`);
+      return;
     } else {
       logger.mqtt.warn("Invalid value in net: " + msg);
       return;
