@@ -44,14 +44,22 @@ export default function App() {
           <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
           <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
           <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
+          <Value topic="zige/meteo/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
+          <Value topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
+          <Value topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "Pa")} />
         </div>
         <div>
           <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} valueF={(v) => unundefined(v, "---")} />
           <DailyHistory topic="zige/pozar0/cerpadlo/val" hidden={true} valueF={(v) => unundefined(v, "---")} />
 
-          <Chart topics={["zige/pozar0/temp/val", "zige/pozar1/temp/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
+          <Chart topics={["zige/pozar0/temp/val", "zige/pozar1/temp/val", "zige/meteo/temp/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
           <DailyHistory topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
           <DailyHistory topic="zige/pozar1/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
+          <DailyHistory topic="zige/meteo/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
+          <Chart topics={["zige/meteo/hum/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
+          <Chart topics={["zige/meteo/press/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "Pa")} />
+          <DailyHistory topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
+          <DailyHistory topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "Pa")} />
         </div>
       </div>
       {NotificationPopup}
