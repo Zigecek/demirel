@@ -124,7 +124,7 @@ async function ZMENA(expression: string) {
 
     // zde budeš muset zjistit, zda je seconds ve správném formátu
     // pokud není, tak bys měl vyhodit chybu
-    if (isNaN(Number(seconds))) {
+    if (isNaN(+seconds)) {
       return replacedExpression;
     }
 
@@ -137,7 +137,7 @@ async function ZMENA(expression: string) {
     // zde budeš muset zjistit, zda je value ve správném rozsahu
     // pokud není, tak bys měl vyhodit chybu
     if (memory[topic].valueType === "FLOAT") {
-      if (isNaN(Number(seconds))) {
+      if (isNaN(+seconds)) {
         return replacedExpression;
       }
     }
@@ -149,7 +149,7 @@ async function ZMENA(expression: string) {
       where: {
         topic,
         timestamp: {
-          gte: new Date(Date.now() - Number(seconds) * 1000),
+          gte: new Date(Date.now() - +seconds * 1000),
         },
       },
       omit: {
@@ -162,7 +162,7 @@ async function ZMENA(expression: string) {
     dbHistory.push(memory[topic]);
 
     if (memory[topic].valueType === "FLOAT") {
-      const vals = dbHistory.map((item) => Number(item.value));
+      const vals = dbHistory.map((item) => (item.value !== null ? +item.value : 0));
       const min = Math.min(...vals);
       const max = Math.max(...vals);
 
@@ -177,7 +177,7 @@ async function ZMENA(expression: string) {
         result = Math.abs(max - min);
       }
 
-      replacedExpression = replacedExpression.replace(fullMatch, result.toString());
+      replacedExpression = replacedExpression.replace(fullMatch, result + "");
     } else if (memory[topic].valueType === "BOOLEAN") {
       let changes = 0;
 
@@ -197,7 +197,7 @@ async function ZMENA(expression: string) {
         }
       }
 
-      replacedExpression = replacedExpression.replace(fullMatch, changes.toString());
+      replacedExpression = replacedExpression.replace(fullMatch, changes + "");
     }
     ZMENAregex.lastIndex = 0;
   }
@@ -230,7 +230,7 @@ async function TRVA(expression: string) {
 
     // zde budeš muset zjistit, zda je seconds ve správném formátu
     // pokud není, tak bys měl vyhodit chybu
-    if (isNaN(Number(seconds))) {
+    if (isNaN(+seconds)) {
       return replacedExpression;
     }
 
@@ -251,7 +251,7 @@ async function TRVA(expression: string) {
       where: {
         topic,
         timestamp: {
-          gte: new Date(Date.now() - Number(seconds) * 1000),
+          gte: new Date(Date.now() - +seconds * 1000),
         },
       },
       omit: {
@@ -270,7 +270,7 @@ async function TRVA(expression: string) {
       return evaluateExpression(cond, context);
     });
 
-    replacedExpression = replacedExpression.replace(fullMatch, result.toString());
+    replacedExpression = replacedExpression.replace(fullMatch, result + "");
     TRVAregex.lastIndex = 0;
   }
 
@@ -310,7 +310,7 @@ const POSLEDNI = async (expression: string) => {
       },
     });
 
-    replacedExpression = replacedExpression.replace(fullMatch, String(dbHistory?.value ?? "null"));
+    replacedExpression = replacedExpression.replace(fullMatch, "" + (dbHistory?.value ?? "null"));
     POSLEDNIregex.lastIndex = 0;
   }
 

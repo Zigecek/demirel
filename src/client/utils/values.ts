@@ -13,7 +13,7 @@ export const fix = (val: number, fix: number) => {
 };
 
 export const unit = (val: number | string, unit: string, afix: Afix = Afix.suffix, delimiter: string = "") => {
-  let string = val.toString();
+  let string = val + "";
 
   if (afix === Afix.prefix) {
     string = unit + delimiter + string;
@@ -29,7 +29,7 @@ export const bool = (val: string | boolean, on: string, off: string, invert: boo
 };
 
 export const unundefined = (val: string | number | boolean | undefined, def: string) => {
-  return val != undefined || val != null ? String(val) : def;
+  return val != undefined || val != null ? val + "" : def;
 };
 
 function parseBoolean(value: number | string | boolean): boolean {

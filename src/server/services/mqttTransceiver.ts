@@ -45,7 +45,7 @@ export const connectClient = () => {
   });
 
   client.on("message", (topic, message: Buffer, packet: Packet) => {
-    const payload = message.toString();
+    const payload = message + "";
     const parts = topic.split("/");
     if (topic.endsWith("/config") && parts.length === 3) {
       const device = parts[parts.length - 2];
@@ -80,7 +80,7 @@ export const connectClient = () => {
       topics.forEach((topic, index) => {
         if (values[index] !== undefined) {
           logger.transceiver.info(`Publishing to ${topic}: ${values[index]}`);
-          client.publish(topic, String(values[index]), { qos: 0, retain: true });
+          client.publish(topic, values[index] + "", { qos: 0, retain: true });
         }
       });
     } else {

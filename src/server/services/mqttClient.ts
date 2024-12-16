@@ -6,6 +6,8 @@ import { env } from "../utils/env";
 import logger from "../utils/loggers";
 import { addMessage, getFromDB } from "../utils/memory";
 
+const lastDigitHisteresis = 1;
+
 export const mqConfig = {
   url: env.MQTT_URL,
   username: env.MQTT_USERNAME,
@@ -78,7 +80,11 @@ const processQueue = async () => {
             },
           });
         } else {
-          if (lastValue.value === msg.value) {
+          // same value or value is close to the last one (last digit difference <= lastDigitHisteresis)
+          if (
+            lastValue.value === msg.value ||
+            (msg.valueType === MqttValueType.FLOAT && Math.abs(Number([...String(lastValue.value)].pop()) - Number([...String(msg.value)].pop())) <= lastDigitHisteresis)
+          ) {
             // Pokud se hodnota nezměnila, posune tento záznam
             updates.push({
               where: { id: lastValue.id },
@@ -168,12 +174,12 @@ mqtt.stream.on("error", (err) => {
   logger.mqtt.error("Error: ", err.message);
 });
 
-mqtt.on("message", (topic, message) => {
+mqtt.on("message", (topic, message: Buffer) => {
   if (status.db !== Status.RUNNING) return;
   if (status.ws !== Status.RUNNING) return;
   if (status.memory !== Status.RUNNING) return;
 
-  const msg: string = message.toString();
+  const msg: string = message + "";
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
     logger.mqtt.warn("Invalid topic in net: " + topic);
     return;

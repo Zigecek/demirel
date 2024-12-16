@@ -60,17 +60,17 @@ const DayHistory: React.FC<DayHistoryProps> = ({ stats, valueF = (msg: any) => m
           <div className="flex items-center space-x-2">
             <MdTrendingUp className="text-red-500" />
             <span className="text-gray-500">Max:</span>
-            <span className="font-medium">{valueF(String(stats.max))}</span>
+            <span className="font-medium">{valueF(stats.max + "")}</span>
           </div>
           <div className="flex items-center space-x-2">
             <MdTrendingDown className="text-blue-500" />
             <span className="text-gray-500">Min:</span>
-            <span className="font-medium">{valueF(String(stats.min))}</span>
+            <span className="font-medium">{valueF(stats.min + "")}</span>
           </div>
           <div className="flex items-center space-x-2">
             <MdSpeed className="text-yellow-500" />
             <span className="text-gray-500">Průměr:</span>
-            <span className="font-medium">{valueF(String(stats.avg))}</span>
+            <span className="font-medium">{valueF(stats.avg + "")}</span>
           </div>
           <div className="flex items-center space-x-2">
             <FaListOl className="text-purple-500" />
