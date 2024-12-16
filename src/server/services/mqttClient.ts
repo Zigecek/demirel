@@ -6,7 +6,7 @@ import { env } from "../utils/env";
 import logger from "../utils/loggers";
 import { addMessage, getFromDB } from "../utils/memory";
 
-const lastDigitHisteresis = 1;
+const lastDigitFluctuation = 1;
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -83,7 +83,7 @@ const processQueue = async () => {
           // same value or value is close to the last one (last digit difference <= lastDigitHisteresis)
           if (
             lastValue.value === msg.value ||
-            (msg.valueType === MqttValueType.FLOAT && Math.abs(Number([...String(lastValue.value)].pop()) - Number([...String(msg.value)].pop())) <= lastDigitHisteresis)
+            (msg.valueType === MqttValueType.FLOAT && Math.abs(Number([...String(lastValue.value)].pop()) - Number([...String(msg.value)].pop())) <= lastDigitFluctuation)
           ) {
             // Pokud se hodnota nezměnila, posune tento záznam
             updates.push({
