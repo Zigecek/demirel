@@ -62,6 +62,10 @@ export default function App() {
           <DailyHistory topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
           <DailyHistory topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
         </div>
+        <h3>Vývoj:</h3>
+        <div>
+          <Chart topics={["zige/meteo/anemoscope/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°")} />
+        </div>
       </div>
       {NotificationPopup}
     </>
