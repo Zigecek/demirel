@@ -1,3 +1,4 @@
+import { CircularProgress } from "@mui/material";
 import React, { lazy, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -14,7 +15,16 @@ type LazyLoaderProps = {
 };
 
 const LazyLoader: React.FC<LazyLoaderProps> = ({ children }) => {
-  return <React.Suspense fallback={<div>Loading...</div>}>{children}</React.Suspense>;
+  return (
+    <React.Suspense
+      fallback={
+        <div className="flex justify-center items-center w-screen h-screen">
+          <CircularProgress />
+        </div>
+      }>
+      {children}
+    </React.Suspense>
+  );
 };
 
 const LazyApp = lazy(() => import("./pages/App"));

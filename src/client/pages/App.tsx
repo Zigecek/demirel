@@ -47,6 +47,7 @@ export default function App() {
           <Value topic="zige/meteo/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
           <Value topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
           <Value topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
+          <Value topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "km/h")} />
         </div>
         <div>
           <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} valueF={(v) => unundefined(v, "---")} />

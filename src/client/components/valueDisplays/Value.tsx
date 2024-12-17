@@ -12,10 +12,10 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
   const { nickname } = useNicknames();
 
   return (
-    <div className="bg-gray-50 border border-gray-300 rounded-lg shadow-md p-2 m-1">
-      <h2 className="text-xl mb-2">
-        <span className="font-semibold">Aktuálně: </span>
-        {nickname(topic)}
+    <div className="bg-gray-50 border border-gray-300 rounded-lg shadow-md p-2 m-1 flex-1 min-w-40">
+      <h2 className="text-xl mb-2 flex flex-wrap whitespace-pre">
+        <span className="font-semibold">Nyní: </span>
+        <span>{nickname(topic)}</span>
       </h2>
       <p className={`text-2xl font-bold ${suspicious ? "text-red-600 font-bold" : "text-blue-500"}`}>{valueF(value + "")}</p>
 
