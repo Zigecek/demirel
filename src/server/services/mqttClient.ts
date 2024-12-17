@@ -4,7 +4,7 @@ import { connect } from "mqtt";
 import { io, prisma, Status, status } from "..";
 import { env } from "../utils/env";
 import logger from "../utils/loggers";
-import { addMessage, getFromDB } from "../utils/memory";
+import { addMessage, getTwoFromDB } from "../utils/memory";
 
 const lastDigitFluctuation = 1;
 
@@ -55,19 +55,32 @@ const processQueue = async () => {
       io.to("auth").emit("messages", toSend);
 
       logger.ws.info("Messages sent to WS");
-      logger.db.info("Saving messages to DB");
 
       // Prepare DB updates
+      /*
       const dbValuesMap = new Map<string, { value: JsonValue; id: number }>();
       (await getFromDB()).forEach((val) => {
         dbValuesMap.set(val.topic, { value: val.value, id: val.id });
       });
+      */
+
+      const dbValuesMapTwo = new Map<string, { value: JsonValue; id: number }[]>();
+      (await getTwoFromDB()).forEach((val) => {
+        if (!dbValuesMapTwo.has(val.topic)) {
+          dbValuesMapTwo.set(val.topic, []);
+        }
+        dbValuesMapTwo.get(val.topic)?.push({ value: val.value, id: val.id });
+      });
+
+      logger.db.info("Saving messages to DB");
 
       const updates: Array<Prisma.mqttUpdateArgs> = [];
       const inserts: Array<Prisma.mqttCreateArgs> = [];
 
       toSend.forEach((msg) => {
-        const lastValue = dbValuesMap.get(msg.topic);
+        const lastValueArray = dbValuesMapTwo.get(msg.topic);
+        const lastValue = lastValueArray ? lastValueArray[0] : undefined;
+        const lastValue2 = lastValueArray ? lastValueArray[1] : undefined;
 
         if (!lastValue) {
           // Pokud neexistuje, přidej prvotní záznam, který zůstane v DB na místě
@@ -83,7 +96,8 @@ const processQueue = async () => {
           // same value or value is close to the last one (last digit difference <= lastDigitHisteresis)
           if (
             lastValue.value === msg.value ||
-            (msg.valueType === MqttValueType.FLOAT && Math.abs(Number([...String(lastValue.value)].pop()) - Number([...String(msg.value)].pop())) <= lastDigitFluctuation)
+            lastValue2?.value === msg.value
+            //(msg.valueType === MqttValueType.FLOAT && Math.abs(Number([...String(lastValue.value)].pop()) - Number([...String(msg.value)].pop())) <= lastDigitFluctuation)
           ) {
             // Pokud se hodnota nezměnila, posune tento záznam
             updates.push({
@@ -146,7 +160,7 @@ const processQueue = async () => {
       logger.db.info("-- Messages saved to DB --");
     }
   } catch (err) {
-    logger.db.error("Error processing queue:", err);
+    logger.db.error("Error processing queue:" + err);
   } finally {
     isProcessingQueue = false; // Reset the flag
   }

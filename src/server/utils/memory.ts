@@ -1,3 +1,4 @@
+import Prisma from "@prisma/client";
 import { EventEmitter } from "eventemitter3";
 import { prisma, Status, status } from "..";
 import logger from "./loggers";
@@ -17,6 +18,7 @@ export const offMemoryChange = (cb: (msg: MQTTMessage) => void) => {
   memoryEmitter.off("message", cb);
 };
 
+// get last messages from db
 export const getFromDB = async () => {
   const latestTimestamps = await prisma.mqtt.groupBy({
     by: ["topic"],
@@ -39,6 +41,27 @@ export const getFromDB = async () => {
   });
 
   return messages;
+};
+
+// get two last messages from db
+export const getTwoFromDB = async (): Promise<Prisma.mqtt[]> => {
+  const query = `
+    WITH RankedMessages AS (
+      SELECT m.*, 
+             ROW_NUMBER() OVER (PARTITION BY m.topic ORDER BY m.timestamp DESC) AS rn
+      FROM mqtt m
+    )
+    SELECT *
+    FROM RankedMessages
+    WHERE rn <= 2
+    ORDER BY topic ASC, timestamp DESC;
+  `;
+
+  // Execute the raw SQL query
+  const messages = await prisma.$queryRawUnsafe(query);
+
+  // Cast the result to the Prisma generated type for the mqtt model
+  return messages as Prisma.mqtt[];
 };
 
 export const loadMemory = async () => {

@@ -19,7 +19,7 @@ export const useTopics = (topics: string[]) => {
 
       const lastMessageInterval = lastMessageIntervals[topic];
       if (lastMessageInterval) {
-        const allowedInterval = lastMessageInterval * 1.3;
+        const allowedInterval = lastMessageInterval * 2;
         if (suspicious[topic] !== now.getTime() - timestamp.getTime() > allowedInterval) {
           setSuspicious((prev) => ({ ...prev, [topic]: now.getTime() - timestamp.getTime() > allowedInterval }));
         }

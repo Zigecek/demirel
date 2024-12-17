@@ -17,7 +17,7 @@ export const useTopic = (topic: string) => {
       setLastUpdated(Math.round(timeSinceLastMessage));
 
       if (lastMessageInterval) {
-        const allowedInterval = lastMessageInterval * 1.3;
+        const allowedInterval = lastMessageInterval * 2;
         setSuspicious(now.getTime() - timestamp.getTime() > allowedInterval);
         return;
       }

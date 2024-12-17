@@ -35,6 +35,8 @@ model mqtt {
 
   @@unique([topic, timestamp])
   @@index([topic, timestamp])
+  @@index([timestamp])
+  @@index([topic])
 }
 
 enum MqttValueType {
