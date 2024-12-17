@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { postMqttNickname } from "../proxy/endpoints";
+import { useUser } from "./UserContext";
 
 interface NicknamesContextType {
   nickname: (topic: string) => string;
@@ -17,6 +18,13 @@ export const useNicknames = (): NicknamesContextType => {
 
 export const NicknamesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [nicknames, setNicknames] = useState<Record<string, string>>({});
+  const { user } = useUser();
+  const [needToGet, setNeedToGet] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchNicknames(needToGet);
+  }, [user, needToGet]);
 
   const fetchNicknames = async (topics: string[]) => {
     const response = await postMqttNickname({ topics });
@@ -32,7 +40,7 @@ export const NicknamesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!nicknames[topic]) {
       if (nicknames[topic] !== topic) {
         nicknames[topic] = topic;
-        fetchNicknames([topic]);
+        setNeedToGet((prev) => [...prev, topic]);
       }
       return topic; // Return the topic itself until the nickname is fetched
     }

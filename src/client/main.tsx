@@ -28,7 +28,6 @@ const LazyLoader: React.FC<LazyLoaderProps> = ({ children }) => {
 };
 
 const LazyApp = lazy(() => import("./pages/App"));
-const LazyLogin = lazy(() => import("./pages/Login"));
 const LazyRegister = lazy(() => import("./pages/Register"));
 
 const router = createBrowserRouter([
@@ -37,14 +36,6 @@ const router = createBrowserRouter([
     element: (
       <LazyLoader>
         <LazyApp />
-      </LazyLoader>
-    ),
-  },
-  {
-    path: "/login",
-    element: (
-      <LazyLoader>
-        <LazyLogin />
       </LazyLoader>
     ),
   },

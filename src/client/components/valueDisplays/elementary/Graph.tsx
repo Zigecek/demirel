@@ -8,6 +8,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { useMessages } from "../../../contexts/MessagesContext";
 import { useNicknames } from "../../../contexts/NicknamesContext";
+import { useUser } from "../../../contexts/UserContext";
 import { useTopics } from "../../../hooks/useTopics";
 import { postMqttData } from "../../../proxy/endpoints";
 
@@ -30,6 +31,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   const chartRef = useRef<any>(null);
   const { addToHistory } = useMessages();
   const { nickname } = useNicknames();
+  const { user } = useUser();
 
   // Bounds for data fetching and timeout for debouncing
   const [bounds, setBounds] = useState<Bounds>();
@@ -112,6 +114,8 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       setTimeUnitByBounds(bounds.min, bounds.max);
     }
 
+    if (!user) return;
+
     const timeout = setTimeout(() => {
       if (!bounds) return;
       if (bounds.min >= loaded.min && bounds.max <= loaded.max) return;
@@ -178,7 +182,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
 
     setBoundsTimeout(timeout);
     return () => clearTimeout(timeout);
-  }, [bounds]);
+  }, [bounds, user]);
 
   // main datapoints useEffect
   useEffect(() => {
@@ -291,14 +295,14 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
         },
       },
     });
-  }, [dataPoints, isUserInteracting, timeUnit, suspicious]);
+  }, [dataPoints, isUserInteracting, timeUnit, suspicious, user]);
 
   useEffect(() => {
     if (!dataPoints) return;
     if (isUserInteracting) return;
 
     resetZoom();
-  }, [isUserInteracting, dataPoints]);
+  }, [isUserInteracting, dataPoints, user]);
 
   const onZoomPan = (chart: ChartJS) => {
     setBounds(chart.scales.x.getUserBounds());

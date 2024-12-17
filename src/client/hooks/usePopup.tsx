@@ -5,6 +5,7 @@ type PopupHookReturnType = {
   PopupComponent: React.ReactPortal | null;
   showPopup: () => void;
   closePopup: () => void;
+  isVisible: boolean;
 };
 
 export const usePopup = (PopupContent: React.FC<PopupContentProps>): PopupHookReturnType => {
@@ -24,5 +25,5 @@ export const usePopup = (PopupContent: React.FC<PopupContentProps>): PopupHookRe
       )
     : null;
 
-  return { PopupComponent, showPopup, closePopup };
+  return { PopupComponent, showPopup, closePopup, isVisible };
 };

@@ -5,6 +5,7 @@ import { FaArrowsUpDown } from "react-icons/fa6";
 import { MdSpeed, MdTrendingDown, MdTrendingUp } from "react-icons/md";
 import { getDayDates } from "../../../globals/daily";
 import { useNicknames } from "../../contexts/NicknamesContext";
+import { useUser } from "../../contexts/UserContext";
 import { useToday } from "../../hooks/useToday";
 import { postMqttStats } from "../../proxy/endpoints";
 
@@ -94,6 +95,7 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF = (msg
   const { nickname } = useNicknames();
   const [fetched, setFetched] = useState<dailyStats[]>();
   const [history, setHistory] = useState<dailyStats[]>([]);
+  const { user } = useUser();
 
   const [showAll, setShowAll] = useState(!hidden);
 
@@ -102,8 +104,9 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF = (msg
   };
 
   useEffect(() => {
+    if (!user) return;
     getStats();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!todayStats) return;

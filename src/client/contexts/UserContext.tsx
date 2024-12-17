@@ -2,8 +2,11 @@ import { user } from "@prisma/client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getIfLoggedInAsync } from "../proxy/endpoints";
 
+type UserState = Omit<user, "password"> | null | false;
+
 interface UserContextType {
-  user: Omit<user, "password">;
+  user: UserState;
+  setUser: React.Dispatch<React.SetStateAction<UserState>>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -17,13 +20,14 @@ export const useUser = (): UserContextType => {
 };
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<Omit<user, "password"> | null>(null);
+  const [user, setUser] = useState<UserState>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const data = await getIfLoggedInAsync();
         if (!data.responseObject) {
+          setUser(false);
           return false;
         }
         setUser(data.responseObject);
@@ -34,5 +38,5 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUser();
   }, []);
 
-  return <UserContext.Provider value={{ user: user! }}>{children}</UserContext.Provider>;
+  return <UserContext.Provider value={{ user: user!, setUser: setUser }}>{children}</UserContext.Provider>;
 };

@@ -83,7 +83,7 @@ authRouter.get("/logout", authenticated, async (req: Request, res: Response) => 
   });
 
   // send Response
-  res.redirect("/login");
+  res.redirect("/");
 });
 
 authRouter.post("/register", async (req: Request, res: Response) => {

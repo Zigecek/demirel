@@ -62,25 +62,6 @@ apiRouter.use("/push", pushRouter);
 apiRouter.use("/rule", ruleRouter);
 app.use("/api", apiRouter);
 
-// Secure static routes
-app.get("/", (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const { user } = req.session;
-  if (user) {
-    return next();
-  } else {
-    return res.redirect("/login");
-  }
-});
-
-app.get("/login", (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const { user } = req.session;
-  if (user) {
-    return res.redirect("/");
-  } else {
-    return next();
-  }
-});
-
 // Vite Express
 app.use(ViteExpress.static());
 
