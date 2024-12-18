@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
-import React, { useEffect, useState } from "react";
-import CustomSnackbar, { createDefaultConfig } from "../components/CustomSnackbar";
+import React, { useState } from "react";
 import TextInput from "../components/TextInput";
+import { useSnackbarContext } from "../contexts/SnackbarContext";
 import { postRegister } from "../proxy/endpoints";
 
 export default function Register() {
@@ -9,11 +9,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [errors, setErrors] = useState({ username: false, password: false, password2: false });
-  const [snackbarConfig, setSnackbarConfig] = useState<SnackBarConfig>();
-
-  useEffect(() => {
-    setSnackbarConfig(createDefaultConfig(setSnackbarConfig));
-  }, []);
+  const { showSnackbar } = useSnackbarContext();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,12 +31,12 @@ export default function Register() {
       postRegister({ username, password })
         .then((response) => {
           if (response.status === 202) {
-            snackbarConfig?.showSnackbar({
+            showSnackbar({
               text: "User already logged in.",
               severity: "warning",
             });
           } else if (response.status === StatusCodes.OK) {
-            snackbarConfig?.showSnackbar({
+            showSnackbar({
               text: "Successfully registered.",
               severity: "success",
             });
@@ -50,17 +46,17 @@ export default function Register() {
         .catch((error) => {
           // show snackbar
           if (error.response?.status === 409) {
-            snackbarConfig?.showSnackbar({
+            showSnackbar({
               text: "User already exists.",
               severity: "error",
             });
           } else if (error.response?.status === StatusCodes.BAD_REQUEST) {
-            snackbarConfig?.showSnackbar({
+            showSnackbar({
               text: "Please fill in all fields.",
               severity: "error",
             });
           } else {
-            snackbarConfig?.showSnackbar({
+            showSnackbar({
               text: "An error occurred: " + error.message,
               severity: "error",
             });
@@ -86,7 +82,6 @@ export default function Register() {
           </form>
         </div>
       </div>
-      {snackbarConfig && <CustomSnackbar config={snackbarConfig} />}
     </>
   );
 }
