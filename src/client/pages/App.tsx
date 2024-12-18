@@ -27,8 +27,6 @@ export default function App() {
       socket.connect();
     }
 
-    // test
-
     return () => {
       socket.disconnect();
     };
