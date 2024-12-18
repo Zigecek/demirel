@@ -227,24 +227,28 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       datasets,
     });
 
+    const min = Math.min(
+      ...Object.values(dataPoints)
+        .flat()
+        .map((dp) => dp.value)
+    );
+
+    const max = Math.max(
+      ...Object.values(dataPoints)
+        .flat()
+        .map((dp) => dp.value)
+    );
+
+    const dif = (max - min) * 0.1;
+
     setOptions({
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
       scales: {
         y: {
-          min:
-            Math.min(
-              ...Object.values(dataPoints)
-                .flat()
-                .map((dp) => dp.value)
-            ) * 0.9,
-          max:
-            Math.max(
-              ...Object.values(dataPoints)
-                .flat()
-                .map((dp) => dp.value)
-            ) * 1.1,
+          min: min - dif,
+          max: max + dif,
         },
         x: {
           type: "time",
