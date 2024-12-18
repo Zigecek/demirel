@@ -5,7 +5,11 @@ import { useUser } from "../contexts/UserContext";
 import { postLogin } from "../proxy/endpoints";
 import TextInput from "./TextInput";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  className: string;
+}
+
+export const LoginForm: React.FC<LoginFormProps> = ({ className, ...rest }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({ username: false, password: false });
@@ -67,7 +71,7 @@ export default function LoginForm() {
 
   return (
     <>
-      <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-lg md:max-w-lg">
+      <div className={`w-full max-w-md p-6 bg-white shadow-lg rounded-lg md:max-w-lg ${className}`} {...rest}>
         <h2 className="text-2xl font-semibold text-center mb-6">Přihlášení</h2>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <TextInput id="username" label="Přihlašovací jméno" value={username} onChange={setUsername} hasError={errors.username} />
@@ -81,4 +85,4 @@ export default function LoginForm() {
       </div>
     </>
   );
-}
+};

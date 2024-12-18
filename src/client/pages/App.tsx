@@ -1,6 +1,6 @@
 import { CircularProgress } from "@mui/material";
 import { useEffect, useState } from "react";
-import LoginForm from "../components/LoginForm";
+import { LoginForm } from "../components/LoginForm";
 import { RuleSetup } from "../components/RuleSetup";
 import { Chart } from "../components/valueDisplays/Chart";
 import { DailyHistory } from "../components/valueDisplays/Stats";
@@ -43,11 +43,12 @@ export default function App() {
         </div>
       ) : (
         <>
-          {user === false && (
-            <div className="min-h-screen w-screen flex items-center justify-center bg-gray-500 bg-opacity-75 fixed backdrop-blur-2px">
-              <LoginForm />
-            </div>
-          )}
+          <div
+            className={`min-h-screen w-screen flex items-center justify-center bg-gray-500 bg-opacity-75 fixed backdrop-blur-0.5 duration-1000 ${
+              user === false ? "visible opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}>
+            <LoginForm className={`duration-100 ${user === false ? "visible opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`} />
+          </div>
           <div className={`bg-gray-100 ${user === false || isVisible ? "overflow-hidden h-screen" : ""}`}>
             <div className="flex flex-row flex-wrap gap-2 p-2">
               <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">

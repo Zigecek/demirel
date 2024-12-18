@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       backdropBlur: {
-        "2px": "2px",
+        0.5: "0.125rem",
       },
     },
     fontFamily: {
