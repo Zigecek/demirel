@@ -2,7 +2,7 @@ name: Deploy to RPi
 
 on:
   push:
-    branches: ["main"]
+    branches: ["prod"]
 
 jobs:
   deploy-to-rpi:
