@@ -97,6 +97,33 @@ export const extractTopics = (expression: string): string[] => {
   return [...new Set(topics)];
 };
 
+const getMessagesInSeconds = async (topic: string, seconds: number) => {
+  const recentTimestamp = new Date(Date.now() - seconds * 1000);
+
+  return await prisma.$transaction(async (prisma) => {
+    const [recentMessages, previousMessage] = await Promise.all([
+      // získání všech záznamů z historie, které jsou novější než recentTimestamp
+      prisma.mqtt.findMany({
+        where: {
+          topic,
+          timestamp: { gte: recentTimestamp },
+        },
+        orderBy: { timestamp: "desc" },
+      }),
+      // získání posledního záznamu z historie, který je starší než recentTimestamp
+      prisma.mqtt.findFirst({
+        where: {
+          topic,
+          timestamp: { lt: recentTimestamp },
+        },
+        orderBy: { timestamp: "desc" },
+      }),
+    ]);
+
+    return [...recentMessages, memory[topic], ...(previousMessage ? [previousMessage] : [])];
+  });
+};
+
 async function ZMENA(expression: string) {
   // funkce ve stringu může mít například následující tvar: "ZMENA(zige/pozar0/temp/val, 45, *)"
   // chci toto detekovat a nahradit za hodnotu, proto budu potřebovat dostat jednotlivé argumenty funkce do proměnných
@@ -145,21 +172,7 @@ async function ZMENA(expression: string) {
     // zde budeme řešit získávání hodnot z databáze a logiku této funkce
     // výsledek funkce bude nahrazen za fullMatch ve výrazu
 
-    const dbHistory = await prisma.mqtt.findMany({
-      where: {
-        topic,
-        timestamp: {
-          gte: new Date(Date.now() - +seconds * 1000),
-        },
-      },
-      omit: {
-        id: true,
-      },
-      orderBy: {
-        timestamp: "desc",
-      },
-    });
-    dbHistory.push(memory[topic]);
+    const dbHistory = await getMessagesInSeconds(topic, +seconds);
 
     if (memory[topic].valueType === "FLOAT") {
       const vals = dbHistory.map((item) => (item.value !== null ? +item.value : 0));
@@ -247,21 +260,7 @@ async function TRVA(expression: string) {
     // zde budeme řešit získávání hodnot z databáze a logiku této funkce
     // výsledek funkce bude nahrazen za fullMatch ve výrazu
 
-    const dbHistory = await prisma.mqtt.findMany({
-      where: {
-        topic,
-        timestamp: {
-          gte: new Date(Date.now() - +seconds * 1000),
-        },
-      },
-      omit: {
-        id: true,
-      },
-      orderBy: {
-        timestamp: "desc",
-      },
-    });
-    dbHistory.push(memory[topic]);
+    const dbHistory = await getMessagesInSeconds(topic, +seconds);
 
     const result = dbHistory.every((item) => {
       const context: RuleContext = { [topic]: item.value as number | boolean };

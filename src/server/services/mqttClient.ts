@@ -56,14 +56,6 @@ const processQueue = async () => {
 
       logger.ws.info("Messages sent to WS");
 
-      // Prepare DB updates
-      /*
-      const dbValuesMap = new Map<string, { value: JsonValue; id: number }>();
-      (await getFromDB()).forEach((val) => {
-        dbValuesMap.set(val.topic, { value: val.value, id: val.id });
-      });
-      */
-
       const dbValuesMapTwo = new Map<string, { value: JsonValue; id: number }[]>();
       (await getTwoFromDB()).forEach((val) => {
         if (!dbValuesMapTwo.has(val.topic)) {
