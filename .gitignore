@@ -34,3 +34,4 @@ prisma/client
 src/generated-prisma-client
 
 pnpm-lock.yaml
+package-lock.json
