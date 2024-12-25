@@ -61,7 +61,7 @@ export default function App() {
                 Programovatelné notifikace
               </button>
             </div>
-            <div className="flex flex-row items-center justify-center box-border flex-wrap">
+            <div className="flex flex-row items-center justify-center box-border flex-wrap items-stretch">
               <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
               <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
               <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
