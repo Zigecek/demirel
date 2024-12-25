@@ -69,7 +69,7 @@ export default function App() {
               <Value topic="zige/meteo/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
               <Value topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
               <Value topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
-              <Value topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "km/h")} />
+              <Value topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
             </div>
             <div>
               <Chart topics={["zige/pozar0/cerpadlo/val"]} boolean={true} valueF={(v) => unundefined(v, "---")} />
@@ -83,8 +83,8 @@ export default function App() {
               <DailyHistory topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
               <Chart topics={["zige/meteo/press/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
               <DailyHistory topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
-              <Chart topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "km/h")} />
-              <DailyHistory topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "km/h")} />
+              <Chart topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
+              <DailyHistory topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
             </div>
           </div>
         </>
