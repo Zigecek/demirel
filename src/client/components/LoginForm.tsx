@@ -71,13 +71,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className, ...rest }) => {
 
   return (
     <>
-      <div className={`w-full max-w-md p-6 bg-white shadow-lg rounded-lg md:max-w-lg ${className}`} {...rest}>
+      <div className={`w-full max-w-md p-6 bg-white dark:bg-neutral-800 shadow-lg rounded-lg md:max-w-lg ${className}`} {...rest}>
         <h2 className="text-2xl font-semibold text-center mb-6">Přihlášení</h2>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <TextInput id="username" label="Přihlašovací jméno" value={username} onChange={setUsername} hasError={errors.username} />
           <TextInput id="password" label="Heslo" type="password" value={password} onChange={setPassword} hasError={errors.password} />
           <div>
-            <button type="submit" className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button
+              type="submit"
+              className="w-full py-2 px-4 bg-blue-600 dark:bg-blue-400 text-white dark:text-black font-semibold rounded-md hover:bg-blue-700 dark:hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
               Přihlášení
             </button>
           </div>

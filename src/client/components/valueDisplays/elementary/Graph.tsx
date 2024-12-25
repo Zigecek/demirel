@@ -10,11 +10,10 @@ import { useMessages } from "../../../contexts/MessagesContext";
 import { useNicknames } from "../../../contexts/NicknamesContext";
 import { useUser } from "../../../contexts/UserContext";
 import { useTopics } from "../../../hooks/useTopics";
+import { colors, suspiciousColor } from "../../../main";
 import { postMqttData } from "../../../proxy/endpoints";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-export const colors = ["rgba(80, 150, 220, 1)", "rgba(80, 220, 150, 1)", "rgba(220, 150, 80, 1)", "rgba(220, 80, 150, 1)", "rgba(150, 80, 220, 1)", "rgba(150, 220, 80, 1)"];
 
 const defaultBound = 1.5 * 24 * 60 * 60 * 1000;
 
@@ -32,6 +31,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   const { addToHistory } = useMessages();
   const { nickname } = useNicknames();
   const { user } = useUser();
+  const [darkMode, setDarkMode] = useState(false);
 
   // Bounds for data fetching and timeout for debouncing
   const [bounds, setBounds] = useState<Bounds>();
@@ -54,6 +54,14 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   // TOPIC STATES //
   const { values, timestamps, suspicious } = useTopics(topics);
   const [dataPoints, setDataPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    setDarkMode(mediaQuery.matches); // Nastavení při načtení
+    const handleChange = (e: MediaQueryListEvent) => setDarkMode(e.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   useEffect(() => {
     topics.forEach((topic) => {
@@ -216,7 +224,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     const datasets = topics.map((topic) => ({
       label: nickname(topic),
       data: dataPoints[topic] ? dataPoints[topic].map((dp) => ({ x: dp.timestamp.getTime(), y: dp.value })) : [],
-      borderColor: suspicious[topic] ? "rgba(220, 75, 75, 1)" : colors[topics.indexOf(topic) % colors.length],
+      borderColor: suspicious[topic] ? suspiciousColor : colors[topics.indexOf(topic) % colors.length],
       borderWidth: 2,
       fill: false,
       pointRadius: 1,
@@ -247,10 +255,22 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       animation: false,
       scales: {
         y: {
+          grid: {
+            color: darkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)", // Barva mřížky osy X
+          },
+          ticks: {
+            color: darkMode ? "#ffffff" : "#000000", // Barva popisků osy X
+          },
           min: min - dif,
           max: max + dif,
         },
         x: {
+          grid: {
+            color: darkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)", // Barva mřížky osy X
+          },
+          ticks: {
+            color: darkMode ? "#ffffff" : "#000000", // Barva popisků osy X
+          },
           type: "time",
           min: minX,
           max: maxX,
@@ -270,8 +290,15 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
         intersect: false,
       },
       plugins: {
+        tooltip: {
+          bodyColor: darkMode ? "#ffffff" : "#000000", // Barva tooltip textu
+          backgroundColor: darkMode ? "#000000" : "#ffffff", // Tooltip pozadí
+        },
         legend: {
           display: topics.length > 1,
+          labels: {
+            color: darkMode ? "#ffffff" : "#000000", // Barva textu legendy
+          },
         },
         zoom: {
           pan: {

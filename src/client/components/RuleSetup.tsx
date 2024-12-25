@@ -279,7 +279,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="flex gap-3 p-2 flex-wrap md:flex-nowrap grow">
         {/* Left Panel */}
-        <div className="w-full md:w-1/3 bg-gray-100 p-4 rounded-lg">
+        <div className="w-full md:w-1/3 bg-neutral-100 dark:bg-neutral-800 p-4 rounded-lg">
           <h3 className="text-lg font-bold mb-4">Seznam pravidel</h3>
           {loading && (
             <div className="flex justify-center gap-3 m-2">
@@ -291,17 +291,17 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
               <li
                 className={`${(() => {
                   if (rule.deleted) {
-                    return "bg-red-100 line-through";
+                    return "bg-red-100 dark:bg-red-900 line-through";
                   }
                   if (rule.isNew) {
-                    return "bg-green-100";
+                    return "bg-green-100 dark:bg-green-900";
                   }
                   if (rule.edited) {
-                    return "bg-yellow-100";
+                    return "bg-yellow-100 dark:bg-yellow-900";
                   }
 
-                  return "bg-white";
-                })()} p-2 mb-2 rounded-lg flex justify-between items-center border ${selectedRule?.id === rule.id ? "border-gray-700" : "border-white"}`}
+                  return "bg-white dark:bg-neutral-800";
+                })()} p-2 mb-2 rounded-lg flex justify-between items-center border ${selectedRule?.id === rule.id ? "border-neutral-700 dark:border-neutral-300" : "border-white dark:border-black"}`}
                 key={rule.id}>
                 <div className="flex justify-between w-full">
                   <div
@@ -314,7 +314,9 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
                   <button
                     type="button"
                     onClick={() => toggleRuleDeletion(rule.id)}
-                    className={`py-1 px-3 font-semibold rounded-md ${rule.deleted ? "bg-green-500" : "bg-red-500"} text-white ${rule.deleted ? "hover:bg-green-600" : "hover:bg-red-600"}`}>
+                    className={`py-1 px-3 font-semibold rounded-md ${rule.deleted ? "bg-green-500" : "bg-red-500"} text-white ${
+                      rule.deleted ? "hover:bg-green-600 dark:hover:bg-green-400" : "hover:bg-red-600 dark:hover:bg-red-400"
+                    }`}>
                     {rule.deleted ? <FaUndo /> : <FaTrash />}
                   </button>
                 </div>
@@ -324,7 +326,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
           <button
             onClick={() => addNewRule()}
             type="button"
-            className="w-full py-2 px-4 bg-gray-300 text-white font-semibold rounded-md hover:bg-gray-StatusCodes.BAD_REQUEST focus:outline-none focus:ring-2 focus:ring-gray-StatusCodes.OK">
+            className="w-full py-2 px-4 bg-neutral-300 dark:bg-neutral-700 text-white dark:text-black font-semibold rounded-md hover:bg-neutral-400 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-200 dark:focus:ring-neutral-800">
             <div className="flex justify-center">
               <FaPlus />
             </div>
@@ -332,27 +334,27 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
         </div>
 
         {/* Right Panel */}
-        <div className="w-full md:w-2/3 bg-white p-4 rounded-lg shadow-lg">
+        <div className="w-full md:w-2/3 bg-white dark:bg-neutral-800 p-4 rounded-lg shadow-lg">
           {selectedRule && (
             <>
               {/* Název pravidla */}
               <div className="mb-4">
-                <label className={`block text-sm font-medium mb-2`}>Název pravidla</label>
+                <label className={`text-neutral-700 dark:text-neutral-300 block text-sm font-medium mb-2`}>Název pravidla</label>
                 <input
                   type="text"
                   placeholder="Název pravidla"
                   className={`${(() => {
                     if (selectedRule.deleted) {
-                      return "border-red-500 bg-red-100 line-through";
+                      return "border-red-500 bg-red-100 dark:bg-red-900 line-through";
                     }
                     if (selectedRule.isNew) {
-                      return "border-green-500 bg-green-100";
+                      return "border-green-500 bg-green-100 dark:bg-green-900";
                     }
                     if (selectedRule.name !== initRules.find((x) => x.id == selectedRule.id)?.name) {
-                      return "border-yellow-500 bg-yellow-100";
+                      return "border-yellow-500 bg-yellow-100 dark:bg-yellow-900";
                     }
                     return "";
-                  })()} w-full p-2 border rounded`}
+                  })()} bg-neutral-200 dark:bg-neutral-700 w-full p-2 border rounded`}
                   value={selectedRule.name}
                   onChange={(e) => {
                     const newName = e.target.value;
@@ -366,22 +368,22 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
 
               {/* Nadpis v oznámení */}
               <div className="mb-4">
-                <label className={`block text-sm font-medium mb-2`}>Nadpis v oznámení</label>
+                <label className={`text-neutral-700 dark:text-neutral-300 block text-sm font-medium mb-2`}>Nadpis v oznámení</label>
                 <input
                   type="text"
                   placeholder="Nadpis v oznámení"
                   className={`${(() => {
                     if (selectedRule.deleted) {
-                      return "border-red-500 bg-red-100 line-through";
+                      return "border-red-500 bg-red-100 dark:bg-red-900 line-through";
                     }
                     if (selectedRule.isNew) {
-                      return "border-green-500 bg-green-100";
+                      return "border-green-500 bg-green-100 dark:bg-green-900";
                     }
                     if (selectedRule.notificationTitle !== initRules.find((x) => x.id == selectedRule.id)?.notificationTitle) {
-                      return "border-yellow-500 bg-yellow-100";
+                      return "border-yellow-500 bg-yellow-100 dark:bg-yellow-900";
                     }
                     return "";
-                  })()} w-full p-2 border rounded`}
+                  })()} bg-neutral-200 dark:bg-neutral-700 w-full p-2 border rounded`}
                   value={selectedRule.notificationTitle}
                   onChange={(e) => {
                     const newTitle = e.target.value;
@@ -395,22 +397,22 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
 
               {/* Popisek v oznámení */}
               <div className="mb-4">
-                <label className={`block text-sm font-medium mb-2`}>Popisek v oznámení</label>
+                <label className={`text-neutral-700 dark:text-neutral-300 block text-sm font-medium mb-2`}>Popisek v oznámení</label>
                 <input
                   type="text"
                   placeholder="Popisek v oznámení"
                   className={`${(() => {
                     if (selectedRule.deleted) {
-                      return "border-red-500 bg-red-100 line-through";
+                      return "border-red-500 bg-red-100 dark:bg-red-900 line-through";
                     }
                     if (selectedRule.isNew) {
-                      return "border-green-500 bg-green-100";
+                      return "border-green-500 bg-green-100 dark:bg-green-900";
                     }
                     if (selectedRule.notificationBody !== initRules.find((x) => x.id == selectedRule.id)?.notificationBody) {
-                      return "border-yellow-500 bg-yellow-100";
+                      return "border-yellow-500 bg-yellow-100 dark:bg-yellow-900";
                     }
                     return "";
-                  })()} w-full p-2 border rounded`}
+                  })()} bg-neutral-200 dark:bg-neutral-700 w-full p-2 border rounded`}
                   value={selectedRule.notificationBody}
                   onChange={(e) => {
                     const newBody = e.target.value;
@@ -424,20 +426,20 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
 
               {/* Závažnost */}
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Závažnost</label>
+                <label className="text-neutral-700 dark:text-neutral-300 block text-sm font-medium mb-2">Závažnost</label>
                 <select
                   className={`${(() => {
                     if (selectedRule.deleted) {
-                      return "border-red-500 bg-red-100 line-through";
+                      return "border-red-500 bg-red-100 dark:bg-red-900 line-through";
                     }
                     if (selectedRule.isNew) {
-                      return "border-green-500 bg-green-100";
+                      return "border-green-500 bg-green-100 dark:bg-green-900";
                     }
                     if (selectedRule.severity !== initRules.find((x) => x.id == selectedRule.id)?.severity) {
-                      return "border-yellow-500 bg-yellow-100";
+                      return "border-yellow-500 bg-yellow-100 dark:bg-yellow-900";
                     }
                     return "";
-                  })()} w-full p-2 border rounded`}
+                  })()} bg-neutral-200 dark:bg-neutral-700 w-full p-2 border rounded`}
                   value={selectedRule.severity}
                   onChange={(e) => {
                     const newSeverity = e.target.value as Rule["severity"];
@@ -455,7 +457,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
               {/* Podmínky */}
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Podmínky</label>
+                <label className="text-neutral-700 dark:text-neutral-300 block text-sm font-medium mb-2">Podmínky</label>
                 <ul>
                   {selectedRule.conditions.map((cond, index) => (
                     <li className="flex items-center mb-2">
@@ -464,16 +466,16 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
                         placeholder="Podmínka"
                         className={`${(() => {
                           if (cond.deleted || selectedRule.deleted) {
-                            return "border-red-500 bg-red-100 line-through";
+                            return "border-red-500 bg-red-100 dark:bg-red-900 line-through";
                           }
                           if (cond.isNew || selectedRule.isNew) {
-                            return "border-green-500 bg-green-100";
+                            return "border-green-500 bg-green-100 dark:bg-green-900";
                           }
                           if (selectedRule.conditions[index].condition !== initRules.find((x) => x.id == selectedRule.id)?.conditions[index].condition) {
-                            return "border-yellow-500 bg-yellow-100";
+                            return "border-yellow-500 bg-yellow-100 dark:bg-yellow-900";
                           }
                           return "";
-                        })()} w-full p-2 border rounded mr-2`}
+                        })()} bg-neutral-200 dark:bg-neutral-700 w-full p-2 border rounded mr-2`}
                         value={cond.condition}
                         onChange={(e) => {
                           const newCondition = e.target.value;
@@ -489,7 +491,9 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
                       <button
                         type="button"
                         onClick={() => toggleConditionDeletion(selectedRule.conditions.indexOf(cond))}
-                        className={`py-2 px-4 font-semibold rounded-md ${cond.deleted ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"} text-white`}>
+                        className={`py-2 px-4 font-semibold rounded-md ${
+                          cond.deleted ? "bg-green-500 hover:bg-green-600 dark:hover:bg-green-400" : "bg-red-500 hover:bg-red-600 dark:hover:bg-red-400"
+                        } text-white dark:text-black`}>
                         {cond.deleted ? <FaUndo /> : <FaTrash />}
                       </button>
                     </li>
@@ -498,7 +502,7 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
                 <button
                   onClick={() => addNewCondition()}
                   type="button"
-                  className="w-full py-2 px-4 bg-gray-300 text-white font-semibold rounded-md hover:bg-gray-StatusCodes.BAD_REQUEST focus:outline-none focus:ring-2 focus:ring-gray-StatusCodes.OK">
+                  className="w-full py-2 px-4 bg-neutral-300 dark:bg-neutral-700 text-white dark:text-black font-semibold rounded-md hover:bg-neutral-400 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-200 dark:focus:ring-neutral-800">
                   <div className="flex justify-center">
                     <FaPlus />
                   </div>
@@ -517,15 +521,15 @@ export const RuleSetup: React.FC<PopupContentProps> = ({ closePopup }) => {
           }}
           disabled={!changes}
           className={`${
-            changes ? "bg-blue-500 hover:bg-blue-600" : "bg-blue-300"
-          } focus:ring-blue-StatusCodes.BAD_REQUEST py-2 px-4 text-white font-semibold rounded-md focus:outline-none focus:ring-2`}>
+            changes ? "bg-blue-500 hover:bg-blue-600 dark:hover:bg-blue-400" : "bg-blue-300 dark:bg-blue-700"
+          } focus:ring-blue-400 py-2 px-4 text-white dark:text-black font-semibold rounded-md focus:outline-none focus:ring-2`}>
           Uložit
         </button>
         <button
           onClick={() => {
             closePopup();
           }}
-          className="py-2 px-4 bg-gray-500 text-white font-semibold rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-StatusCodes.BAD_REQUEST">
+          className="py-2 px-4 bg-neutral-500 text-white dark:text-black font-semibold rounded-md hover:bg-neutral-600 dark:hover:bg-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-600">
           Zrušit
         </button>
       </div>

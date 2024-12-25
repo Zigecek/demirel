@@ -1,7 +1,8 @@
 import React from "react";
 import { useNicknames } from "../../contexts/NicknamesContext";
 import { useTopics } from "../../hooks/useTopics";
-import { colors, Graph } from "./elementary/Graph";
+import { colors } from "../../main";
+import { Graph } from "./elementary/Graph";
 
 type ChartProps = {
   topics: string[];
@@ -13,7 +14,7 @@ export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = 
   const { nickname } = useNicknames();
   const { values } = useTopics(topics);
   return (
-    <div className="bg-gray-50 border border-gray-300 rounded-lg shadow-md p-2 m-1">
+    <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-md p-2 m-1">
       <h2 className="text-xl mb-2">
         <span className="font-semibold">Graf: </span>
         {topics.map((t, i) => {

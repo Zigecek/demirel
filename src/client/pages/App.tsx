@@ -36,7 +36,7 @@ export default function App() {
   };
 
   return (
-    <div>
+    <div className="text-black dark:text-white">
       {loading ? (
         <div className="flex justify-center items-center w-screen h-screen">
           <CircularProgress />
@@ -44,20 +44,20 @@ export default function App() {
       ) : (
         <>
           <div
-            className={`min-h-screen w-screen flex items-center justify-center bg-gray-500 bg-opacity-75 fixed backdrop-blur-0.5 duration-1000 ${
+            className={`min-h-screen w-screen flex items-center justify-center bg-neutral-500 bg-opacity-75 fixed backdrop-blur-0.5 duration-1000 ${
               user === false ? "visible opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             }`}>
             <LoginForm className={`duration-100 ${user === false ? "visible opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`} />
           </div>
-          <div className={`bg-gray-100 ${user === false || isVisible ? "overflow-hidden h-screen" : ""}`}>
+          <div className={`bg-neutral-100 dark:bg-neutral-900 ${user === false || isVisible ? "overflow-hidden h-screen" : ""}`}>
             <div className="flex flex-row flex-wrap gap-2 p-2">
-              <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+              <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 dark:hover:bg-red-400">
                 Odhlásit
               </button>
-              <button onClick={testNotification} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+              <button onClick={testNotification} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 dark:hover:bg-orange-400">
                 Zapnout notifikace
               </button>
-              <button onClick={showPopup} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+              <button onClick={showPopup} className="px-4 py-2 bg-neutral-500 text-white rounded hover:bg-neutral-600 dark:hover:bg-neutral-400">
                 Programovatelné notifikace
               </button>
             </div>
@@ -85,7 +85,6 @@ export default function App() {
               <DailyHistory topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
               <Chart topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
               <DailyHistory topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
-
             </div>
           </div>
         </>

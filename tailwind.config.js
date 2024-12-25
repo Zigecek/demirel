@@ -11,5 +11,5 @@ export default {
       noto: ["Noto Sans", "sans-serif"],
     },
   },
-  plugins: [],
+  plugins: [require("tailwind-scrollbar")],
 };

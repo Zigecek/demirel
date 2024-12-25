@@ -5,11 +5,16 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply scrollbar scrollbar-thumb-neutral-500 scrollbar-track-neutral-700 dark:scrollbar-thumb-neutral-600 dark:scrollbar-track-neutral-800;
+  }
+
   html,
   body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    @apply text-black dark:text-white;
   }
 
   body {

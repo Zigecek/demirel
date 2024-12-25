@@ -14,6 +14,9 @@ type LazyLoaderProps = {
   children: React.ReactNode;
 };
 
+export const colors = ["rgba(80, 150, 220, 1)", "rgba(80, 220, 150, 1)", "rgba(220, 150, 80, 1)", "rgba(220, 80, 150, 1)", "rgba(150, 80, 220, 1)", "rgba(150, 220, 80, 1)"];
+export const suspiciousColor = "rgba(220, 75, 75, 1)";
+
 const LazyLoader: React.FC<LazyLoaderProps> = ({ children }) => {
   return (
     <React.Suspense
