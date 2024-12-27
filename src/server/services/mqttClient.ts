@@ -4,9 +4,7 @@ import { connect } from "mqtt";
 import { io, prisma, Status, status } from "..";
 import { env } from "../utils/env";
 import logger from "../utils/loggers";
-import { addMessage, getTwoFromDB } from "../utils/memory";
-
-const lastDigitFluctuation = 1;
+import { addMessage, getNFromDB } from "../utils/memory";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -23,7 +21,7 @@ const regexes = {
   config: /^zige\/.+\/config$/,
 };
 
-const wsQueue: MQTTMessage[] = [];
+const queue: MQTTMessage[] = [];
 let isProcessingQueue = false;
 let debounceTimer: NodeJS.Timeout | null = null;
 
@@ -47,17 +45,17 @@ const processQueue = async () => {
   isProcessingQueue = true;
 
   try {
-    while (wsQueue.length > 0) {
-      const toSend = [...new Set(wsQueue)];
-      wsQueue.length = 0;
+    while (queue.length > 0) {
+      const uniqueMessages = [...new Set(queue)];
+      queue.length = 0;
 
-      logger.ws.info(`Sending ${toSend.length} messages to WS`);
-      io.to("auth").emit("messages", toSend);
+      logger.ws.info(`Sending ${uniqueMessages.length} messages to WS`);
+      io.to("auth").emit("messages", uniqueMessages);
 
       logger.ws.info("Messages sent to WS");
 
       const dbValuesMapTwo = new Map<string, { value: JsonValue; id: number }[]>();
-      (await getTwoFromDB()).forEach((val) => {
+      (await getNFromDB(2)).forEach((val) => {
         if (!dbValuesMapTwo.has(val.topic)) {
           dbValuesMapTwo.set(val.topic, []);
         }
@@ -69,12 +67,12 @@ const processQueue = async () => {
       const updates: Array<Prisma.mqttUpdateArgs> = [];
       const inserts: Array<Prisma.mqttCreateArgs> = [];
 
-      toSend.forEach((msg) => {
+      uniqueMessages.forEach((msg) => {
         const lastValueArray = dbValuesMapTwo.get(msg.topic);
         const lastValue = lastValueArray ? lastValueArray[0] : undefined;
         const lastValue2 = lastValueArray ? lastValueArray[1] : undefined;
 
-        if (!lastValue) {
+        if (!lastValue || !lastValue2) {
           // Pokud neexistuje, přidej prvotní záznam, který zůstane v DB na místě
           inserts.push({
             data: {
@@ -85,30 +83,15 @@ const processQueue = async () => {
             },
           });
         } else {
-          // same value or value is close to the last one (last digit difference <= lastDigitHisteresis)
-          if (
-            lastValue.value === msg.value ||
-            lastValue2?.value === msg.value
-            //(msg.valueType === MqttValueType.FLOAT && Math.abs(Number([...String(lastValue.value)].pop()) - Number([...String(msg.value)].pop())) <= lastDigitFluctuation)
-          ) {
+          if (lastValue?.value === msg.value || lastValue2?.value === msg.value) {
             // Pokud se hodnota nezměnila, posune tento záznam
             updates.push({
               where: { id: lastValue.id },
               data: { timestamp: msg.timestamp },
             });
             return; // IMPORTANT !
-          } else if (msg.valueType === MqttValueType.BOOLEAN) {
-            // Tyto dva záznamy zůstanou na místě, je to potřeba kvůli grafům
-
-            inserts.push({
-              data: {
-                topic: msg.topic,
-                value: !msg.value,
-                timestamp: new Date(msg.timestamp.getTime() - 2),
-                valueType: msg.valueType,
-              },
-            });
-
+          } else if (msg.valueType === MqttValueType.BOOLEAN || (lastValue?.value === msg.value && lastValue2?.value !== msg.value)) {
+            // Tento záznam zůstane v DB na místě, aby to nedělalo schody v grafu
             inserts.push({
               data: {
                 topic: msg.topic,
@@ -117,6 +100,18 @@ const processQueue = async () => {
                 valueType: msg.valueType,
               },
             });
+
+            if (msg.valueType === MqttValueType.BOOLEAN) {
+              // Tento záznam zůstane v DB na místě, kvůli booleanu
+              inserts.push({
+                data: {
+                  topic: msg.topic,
+                  value: msg.value,
+                  timestamp: new Date(msg.timestamp.getTime() - 2),
+                  valueType: msg.valueType,
+                },
+              });
+            }
           }
         }
 
@@ -149,11 +144,11 @@ const processQueue = async () => {
       }
 
       await prisma.$transaction(promises);
-      logger.db.info("-- Messages saved to DB --");
     }
   } catch (err) {
     logger.db.error("Error processing queue:" + err);
   } finally {
+    logger.db.info("-- Messages saved to DB --");
     isProcessingQueue = false; // Reset the flag
   }
 };
@@ -218,7 +213,7 @@ mqtt.on("message", (topic, message: Buffer) => {
 
     logger.mqtt.info(`${topic}: ${val} <${valueType}>`);
 
-    wsQueue.push({
+    queue.push({
       topic,
       value: val,
       timestamp: when,

@@ -44,7 +44,7 @@ export const getFromDB = async () => {
 };
 
 // get two last messages from db
-export const getTwoFromDB = async (): Promise<Prisma.mqtt[]> => {
+export const getNFromDB = async (n: number): Promise<Prisma.mqtt[]> => {
   const query = `
     WITH RankedMessages AS (
       SELECT m.*, 
@@ -53,7 +53,7 @@ export const getTwoFromDB = async (): Promise<Prisma.mqtt[]> => {
     )
     SELECT *
     FROM RankedMessages
-    WHERE rn <= 2
+    WHERE rn <= ${n}
     ORDER BY topic ASC, timestamp DESC;
   `;
 
