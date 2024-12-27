@@ -54,12 +54,12 @@ const processQueue = async () => {
 
       logger.ws.info("Messages sent to WS");
 
-      const dbValuesMapTwo = new Map<string, { value: JsonValue; id: number }[]>();
+      const valMap = new Map<string, { value: JsonValue; id: number }[]>();
       (await getNFromDB(2)).forEach((val) => {
-        if (!dbValuesMapTwo.has(val.topic)) {
-          dbValuesMapTwo.set(val.topic, []);
+        if (!valMap.has(val.topic)) {
+          valMap.set(val.topic, []);
         }
-        dbValuesMapTwo.get(val.topic)?.push({ value: val.value, id: val.id });
+        valMap.get(val.topic)?.push({ value: val.value, id: val.id });
       });
 
       logger.db.info("Saving messages to DB");
@@ -68,7 +68,7 @@ const processQueue = async () => {
       const inserts: Array<Prisma.mqttCreateArgs> = [];
 
       uniqueMessages.forEach((msg) => {
-        const lastValueArray = dbValuesMapTwo.get(msg.topic);
+        const lastValueArray = valMap.get(msg.topic);
         const lastValue = lastValueArray ? lastValueArray[0] : undefined;
         const lastValue2 = lastValueArray ? lastValueArray[1] : undefined;
 
@@ -85,12 +85,13 @@ const processQueue = async () => {
         } else {
           if (lastValue?.value === msg.value || lastValue2?.value === msg.value) {
             // Pokud se hodnota nezměnila, posune tento záznam
-            updates.push({
+
+            return; /*updates.push({
               where: { id: lastValue.id },
               data: { timestamp: msg.timestamp },
-            });
-            return; // IMPORTANT !
-          } else if (msg.valueType === MqttValueType.BOOLEAN || (lastValue?.value === msg.value && lastValue2?.value !== msg.value)) {
+            });*/
+          }
+          if (msg.valueType === MqttValueType.BOOLEAN) {
             // Tento záznam zůstane v DB na místě, aby to nedělalo schody v grafu
             inserts.push({
               data: {
@@ -101,17 +102,15 @@ const processQueue = async () => {
               },
             });
 
-            if (msg.valueType === MqttValueType.BOOLEAN) {
-              // Tento záznam zůstane v DB na místě, kvůli booleanu
-              inserts.push({
-                data: {
-                  topic: msg.topic,
-                  value: msg.value,
-                  timestamp: new Date(msg.timestamp.getTime() - 2),
-                  valueType: msg.valueType,
-                },
-              });
-            }
+            // Tento záznam zůstane v DB na místě, kvůli booleanu
+            inserts.push({
+              data: {
+                topic: msg.topic,
+                value: msg.value,
+                timestamp: new Date(msg.timestamp.getTime() - 2),
+                valueType: msg.valueType,
+              },
+            });
           }
         }
 
