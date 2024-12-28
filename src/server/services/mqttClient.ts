@@ -72,7 +72,7 @@ const processQueue = async () => {
         const lastValue = lastValueArray ? lastValueArray[0] : undefined;
         const lastValue2 = lastValueArray ? lastValueArray[1] : undefined;
 
-        if (!lastValue || !lastValue2) {
+        if (lastValue == undefined || lastValue2 == undefined) {
           // Pokud neexistuje, přidej prvotní záznam, který zůstane v DB na místě
           inserts.push({
             data: {
@@ -83,15 +83,24 @@ const processQueue = async () => {
             },
           });
         } else {
-          if (lastValue?.value === msg.value || lastValue2?.value === msg.value) {
-            // Pokud se hodnota nezměnila, posune tento záznam
+          // FLOAT
+          if (msg.valueType === MqttValueType.FLOAT) {
+            if (lastValue?.value === msg.value || lastValue2?.value === msg.value) {
+              // Pokud se hodnota nezměnila, posune tento záznam
 
-            return; /*updates.push({
+              return; /*updates.push({
               where: { id: lastValue.id },
               data: { timestamp: msg.timestamp },
             });*/
+            }
           }
+
+          // BOOLEAN
           if (msg.valueType === MqttValueType.BOOLEAN) {
+            if (lastValue?.value === msg.value) {
+              return;
+            }
+
             // Tento záznam zůstane v DB na místě, aby to nedělalo schody v grafu
             inserts.push({
               data: {
@@ -106,7 +115,7 @@ const processQueue = async () => {
             inserts.push({
               data: {
                 topic: msg.topic,
-                value: msg.value,
+                value: !msg.value,
                 timestamp: new Date(msg.timestamp.getTime() - 2),
                 valueType: msg.valueType,
               },
