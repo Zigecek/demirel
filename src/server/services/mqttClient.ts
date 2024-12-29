@@ -1,5 +1,4 @@
 import { MqttValueType, Prisma } from "@prisma/client";
-import { type JsonValue } from "@prisma/client/runtime/library";
 import { connect } from "mqtt";
 import { io, prisma, Status, status } from "..";
 import { env } from "../utils/env";
@@ -37,141 +36,7 @@ export const endClient = () => new Promise((resolve) => mqtt.end(false, {}, reso
 
 const mqtt = getNewClient();
 
-const processQueue = async () => {
-  if (isProcessingQueue) {
-    return;
-  }
-
-  isProcessingQueue = true;
-
-  try {
-    while (queue.length > 0) {
-      const uniqueMessages = [...new Set(queue)];
-      queue.length = 0;
-
-      logger.ws.info(`Sending ${uniqueMessages.length} messages to WS`);
-      io.to("auth").emit("messages", uniqueMessages);
-
-      logger.ws.info("Messages sent to WS");
-
-      const valMap = new Map<string, { value: JsonValue; id: number }[]>();
-      (await getNFromDB(2)).forEach((val) => {
-        if (!valMap.has(val.topic)) {
-          valMap.set(val.topic, []);
-        }
-        valMap.get(val.topic)?.push({ value: val.value, id: val.id });
-      });
-
-      logger.db.info("Saving messages to DB");
-
-      const updates: Array<Prisma.mqttUpdateArgs> = [];
-      const inserts: Array<Prisma.mqttCreateArgs> = [];
-
-      uniqueMessages.forEach((msg) => {
-        const lastValueArray = valMap.get(msg.topic);
-        const lastValue = lastValueArray ? lastValueArray[0] : undefined;
-        const lastValue2 = lastValueArray ? lastValueArray[1] : undefined;
-
-        if (lastValue == undefined || lastValue2 == undefined) {
-          // Pokud neexistuje, přidej prvotní záznam, který zůstane v DB na místě
-          inserts.push({
-            data: {
-              topic: msg.topic,
-              value: msg.value,
-              timestamp: new Date(msg.timestamp.getTime() - 1),
-              valueType: msg.valueType,
-            },
-          });
-        } else {
-          // FLOAT
-          if (msg.valueType === MqttValueType.FLOAT) {
-            if (lastValue?.value === msg.value || lastValue2?.value === msg.value) {
-              // Pokud se hodnota nezměnila, posune tento záznam
-
-              return; /*updates.push({
-              where: { id: lastValue.id },
-              data: { timestamp: msg.timestamp },
-            });*/
-            }
-          }
-
-          // BOOLEAN
-          if (msg.valueType === MqttValueType.BOOLEAN) {
-            if (lastValue?.value === msg.value) {
-              return;
-            }
-
-            // Tento záznam zůstane v DB na místě, aby to nedělalo schody v grafu
-            inserts.push({
-              data: {
-                topic: msg.topic,
-                value: msg.value,
-                timestamp: new Date(msg.timestamp.getTime() - 1),
-                valueType: msg.valueType,
-              },
-            });
-
-            // Tento záznam zůstane v DB na místě, kvůli booleanu
-            inserts.push({
-              data: {
-                topic: msg.topic,
-                value: !msg.value,
-                timestamp: new Date(msg.timestamp.getTime() - 2),
-                valueType: msg.valueType,
-              },
-            });
-          }
-        }
-
-        // Tento záznam se bude posouvat, pokud se hodnota nezmění
-        inserts.push({
-          data: {
-            topic: msg.topic,
-            value: msg.value,
-            timestamp: msg.timestamp,
-            valueType: msg.valueType,
-          },
-        });
-      });
-
-      const promises: Prisma.PrismaPromise<any>[] = [];
-
-      if (inserts.length > 0) {
-        logger.db.info("Inserting new values. " + inserts.length);
-        promises.push(
-          prisma.mqtt.createMany({
-            data: inserts.map((insert) => insert.data),
-            skipDuplicates: true,
-          })
-        );
-      }
-
-      if (updates.length > 0) {
-        logger.db.info("Updating existing values. " + updates.length);
-        promises.push(...updates.map((update) => prisma.mqtt.update(update)));
-      }
-
-      await prisma.$transaction(promises);
-    }
-  } catch (err) {
-    logger.db.error("Error processing queue:" + err);
-  } finally {
-    logger.db.info("-- Messages saved to DB --");
-    isProcessingQueue = false; // Reset the flag
-  }
-};
-
-const scheduleProcessing = () => {
-  if (debounceTimer) {
-    clearTimeout(debounceTimer); // Reset the timer
-  }
-
-  debounceTimer = setTimeout(() => {
-    processQueue(); // Process the queue after 100 ms
-  }, 100);
-};
-
-//setIntervalAsync(checkQueue, mqConfig.wsInterval);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 mqtt.on("connect", () => {
   logger.mqtt.info("Connected.");
@@ -232,3 +97,136 @@ mqtt.on("message", (topic, message: Buffer) => {
     addMessage({ topic, value: val, timestamp: when, valueType } as MQTTMessage);
   }
 });
+
+const processQueue = async () => {
+  if (isProcessingQueue) {
+    return;
+  }
+
+  isProcessingQueue = true;
+
+  try {
+    while (queue.length > 0) {
+      const uniqueMessages = [...new Set(queue)];
+      queue.length = 0;
+
+      logger.ws.info(`Sending ${uniqueMessages.length} messages to WS`);
+      io.to("auth").emit("messages", uniqueMessages);
+
+      logger.ws.info("Messages sent to WS");
+
+      await saveToPrisma(uniqueMessages);
+    }
+  } catch (err) {
+    logger.db.error("Error processing queue:" + err);
+  } finally {
+    logger.db.info("-- Messages saved to DB --");
+    isProcessingQueue = false; // Reset the flag
+  }
+};
+
+const saveToPrisma = async (messages: MQTTMessage[]) => {
+  const topicMap = new Map<string, MQTTMessage[]>();
+  const lastMessagesFromPrisma = await getNFromDB(2);
+  lastMessagesFromPrisma.forEach((msg) => {
+    if (!topicMap.has(msg.topic)) {
+      topicMap.set(msg.topic, []);
+    }
+    topicMap.get(msg.topic)?.push(msg);
+  });
+
+  const updates: Array<Prisma.mqttUpdateArgs> = [];
+  const inserts: Array<Prisma.mqttCreateArgs> = [];
+
+  messages.forEach((msg) => {
+    const lastValueArray = topicMap.get(msg.topic);
+    const lastValue = lastValueArray ? lastValueArray[0] : undefined;
+    const lastValue2 = lastValueArray ? lastValueArray[1] : undefined;
+
+    // NEW TOPIC
+    if (lastValue == undefined || lastValue2 == undefined) {
+      inserts.push({
+        data: {
+          topic: msg.topic,
+          value: msg.value,
+          timestamp: new Date(msg.timestamp.getTime() - 1),
+          valueType: msg.valueType,
+        },
+      });
+      return;
+    }
+
+    // FLOAT
+    if (msg.valueType === MqttValueType.FLOAT) {
+      // comparing new value to last two values to reduce fluctuations
+      if (lastValue?.value === msg.value || lastValue2?.value === msg.value) {
+        return;
+      }
+    }
+
+    // BOOLEAN
+    if (msg.valueType === MqttValueType.BOOLEAN) {
+      // record only value changes
+      if (lastValue?.value === msg.value) {
+        return;
+      }
+      inserts.push({
+        data: {
+          topic: msg.topic,
+          value: msg.value,
+          timestamp: new Date(msg.timestamp.getTime() - 1),
+          valueType: msg.valueType,
+        },
+      });
+      inserts.push({
+        data: {
+          topic: msg.topic,
+          value: !msg.value, // IMPORTANT !!!
+          timestamp: new Date(msg.timestamp.getTime() - 2),
+          valueType: msg.valueType,
+        },
+      });
+    }
+
+    // COMMON VALUE RECORD
+    inserts.push({
+      data: {
+        topic: msg.topic,
+        value: msg.value,
+        timestamp: msg.timestamp,
+        valueType: msg.valueType,
+      },
+    });
+  });
+
+  logger.db.info("Saving messages to DB");
+
+  const promises: Prisma.PrismaPromise<any>[] = [];
+
+  if (inserts.length > 0) {
+    logger.db.info("Inserting new values. " + inserts.length);
+    promises.push(
+      prisma.mqtt.createMany({
+        data: inserts.map((insert) => insert.data),
+        skipDuplicates: true,
+      })
+    );
+  }
+
+  if (updates.length > 0) {
+    logger.db.info("Updating existing values. " + updates.length);
+    promises.push(...updates.map((update) => prisma.mqtt.update(update)));
+  }
+
+  await prisma.$transaction(promises);
+};
+
+const scheduleProcessing = () => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer); // Reset the timer
+  }
+
+  debounceTimer = setTimeout(() => {
+    processQueue(); // Process the queue after 100 ms
+  }, 100);
+};
