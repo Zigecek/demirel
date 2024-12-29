@@ -8,6 +8,7 @@ export const useTopics = (topics: string[]) => {
   const [lastUpdated, setLastUpdated] = useState<Record<string, number>>({});
   const [timestamps, setTimestamps] = useState<Record<string, Date>>({});
   const [suspicious, setSuspicious] = useState<Record<string, boolean>>({});
+  const [howSus, setHowSus] = useState<Record<string, number>>({}); // 0..1 - percentage of how suspicious the message is
   const [lastMessageIntervals, setLastMessageIntervals] = useState<Record<string, number | undefined>>({});
 
   const updateLastUpdated = (topic: string) => {
@@ -22,6 +23,7 @@ export const useTopics = (topics: string[]) => {
         const allowedInterval = lastMessageInterval * 2;
         if (suspicious[topic] !== now.getTime() - timestamp.getTime() > allowedInterval) {
           setSuspicious((prev) => ({ ...prev, [topic]: now.getTime() - timestamp.getTime() > allowedInterval }));
+          setHowSus((prev) => ({ ...prev, [topic]: (now.getTime() - timestamp.getTime()) / lastMessageInterval }));
         }
         return;
       }
@@ -30,12 +32,14 @@ export const useTopics = (topics: string[]) => {
       if (now.getTime() - timestamp.getTime() > hardLimit) {
         if (!suspicious[topic]) {
           setSuspicious((prev) => ({ ...prev, [topic]: true }));
+          setHowSus((prev) => ({ ...prev, [topic]: 1 }));
         }
         return;
       }
 
       if (suspicious[topic]) {
         setSuspicious((prev) => ({ ...prev, [topic]: false }));
+        setHowSus((prev) => ({ ...prev, [topic]: 0 }));
       }
     }
   };
@@ -85,7 +89,7 @@ export const useTopics = (topics: string[]) => {
     topics.forEach((topic) => {
       const timestamp = timestamps[topic];
       if (timestamp) {
-        intervals[topic] = setInterval(() => updateLastUpdated(topic), 1000);
+        intervals[topic] = setInterval(() => updateLastUpdated(topic), 500);
         updateLastUpdated(topic);
       }
     });
@@ -95,5 +99,5 @@ export const useTopics = (topics: string[]) => {
     };
   }, [timestamps, topics]);
 
-  return { values, lastUpdated, timestamps, suspicious };
+  return { values, lastUpdated, timestamps, suspicious, howSus };
 };

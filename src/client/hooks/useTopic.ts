@@ -8,6 +8,7 @@ export const useTopic = (topic: string) => {
   const [lastUpdated, setLastUpdated] = useState<number>();
   const [timestamp, setTimestamp] = useState<Date>();
   const [suspicious, setSuspicious] = useState<boolean>(false);
+  const [howSus, setHowSus] = useState<number>(0); // 0..1 - percentage of how suspicious the message is
   const [lastMessageInterval, setLastMessageInterval] = useState<number | undefined>(undefined);
 
   const updateLastUpdated = () => {
@@ -19,16 +20,20 @@ export const useTopic = (topic: string) => {
       if (lastMessageInterval) {
         const allowedInterval = lastMessageInterval * 2;
         setSuspicious(now.getTime() - timestamp.getTime() > allowedInterval);
+
+        setHowSus((now.getTime() - timestamp.getTime()) / lastMessageInterval);
         return;
       }
 
       const hardLimit = 2 * 60 * 1000;
       if (now.getTime() - timestamp.getTime() > hardLimit) {
         setSuspicious(true);
+        setHowSus(1);
         return;
       }
 
       setSuspicious(false);
+      setHowSus(0);
     }
   };
 
@@ -61,7 +66,7 @@ export const useTopic = (topic: string) => {
 
   useEffect(() => {
     if (timestamp) {
-      const interval = setInterval(updateLastUpdated, 1000);
+      const interval = setInterval(updateLastUpdated, 500);
       updateLastUpdated();
 
       return () => {
@@ -70,5 +75,5 @@ export const useTopic = (topic: string) => {
     }
   }, [timestamp]);
 
-  return { value, lastUpdated, timestamp, suspicious };
+  return { value, lastUpdated, timestamp, suspicious, howSus };
 };

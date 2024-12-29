@@ -7,6 +7,7 @@ import { MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
 import { LoginForm } from "../components/LoginForm";
 import { RuleSetup } from "../components/RuleSetup";
 import { Chart } from "../components/valueDisplays/Chart";
+import { AverageValue } from "../components/valueDisplays/elementary/AverageValue";
 import { DailyHistory } from "../components/valueDisplays/Stats";
 import { Value } from "../components/valueDisplays/Value";
 import { useDark } from "../contexts/DarkContext";
@@ -59,7 +60,10 @@ export default function App() {
             <button onClick={showPopup} className="px-4 py-2 bg-neutral-500 text-white rounded hover:bg-neutral-600 dark:hover:bg-neutral-400">
               <BiCustomize size={20} />
             </button>
-            <button onClick={testNotification} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 dark:hover:bg-orange-400 ml-auto">
+            <div className="ml-auto">
+              <AverageValue topics={["zige/pozar1/12v/val", "zige/pozar0/12v/val", "zige/meteo/12v/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
+            </div>
+            <button onClick={testNotification} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 dark:hover:bg-orange-400">
               <IoMdNotificationsOutline size={20} />
             </button>
             <button
