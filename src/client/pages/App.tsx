@@ -80,9 +80,7 @@ export default function App() {
           <div className={`bg-neutral-100 dark:bg-neutral-900 ${user === false || isVisible ? "overflow-hidden h-screen" : ""}`}>
             <div className="flex flex-row justify-center box-border flex-wrap items-stretch">
               <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
-              <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
               <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
-              <Value topic="zige/pozar0/12v/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
               <Value topic="zige/meteo/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
               <Value topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
               <Value topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />

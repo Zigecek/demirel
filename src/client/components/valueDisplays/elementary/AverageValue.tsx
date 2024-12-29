@@ -20,7 +20,7 @@ export const AverageValue: React.FC<AverageValueProps> = ({ topics, valueF }) =>
   return (
     <div className="group relative">
       <p className={`text-2xl font-bold`} style={{ color: Object.values(suspicious).some((x) => x) ? suspiciousColor : colors[0] }}>
-        <span className="font-bold text-green-500" style={{ opacity: 1 - average(Object.values(howSus)) }}>
+        <span className="font-bold text-green-500" style={{ opacity: Math.max(0, 1 - average(Object.values(howSus))) }}>
           ●
         </span>
         {valueF(average(Object.values(values)) + "")}
@@ -28,7 +28,7 @@ export const AverageValue: React.FC<AverageValueProps> = ({ topics, valueF }) =>
       <div className="group-hover:opacity-100 transition-opacity bg-neutral-100 dark:bg-neutral-900 border-2 border-neutral-400 dark:border-neutral-600 dark:text-white rounded-md absolute opacity-0 flex flex-col flex-grow min-w-max right-0 z-50 top-full shadow-lg dark:shadow-neutral-800">
         {topics.map((topic, i) => (
           <p key={i} className="p-2">
-            <span className="font-bold text-green-500" style={{ opacity: 1 - howSus[topic] }}>
+            <span className="font-bold text-green-500" style={{ opacity: Math.max(0, 1 - howSus[topic]) }}>
               ●
             </span>
             {nickname(topic)}: <span style={{ color: suspicious[topic] ? suspiciousColor : colors[i] }}>{valueF(values[topic])}</span>
