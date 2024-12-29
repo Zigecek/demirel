@@ -133,10 +133,7 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF = (msg
   return (
     <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-md p-2 m-1">
       <div className="flex items-center mb-2 gap-2">
-        <h2 className="text-xl">
-          <span className="font-semibold">Historie: </span>
-          {nickname(topic)}
-        </h2>
+        <h2 className="text-xl">{nickname(topic)}</h2>
         <button className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 focus:outline-none" onClick={toggleVisibility}>
           {showAll ? (
             <>
@@ -150,7 +147,7 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({ topic, valueF = (msg
         </button>
       </div>
       {showAll && (
-        <div className="overflow-x-auto flex m-2 scrollbar scrollbar-thumb-neutral-500 scrollbar-track-neutral-700 dark:scrollbar-thumb-neutral-600 dark:scrollbar-track-neutral-800">
+        <div className="overflow-x-auto flex m-2 scrollbar scrollbar-thumb-neutral-400 scrollbar-track-neutral-200 dark:scrollbar-thumb-neutral-600 dark:scrollbar-track-neutral-800">
           <div className="flex gap-3 m-1">
             {history.map((stat, index) => (
               <DayHistory key={index} stats={stat} valueF={valueF} />

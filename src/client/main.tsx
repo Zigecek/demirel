@@ -2,6 +2,7 @@ import { CircularProgress } from "@mui/material";
 import React, { lazy, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { DarkProvider } from "./contexts/DarkContext";
 import { MessagesProvider } from "./contexts/MessagesContext";
 import { NicknamesProvider } from "./contexts/NicknamesContext";
 import { PgMonProvider } from "./contexts/PgMonContext";
@@ -21,7 +22,7 @@ const LazyLoader: React.FC<LazyLoaderProps> = ({ children }) => {
   return (
     <React.Suspense
       fallback={
-        <div className="flex justify-center items-center w-screen h-screen">
+        <div className="flex justify-center items-center w-screen h-screen bg-neutral-100 dark:bg-neutral-900">
           <CircularProgress />
         </div>
       }>
@@ -61,7 +62,9 @@ createRoot(document.getElementById("root")!).render(
         <NicknamesProvider>
           <SnackbarProvider>
             <PgMonProvider>
-              <RouterProvider router={router} />
+              <DarkProvider>
+                <RouterProvider router={router} />
+              </DarkProvider>
             </PgMonProvider>
           </SnackbarProvider>
         </NicknamesProvider>

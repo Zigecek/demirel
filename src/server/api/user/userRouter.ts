@@ -10,9 +10,9 @@ import { prisma } from "../../index";
 import { authenticated } from "../../middlewares/authenticated";
 import logger from "../../utils/loggers";
 
-export const authRouter: Router = express.Router();
+export const userRouter: Router = express.Router();
 
-authRouter.get("/loggedIn", (req: Request, res: Response) => {
+userRouter.get("/loggedIn", (req: Request, res: Response) => {
   // Check if express session is authenticated
   if (!req.session?.user) {
     // User is not authenticated
@@ -29,7 +29,7 @@ authRouter.get("/loggedIn", (req: Request, res: Response) => {
   return;
 });
 
-authRouter.post("/login", async (req: Request, res: Response) => {
+userRouter.post("/login", async (req: Request, res: Response) => {
   // if session user exists
   if (req.session?.user) {
     const serviceResponse = ServiceResponse.success("User already logged in.", true, 202);
@@ -73,7 +73,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
   return;
 });
 
-authRouter.get("/logout", authenticated, async (req: Request, res: Response) => {
+userRouter.get("/logout", authenticated, async (req: Request, res: Response) => {
   // if session user exists
   // then delete session user
   req.session.destroy((err) => {
@@ -86,7 +86,7 @@ authRouter.get("/logout", authenticated, async (req: Request, res: Response) => 
   res.redirect("/");
 });
 
-authRouter.post("/register", async (req: Request, res: Response) => {
+userRouter.post("/register", async (req: Request, res: Response) => {
   // if session user exists
   if (req.session?.user) {
     const serviceResponse = ServiceResponse.success("User already logged in.", true, 202);
@@ -139,4 +139,37 @@ authRouter.post("/register", async (req: Request, res: Response) => {
 
   // send response
   res.redirect("/");
+});
+
+userRouter.post("/dark", authenticated, async (req: Request, res: Response) => {
+  const { dark } = req.body;
+
+  if (dark === undefined) {
+    const serviceResponse = ServiceResponse.failure("No dark mode state provided.", false, StatusCodes.BAD_REQUEST);
+    handleServiceResponse(serviceResponse, res);
+    return;
+  }
+
+  const user = req.session.user;
+
+  if (!user) {
+    const serviceResponse = ServiceResponse.failure("User not found.", false, StatusCodes.NOT_FOUND);
+    handleServiceResponse(serviceResponse, res);
+    return;
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      username: user.username,
+    },
+    data: {
+      darkMode: dark,
+    },
+  });
+
+  req.session.user = updatedUser;
+
+  const serviceResponse = ServiceResponse.success("Dark mode state updated.", true, StatusCodes.OK);
+  handleServiceResponse(serviceResponse, res);
+  return;
 });

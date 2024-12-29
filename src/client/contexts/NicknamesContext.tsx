@@ -42,7 +42,7 @@ export const NicknamesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         nicknames[topic] = topic;
         setNeedToGet((prev) => [...prev, topic]);
       }
-      return topic; // Return the topic itself until the nickname is fetched
+      return topic;
     }
     return nicknames[topic];
   };

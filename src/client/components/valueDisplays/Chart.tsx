@@ -16,18 +16,16 @@ export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = 
   return (
     <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-md p-2 m-1">
       <h2 className="text-xl mb-2">
-        <span className="font-semibold">Graf: </span>
         {topics.map((t, i) => {
           return (
-            <>
-              <span key={i}>
-                {nickname(t)}
-                <span className="font-semibold" style={{ color: colors[i] }}>
-                  {" "}
-                  {valueF(values[t])}{" "}
-                </span>
+            <span key={i}>
+              {nickname(t)}
+              {":"}
+              <span className="font-semibold" style={{ color: colors[i] }}>
+                {" "}
+                {valueF(values[t])}{" "}
               </span>
-            </>
+            </span>
           );
         })}
       </h2>

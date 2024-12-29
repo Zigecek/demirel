@@ -1,10 +1,15 @@
 import { CircularProgress } from "@mui/material";
 import { useEffect, useState } from "react";
+import { BiCustomize } from "react-icons/bi";
+import { IoMdNotificationsOutline } from "react-icons/io";
+import { IoLogOutOutline } from "react-icons/io5";
+import { MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
 import { LoginForm } from "../components/LoginForm";
 import { RuleSetup } from "../components/RuleSetup";
 import { Chart } from "../components/valueDisplays/Chart";
 import { DailyHistory } from "../components/valueDisplays/Stats";
 import { Value } from "../components/valueDisplays/Value";
+import { useDark } from "../contexts/DarkContext";
 import { useUser } from "../contexts/UserContext";
 import { useNotification } from "../hooks/useNotification";
 import { usePopup } from "../hooks/usePopup";
@@ -16,6 +21,7 @@ export default function App() {
   const { PopupComponent: NotificationPopup, showPopup, isVisible } = usePopup(RuleSetup);
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
+  const { toggleDark, dark } = useDark();
 
   useEffect(() => {
     if (user === null) {
@@ -32,7 +38,7 @@ export default function App() {
     };
   }, [user]);
   const handleLogout = () => {
-    window.location.href = "/api/auth/logout";
+    window.location.href = "/api/user/logout";
   };
 
   return (
@@ -49,19 +55,26 @@ export default function App() {
             }`}>
             <LoginForm className={`duration-100 ${user === false ? "visible opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`} />
           </div>
+          <div className="flex flex-row flex-wrap gap-2 p-2 bg-neutral-100 dark:bg-neutral-900 border-b-neutral-700 border-b sticky top-0 shadow-lg dark:shadow-neutral-800">
+            <button onClick={showPopup} className="px-4 py-2 bg-neutral-500 text-white rounded hover:bg-neutral-600 dark:hover:bg-neutral-400">
+              <BiCustomize size={20} />
+            </button>
+            <button onClick={testNotification} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 dark:hover:bg-orange-400 ml-auto">
+              <IoMdNotificationsOutline size={20} />
+            </button>
+            <button
+              onClick={() => {
+                toggleDark();
+              }}
+              className="flex justify-center items-center px-4 py-2 bg-neutral-300 dark:bg-neutral-700 text-white rounded hover:bg-neutral-500 ">
+              {dark ? <MdOutlineLightMode /> : <MdOutlineDarkMode />}
+            </button>
+            <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 dark:hover:bg-red-400">
+              <IoLogOutOutline size={20} />
+            </button>
+          </div>
           <div className={`bg-neutral-100 dark:bg-neutral-900 ${user === false || isVisible ? "overflow-hidden h-screen" : ""}`}>
-            <div className="flex flex-row flex-wrap gap-2 p-2">
-              <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 dark:hover:bg-red-400">
-                Odhlásit
-              </button>
-              <button onClick={testNotification} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 dark:hover:bg-orange-400">
-                Zapnout notifikace
-              </button>
-              <button onClick={showPopup} className="px-4 py-2 bg-neutral-500 text-white rounded hover:bg-neutral-600 dark:hover:bg-neutral-400">
-                Programovatelné notifikace
-              </button>
-            </div>
-            <div className="flex flex-row items-center justify-center box-border flex-wrap items-stretch">
+            <div className="flex flex-row justify-center box-border flex-wrap items-stretch">
               <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
               <Value topic="zige/pozar1/12v/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
               <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />

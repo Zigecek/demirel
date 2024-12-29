@@ -6,6 +6,7 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { useDark } from "../../../contexts/DarkContext";
 import { useMessages } from "../../../contexts/MessagesContext";
 import { useNicknames } from "../../../contexts/NicknamesContext";
 import { useUser } from "../../../contexts/UserContext";
@@ -31,7 +32,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   const { addToHistory } = useMessages();
   const { nickname } = useNicknames();
   const { user } = useUser();
-  const [darkMode, setDarkMode] = useState(false);
+  const { dark } = useDark();
 
   // Bounds for data fetching and timeout for debouncing
   const [bounds, setBounds] = useState<Bounds>();
@@ -54,14 +55,6 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   // TOPIC STATES //
   const { values, timestamps, suspicious } = useTopics(topics);
   const [dataPoints, setDataPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    setDarkMode(mediaQuery.matches); // Nastavení při načtení
-    const handleChange = (e: MediaQueryListEvent) => setDarkMode(e.matches);
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
 
   useEffect(() => {
     topics.forEach((topic) => {
@@ -256,20 +249,20 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       scales: {
         y: {
           grid: {
-            color: darkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)", // Barva mřížky osy X
+            color: dark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)", // Barva mřížky osy X
           },
           ticks: {
-            color: darkMode ? "#ffffff" : "#000000", // Barva popisků osy X
+            color: dark ? "#ffffff" : "#000000", // Barva popisků osy X
           },
           min: min - dif,
           max: max + dif,
         },
         x: {
           grid: {
-            color: darkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)", // Barva mřížky osy X
+            color: dark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)", // Barva mřížky osy X
           },
           ticks: {
-            color: darkMode ? "#ffffff" : "#000000", // Barva popisků osy X
+            color: dark ? "#ffffff" : "#000000", // Barva popisků osy X
           },
           type: "time",
           min: minX,
@@ -291,13 +284,13 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       },
       plugins: {
         tooltip: {
-          bodyColor: darkMode ? "#ffffff" : "#000000", // Barva tooltip textu
-          backgroundColor: darkMode ? "#000000" : "#ffffff", // Tooltip pozadí
+          bodyColor: dark ? "#ffffff" : "#000000", // Barva tooltip textu
+          backgroundColor: dark ? "#000000" : "#ffffff", // Tooltip pozadí
         },
         legend: {
           display: topics.length > 1,
           labels: {
-            color: darkMode ? "#ffffff" : "#000000", // Barva textu legendy
+            color: dark ? "#ffffff" : "#000000", // Barva textu legendy
           },
         },
         zoom: {

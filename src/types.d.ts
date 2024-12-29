@@ -199,3 +199,7 @@ interface PgMonStats {
   rows_deleted: number;
   current_time: Date;
 }
+
+interface postDarkRequest {
+  dark: boolean;
+}

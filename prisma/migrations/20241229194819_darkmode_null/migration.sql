@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "user" ALTER COLUMN "darkMode" DROP NOT NULL,
+ALTER COLUMN "darkMode" DROP DEFAULT;

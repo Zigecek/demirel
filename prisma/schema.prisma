@@ -20,7 +20,7 @@ model session {
 model user {
   username String    @id @unique(map: "username") @db.VarChar(255)
   password String    @db.VarChar
-  darkMode Boolean   @default(true)
+  darkMode Boolean? // false - light, true - dark, null - system default
   webpush  webpush[]
   rule     rule[]
 

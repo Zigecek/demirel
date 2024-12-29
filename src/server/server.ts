@@ -5,12 +5,12 @@ import "express-session";
 import session from "express-session";
 import pg from "pg";
 import ViteExpress from "vite-express";
-import { authRouter } from "./api/auth/authRouter";
 import { healthCheckRouter } from "./api/healthCheck/healthCheckRouter";
 import { mqttRouter } from "./api/mqtt/mqttRouter";
 import { pushRouter } from "./api/push/pushRouter";
 import { ruleRouter } from "./api/rule/ruleRouter";
 import { socketsRouter } from "./api/sockets/socketsRouter";
+import { userRouter } from "./api/user/userRouter";
 import { env } from "./utils/env";
 
 const app: Express = express();
@@ -56,7 +56,7 @@ const apiRouter = express.Router();
 
 apiRouter.use("/health-check", healthCheckRouter);
 apiRouter.use("/sockets", socketsRouter);
-apiRouter.use("/auth", authRouter);
+apiRouter.use("/user", userRouter);
 apiRouter.use("/mqtt", mqttRouter);
 apiRouter.use("/push", pushRouter);
 apiRouter.use("/rule", ruleRouter);

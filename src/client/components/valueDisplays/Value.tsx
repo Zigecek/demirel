@@ -15,7 +15,6 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
   return (
     <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-md p-2 m-1 flex-1 min-w-40">
       <h2 className="text-xl mb-2 flex flex-wrap whitespace-pre">
-        <span className="font-semibold">Nyní: </span>
         <span>{nickname(topic)}</span>
       </h2>
       <p className={`text-2xl font-bold`} style={{ color: suspicious ? suspiciousColor : colors[0] }}>
