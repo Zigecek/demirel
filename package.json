@@ -5,13 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon -w src/server -x tsx src/server/index.ts",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
     "start:tsx": "cross-env NODE_ENV=production tsx src/server/index.ts",
     "build:react": "vite build --config vite.client.config.ts",
-    "build:server": "tsup",
+    "build:server": "prisma generate && tsup",
     "build": "npm run build:react && npm run build:server",
     "start:node": "node ./dist/index.js",
-    "start:pm2": "pm2 start ecosystem.config.cjs",
-    "update": "npx npm-check-updates -u -t semver"
+    "start:pm2": "pm2 delete demirel && pm2 start ecosystem.config.cjs && pm2 save",
+    "update": "npx npm-check-updates -u -t semver",
+    "pull": "git reset --hard && git pull",
+    "workflow": "npm run pull && npm i && npm run migrate:deploy && npm run build && npm run start:pm2 && pm2 list"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
