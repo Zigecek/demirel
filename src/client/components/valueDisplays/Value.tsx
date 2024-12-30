@@ -24,7 +24,7 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
         {valueF(value + "")}
       </p>
 
-      {lastUpdated != undefined && (
+      {/*lastUpdated != undefined && (
         <p className="text-xs text-neutral-500 mt-2">
           Před{" "}
           <span className={suspicious ? "font-bold" : ""} style={{ color: suspicious ? suspiciousColor : colors[0] }}>
@@ -32,7 +32,7 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
           </span>{" "}
           vteřinami
         </p>
-      )}
+      )*/}
     </div>
   );
 };
