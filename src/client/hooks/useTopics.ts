@@ -99,5 +99,5 @@ export const useTopics = (topics: string[]) => {
     };
   }, [timestamps, topics]);
 
-  return { values, lastUpdated, timestamps, suspicious, howSus };
+  return { values, lastUpdated, timestamps, suspicious, howSus, lastMessageIntervals };
 };

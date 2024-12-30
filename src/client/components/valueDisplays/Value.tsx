@@ -9,14 +9,14 @@ type ValueProps = {
 };
 
 export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
-  const { value, suspicious, howSus } = useTopic(topic);
+  const { value, suspicious, howSus, lastMessageInterval, lastUpdated } = useTopic(topic);
   const { nickname } = useNicknames();
 
   return (
     <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-md p-2 m-1 flex-1 min-w-40">
-      <h2 className="text-xl mb-2 flex flex-wrap whitespace-pre">
+      <h2 className="text-xl mb-2 flex flex-wrap whitespace-pre z-0">
         <span>{nickname(topic)} </span>
-        <span className="font-bold text-green-500" style={{ opacity: 1 - howSus }}>
+        <span className="font-bold text-green-500 opacity-0" key={lastMessageInterval} style={{ animation: `changeOpacity ${lastMessageInterval}ms linear 1` }}>
           ●
         </span>
       </h2>
@@ -24,7 +24,7 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
         {valueF(value + "")}
       </p>
 
-      {/*lastUpdated != undefined && (
+      {lastUpdated != undefined && (
         <p className="text-xs text-neutral-500 mt-2">
           Před{" "}
           <span className={suspicious ? "font-bold" : ""} style={{ color: suspicious ? suspiciousColor : colors[0] }}>
@@ -32,7 +32,7 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
           </span>{" "}
           vteřinami
         </p>
-      )*/}
+      )}
     </div>
   );
 };

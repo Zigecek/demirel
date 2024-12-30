@@ -4,6 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes changeOpacity {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @layer base {
   html {
     @apply scrollbar scrollbar-thumb-neutral-500 scrollbar-track-neutral-700 dark:scrollbar-thumb-neutral-600 dark:scrollbar-track-neutral-800;

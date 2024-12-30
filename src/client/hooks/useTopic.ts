@@ -75,5 +75,5 @@ export const useTopic = (topic: string) => {
     }
   }, [timestamp]);
 
-  return { value, lastUpdated, timestamp, suspicious, howSus };
+  return { value, lastUpdated, timestamp, suspicious, howSus, lastMessageInterval };
 };
