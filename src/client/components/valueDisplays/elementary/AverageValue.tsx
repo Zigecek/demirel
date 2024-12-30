@@ -9,7 +9,7 @@ type AverageValueProps = {
 };
 
 export const AverageValue: React.FC<AverageValueProps> = ({ topics, valueF }) => {
-  const { values, lastUpdated, suspicious, howSus, lastMessageIntervals } = useTopics(topics);
+  const { values, suspicious, lastMessageIntervals } = useTopics(topics);
   const { nickname } = useNicknames();
 
   const average = (arr: any[]) => {

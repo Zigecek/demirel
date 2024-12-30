@@ -9,7 +9,7 @@ type ValueProps = {
 };
 
 export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
-  const { value, suspicious, howSus, lastMessageInterval, lastUpdated } = useTopic(topic);
+  const { value, suspicious, lastMessageInterval, lastUpdated } = useTopic(topic);
   const { nickname } = useNicknames();
 
   return (
