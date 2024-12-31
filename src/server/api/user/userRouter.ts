@@ -68,9 +68,13 @@ userRouter.post("/login", async (req: Request, res: Response) => {
   // set session user
   req.session.user = user;
 
-  const serviceResponse = ServiceResponse.success("Login successful.", true, StatusCodes.OK);
+  // Vrátit session ID pro Android klienty
+  const serviceResponse = ServiceResponse.success(
+    "Login successful.",
+    { sessionId: req.sessionID }, // Zahrň session ID do odpovědi
+    StatusCodes.OK
+  );
   handleServiceResponse(serviceResponse, res);
-  return;
 });
 
 userRouter.get("/logout", authenticated, async (req: Request, res: Response) => {

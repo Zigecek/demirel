@@ -3,7 +3,7 @@ import { connect } from "mqtt";
 import { io, prisma, Status, status } from "..";
 import { env } from "../utils/env";
 import logger from "../utils/loggers";
-import { addMessage, getNFromDB } from "../utils/memory";
+import { addMessage, cloneMemory } from "../utils/memory";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -52,6 +52,8 @@ mqtt.on("message", (topic, message: Buffer) => {
   if (status.db !== Status.RUNNING) return;
   if (status.ws !== Status.RUNNING) return;
   if (status.memory !== Status.RUNNING) return;
+  if (status.rules !== Status.RUNNING) return;
+  if (status.daily !== Status.RUNNING) return;
 
   const msg: string = message + "";
   if (!regexes.basicVal.test(topic) && !regexes.basicSet.test(topic) && !regexes.config.test(topic) && !regexes.allVals.test(topic)) {
@@ -126,22 +128,18 @@ const processQueue = async () => {
 };
 
 const saveToPrisma = async (messages: MQTTMessage[]) => {
-  const topicMap = new Map<string, MQTTMessage[]>();
-  const lastMessagesFromPrisma = await getNFromDB(2);
-  lastMessagesFromPrisma.forEach((msg) => {
-    if (!topicMap.has(msg.topic)) {
-      topicMap.set(msg.topic, []);
-    }
-    topicMap.get(msg.topic)?.push(msg);
-  });
+  const mem = await cloneMemory();
 
   const updates: Array<Prisma.mqttUpdateArgs> = [];
   const inserts: Array<Prisma.mqttCreateArgs> = [];
 
   messages.forEach((msg) => {
-    const lastValueArray = topicMap.get(msg.topic);
-    const lastValue = lastValueArray ? lastValueArray[0] : undefined;
-    const lastValue2 = lastValueArray ? lastValueArray[1] : undefined;
+    const lastValueArray = mem[msg.topic];
+    // if memory doesnt have more than 2 values, return
+    if (lastValueArray.length < 3) return;
+
+    const lastValue = lastValueArray ? lastValueArray[1] : undefined;
+    const lastValue2 = lastValueArray ? lastValueArray[2] : undefined;
 
     // NEW TOPIC
     if (lastValue == undefined || lastValue2 == undefined) {
@@ -211,11 +209,15 @@ const saveToPrisma = async (messages: MQTTMessage[]) => {
         skipDuplicates: true,
       })
     );
+  } else {
+    logger.db.info("No insertions.");
   }
 
   if (updates.length > 0) {
     logger.db.info("Updating existing values. " + updates.length);
     promises.push(...updates.map((update) => prisma.mqtt.update(update)));
+  } else {
+    logger.db.info("No updates.");
   }
 
   await prisma.$transaction(promises);

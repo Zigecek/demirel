@@ -19,7 +19,7 @@ export const AverageValue: React.FC<AverageValueProps> = ({ topics, valueF }) =>
 
   return (
     <div className="group relative">
-      <p className={`text-2xl font-bold`} style={{ color: Object.values(suspicious).some((x) => x) ? suspiciousColor : colors[0] }}>
+      <p className={`text-xl font-semibold`} style={{ color: Object.values(suspicious).some((x) => x) ? suspiciousColor : colors[0] }}>
         <span
           className="font-bold text-green-500 opacity-0"
           key={average(Object.values(lastMessageIntervals))}

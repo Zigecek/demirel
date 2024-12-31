@@ -45,12 +45,22 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24,
       sameSite: true,
-      secure: false,
+      secure: env.NODE_ENV === "production",
+      httpOnly: true,
     },
   })
 );
 
-//app.use(requestLogger);
+// Middleware pro podporu session ID v hlavičkách
+app.use((req, res, next) => {
+  if (!req.sessionID && req.headers["x-session-id"]) {
+    const sessionIdHeader = req.headers["x-session-id"];
+    if (typeof sessionIdHeader === "string") {
+      req.sessionID = sessionIdHeader; // Ručně nastavíme session ID z hlavičky
+    }
+  }
+  next();
+});
 
 const apiRouter = express.Router();
 

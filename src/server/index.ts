@@ -54,7 +54,6 @@ prisma
     onEachDay(() => {
       createDailyStats("all", "all");
     });
-    status.daily = Status.RUNNING;
   })
   .catch((e) => {
     logger.db.error(`Prisma: Connection failed: ${e}`);

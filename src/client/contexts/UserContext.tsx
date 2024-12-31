@@ -7,6 +7,8 @@ type UserState = Omit<user, "password"> | null | false;
 interface UserContextType {
   user: UserState;
   setUser: React.Dispatch<React.SetStateAction<UserState>>;
+  chartLock: boolean;
+  setChartLock: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -21,6 +23,7 @@ export const useUser = (): UserContextType => {
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserState>(null);
+  const [chartLock, setChartLock] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -38,5 +41,5 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUser();
   }, []);
 
-  return <UserContext.Provider value={{ user: user!, setUser: setUser }}>{children}</UserContext.Provider>;
+  return <UserContext.Provider value={{ user: user!, setUser: setUser, chartLock, setChartLock }}>{children}</UserContext.Provider>;
 };

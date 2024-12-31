@@ -51,8 +51,8 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
       const fv = Object.values(await cloneMemory());
       const topics: RuleTopics = {};
 
-      fv.forEach((msg) => {
-        topics[msg.topic] = msg.valueType === "FLOAT" ? "number" : "boolean";
+      fv.forEach((msgs) => {
+        topics[msgs[0].topic] = msgs[0].valueType === "FLOAT" ? "number" : "boolean";
       });
 
       if (!validateExpression(condition, topics)) {

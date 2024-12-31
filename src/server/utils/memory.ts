@@ -2,7 +2,7 @@ import { EventEmitter } from "eventemitter3";
 import { prisma, Status, status } from "..";
 import logger from "./loggers";
 
-export const memory: Record<string, MQTTMessage> = {};
+export const memory: Record<string, MQTTMessage[]> = {};
 const memoryEmitter = new EventEmitter();
 
 export const cloneMemory = () => {
@@ -42,36 +42,39 @@ export const getFromDB = async () => {
   return messages;
 };
 
-// get two last messages from db
-export const getNFromDB = async (n: number): Promise<MQTTMessage[]> => {
-  // Execute the raw SQL query
-  const messages = await prisma.$queryRaw`
+export const getNFromDB = async (n: number) => {
+  const messages = await prisma.$queryRaw<(MQTTMessage & { rn: bigint })[]>`
     WITH RankedMessages AS (
-      SELECT m.*, 
-        ROW_NUMBER() OVER (PARTITION BY m.topic ORDER BY m.timestamp DESC) AS rn
-      FROM mqtt m
+      SELECT *, ROW_NUMBER() OVER (PARTITION BY topic ORDER BY timestamp DESC) AS rn
+      FROM mqtt
     )
     SELECT *
     FROM RankedMessages
     WHERE rn <= ${n}
-    ORDER BY topic ASC, timestamp DESC;
+    ORDER BY topic, timestamp DESC;
   `;
-
-  // Cast the result to the Prisma generated type for the mqtt model
-  return messages as MQTTMessage[];
+  return messages;
 };
 
 export const loadMemory = async () => {
   // load memory from db
   const firstVals = (await getFromDB()) as MQTTMessageID[];
   firstVals.forEach((msg) => {
-    memory[msg.topic] = msg;
+    memory[msg.topic] = [msg];
   });
 };
 
+const memoryLimit = 5;
+
 export const addMessage = async (message: MQTTMessage) => {
   // add message to memory
-  memory[message.topic] = message;
+  if (!memory[message.topic]) {
+    memory[message.topic] = [];
+  }
+  memory[message.topic].unshift(message);
+  if (memory[message.topic].length > memoryLimit) {
+    memory[message.topic].pop();
+  }
   memoryEmitter.emit("message", message);
 };
 

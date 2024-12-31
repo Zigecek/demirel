@@ -31,7 +31,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   const chartRef = useRef<any>(null);
   const { addToHistory } = useMessages();
   const { nickname } = useNicknames();
-  const { user } = useUser();
+  const { user, chartLock } = useUser();
   const { dark } = useDark();
 
   // Bounds for data fetching and timeout for debouncing
@@ -40,7 +40,6 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
 
   // User interaction state and timeout for resetting zoom
   const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const [resetTimeout, setResetTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Chart.js data and options
   const [data, setData] = useState<any>();
@@ -284,6 +283,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       },
       plugins: {
         tooltip: {
+          enabled: chartLock,
           bodyColor: dark ? "#ffffff" : "#000000", // Barva tooltip textu
           backgroundColor: dark ? "#000000" : "#ffffff", // Tooltip pozadí
         },
@@ -295,7 +295,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
         },
         zoom: {
           pan: {
-            enabled: true,
+            enabled: chartLock,
             mode: "x",
             onPan: ({ chart }: { chart: ChartJS }) => {
               onZoomPan(chart);
@@ -303,10 +303,10 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
           },
           zoom: {
             wheel: {
-              enabled: true,
+              enabled: chartLock,
             },
             pinch: {
-              enabled: true,
+              enabled: chartLock,
             },
             mode: "x",
             onZoom: ({ chart }: { chart: ChartJS }) => {
@@ -331,7 +331,6 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   const onZoomPan = (chart: ChartJS) => {
     setBounds(chart.scales.x.getUserBounds());
     setIsUserInteracting(true);
-    resetActivityTimeout();
   };
 
   useEffect(() => {
@@ -369,15 +368,6 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
       window.removeEventListener("resize", updateChart);
     };
   }, []);
-
-  const resetActivityTimeout = () => {
-    if (resetTimeout) {
-      clearTimeout(resetTimeout);
-    }
-    // Set a new timeout to reset zoom after 1 minute of inactivity
-    const timeout = setTimeout(resetZoom, 60 * 1000);
-    setResetTimeout(timeout);
-  };
 
   const resetZoom = () => {
     if (Object.values(dataPoints).flat().length > 0) {

@@ -1,4 +1,4 @@
-import { CircularProgress } from "@mui/material";
+import { CircularProgress, Switch } from "@mui/material";
 import { useEffect, useState } from "react";
 import { BiCustomize } from "react-icons/bi";
 import { IoMdNotificationsOutline } from "react-icons/io";
@@ -20,7 +20,7 @@ import { socket } from "../ws-client";
 export default function App() {
   const { testNotification } = useNotification();
   const { PopupComponent: NotificationPopup, showPopup, isVisible } = usePopup(RuleSetup);
-  const { user } = useUser();
+  const { user, setChartLock, chartLock } = useUser();
   const [loading, setLoading] = useState(true);
   const { toggleDark, dark } = useDark();
 
@@ -51,16 +51,22 @@ export default function App() {
       ) : (
         <>
           <div
-            className={`min-h-screen w-screen flex items-center justify-center bg-neutral-500 bg-opacity-75 fixed backdrop-blur-0.5 duration-1000 ${
+            className={`z-20 min-h-screen w-screen flex items-center justify-center bg-neutral-500 bg-opacity-75 fixed backdrop-blur-0.5 duration-1000 ${
               user === false ? "visible opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             }`}>
             <LoginForm className={`duration-100 ${user === false ? "visible opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`} />
           </div>
-          <div className="flex flex-row flex-wrap gap-2 p-2 bg-neutral-100 dark:bg-neutral-900 border-b-neutral-700 border-b sticky top-0 shadow-lg dark:shadow-neutral-800">
+          <div className="z-10 flex flex-row flex-wrap gap-1 p-2 bg-neutral-100 dark:bg-neutral-900 border-b-neutral-700 border-b sticky top-0 shadow-lg dark:shadow-neutral-800">
             <button onClick={showPopup} className="px-4 py-2 bg-neutral-500 text-white rounded hover:bg-neutral-600 dark:hover:bg-neutral-400">
               <BiCustomize size={20} />
             </button>
-            <div className="ml-auto">
+            <Switch
+              value={!chartLock}
+              onChange={(e) => {
+                setChartLock((prev) => !prev);
+              }}
+            />
+            <div className="ml-auto flex justify-center items-center px-2">
               <AverageValue topics={["zige/pozar1/12v/val", "zige/pozar0/12v/val", "zige/meteo/12v/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "V")} />
             </div>
             <button onClick={testNotification} className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 dark:hover:bg-orange-400">
@@ -77,7 +83,7 @@ export default function App() {
               <IoLogOutOutline size={20} />
             </button>
           </div>
-          <div className={`bg-neutral-100 dark:bg-neutral-900 ${user === false || isVisible ? "overflow-hidden h-screen" : ""}`}>
+          <div className={`z-0 bg-neutral-100 dark:bg-neutral-900 ${user === false || isVisible ? "overflow-hidden h-screen" : ""}`}>
             <div className="flex flex-row justify-center box-border flex-wrap items-stretch">
               <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
               <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
