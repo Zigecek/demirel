@@ -16,11 +16,11 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
     <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-md p-2 m-1 flex-1 min-w-40">
       <h2 className="text-xl mb-2 flex flex-wrap whitespace-pre z-0">
         <span>{nickname(topic)} </span>
-        <span className="font-bold text-green-500 opacity-0" key={lastMessageInterval} style={{ animation: `changeOpacity ${lastMessageInterval}ms linear 1` }}>
-          ●
-        </span>
       </h2>
       <p className={`text-2xl font-bold`} style={{ color: suspicious ? suspiciousColor : colors[0] }}>
+        <span className="font-semibold text-green-500 opacity-0 px-1" key={lastMessageInterval} style={{ animation: `changeOpacity ${lastMessageInterval}ms linear 1` }}>
+          ●
+        </span>
         {valueF(value + "")}
       </p>
 
