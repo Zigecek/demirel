@@ -49,13 +49,14 @@ export const cloneMemory = () => {
 export const getNFromDB = async (n: number) => {
   const messages = await prisma.$queryRaw<(MQTTMessageID & { rn: bigint })[]>`
     WITH RankedMessages AS (
-      SELECT *, ROW_NUMBER() OVER (PARTITION BY topic ORDER BY timestamp DESC) AS rn
-      FROM mqtt
+      SELECT m.*, 
+        ROW_NUMBER() OVER (PARTITION BY m.topic ORDER BY m.timestamp DESC) AS rn
+      FROM mqtt m
     )
     SELECT *
     FROM RankedMessages
     WHERE rn <= ${n}
-    ORDER BY topic, timestamp DESC;
+    ORDER BY topic ASC, timestamp DESC;
   `;
   return messages;
 };
@@ -79,7 +80,7 @@ export const addMessage = async (message: MQTTMessage) => {
     // cut the array to the memoryLimit length
     memory[message.topic] = memory[message.topic].slice(0, memoryLimit);
   }*/
-  memoryEmitter.emit("message", message);
+  //memoryEmitter.emit("message", message);
   logger.memory.info(`Value added to memory: ${message.topic} - ${message.value} (${memory[message.topic].length})`);
 };
 
