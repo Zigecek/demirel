@@ -35,10 +35,10 @@ export const setTypes = async () => {
   rules.forEach((rule) => {
     rule.topics.forEach((topic) => {
       if (!topicTypes[topic]) {
-        if (memory[topic] /*?.length > 0*/) {
-          if (memory[topic].valueType == "BOOLEAN") {
+        if (memory[topic].length > 0) {
+          if (memory[topic][0].valueType == "BOOLEAN") {
             topicTypes[topic] = "boolean";
-          } else if (memory[topic].valueType == "FLOAT") {
+          } else if (memory[topic][0].valueType == "FLOAT") {
             topicTypes[topic] = "number";
           }
         }

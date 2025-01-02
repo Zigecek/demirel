@@ -1,16 +1,12 @@
 import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { prisma } from "../..";
-import { validateExpression } from "../../../globals/rules";
 import { authenticated } from "../../middlewares/authenticated";
-import { updateRules } from "../../services/rules";
 import { handleServiceResponse } from "../../utils/httpHandlers";
-import { cloneMemory } from "../../utils/memory";
-import { extractTopics } from "../../utils/rules";
 import { ServiceResponse } from "../../utils/serviceResponse";
 
 export const ruleRouter: Router = express.Router();
-
+/*
 ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Response) => {
   req.session.user = req.session.user!;
   const username = req.session.user.username;
@@ -104,7 +100,7 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
   handleServiceResponse(serviceResponse, res);
   return;
 });
-
+*/
 ruleRouter.get("/getRules", authenticated, async (req: Request, res: Response) => {
   req.session.user = req.session.user!;
 

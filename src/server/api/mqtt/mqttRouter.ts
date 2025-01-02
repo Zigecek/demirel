@@ -2,9 +2,7 @@ import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { calculateStats, getDayDates } from "../../../globals/daily";
 import { prisma } from "../../index";
-import { authenticated } from "../../middlewares/authenticated";
 import { handleServiceResponse } from "../../utils/httpHandlers";
-import { cloneMemory } from "../../utils/memory";
 import { ServiceResponse } from "../../utils/serviceResponse";
 
 export const mqttRouter: Router = express.Router();
@@ -205,7 +203,7 @@ mqttRouter.post("/nickname", async (req: Request, res: Response) => {
   handleServiceResponse(serviceResponse, res);
   return;
 });
-
+/*
 mqttRouter.get("/firstValues", authenticated, async (req: Request, res: Response) => {
   const messages = Object.values(await cloneMemory());
 
@@ -220,3 +218,4 @@ mqttRouter.get("/firstValues", authenticated, async (req: Request, res: Response
   handleServiceResponse(serviceResponse, res);
   return;
 });
+*/
