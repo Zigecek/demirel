@@ -46,14 +46,15 @@ prisma
   .then(async () => {
     logger.db.info("Connected.");
     status.db = Status.RUNNING;
-    startMem();
-    startRules();
-    startPgMon();
+    await startMem();
+    await startRules();
+    await startPgMon();
 
     // schedule daily stats creation
     onEachDay(() => {
       createDailyStats("all", new Date());
     });
+    status.daily = Status.RUNNING;
   })
   .catch((e) => {
     logger.db.error(`Prisma: Connection failed: ${e}`);

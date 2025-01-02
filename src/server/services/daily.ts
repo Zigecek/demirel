@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { prisma, Status, status } from "..";
+import { prisma } from "..";
 import { calculateStats, getDayDates } from "../../globals/daily";
 import logger from "../utils/loggers";
 
@@ -76,5 +76,4 @@ export async function createDailyStats(topic: string | "all" = "all", date: Date
     data: dailyStats,
   });
   logger.daily.info("Daily stats saved to db");
-  status.daily = Status.RUNNING;
 }
