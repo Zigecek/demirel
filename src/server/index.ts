@@ -52,7 +52,7 @@ prisma
 
     // schedule daily stats creation
     onEachDay(() => {
-      createDailyStats("all", "all");
+      createDailyStats("all", new Date());
     });
   })
   .catch((e) => {
