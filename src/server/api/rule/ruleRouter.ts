@@ -52,7 +52,7 @@ ruleRouter.post("/updateRules", authenticated, async (req: Request, res: Respons
       const topics: RuleTopics = {};
 
       fv.forEach((msgs) => {
-        topics[msgs[0].topic] = msgs[0].valueType === "FLOAT" ? "number" : "boolean";
+        topics[msgs.topic] = msgs.valueType === "FLOAT" ? "number" : "boolean";
       });
 
       if (!validateExpression(condition, topics)) {

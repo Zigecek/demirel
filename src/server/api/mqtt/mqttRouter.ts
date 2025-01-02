@@ -211,8 +211,8 @@ mqttRouter.get("/firstValues", authenticated, async (req: Request, res: Response
 
   const sendMessages: MQTTMessageTransfer[] = messages.map((msgs) => {
     return {
-      ...msgs[0],
-      timestamp: msgs[0].timestamp.getTime(),
+      ...msgs,
+      timestamp: msgs.timestamp.getTime(),
     } as MQTTMessageTransfer;
   });
 

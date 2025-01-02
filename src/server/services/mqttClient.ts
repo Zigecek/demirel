@@ -1,9 +1,9 @@
-import { MqttValueType, Prisma } from "@prisma/client";
+import { MqttValueType } from "@prisma/client";
 import { connect } from "mqtt";
-import { io, prisma, Status, status } from "..";
+import { io, Status, status } from "..";
 import { env } from "../utils/env";
 import logger from "../utils/loggers";
-import { addMessage, cloneMemory } from "../utils/memory";
+import { addMessage } from "../utils/memory";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -88,6 +88,7 @@ mqtt.on("message", (topic, message: Buffer) => {
 
     logger.mqtt.info(`${topic}: ${val} <${valueType}>`);
 
+    /*
     queue.push({
       topic,
       value: val,
@@ -95,7 +96,7 @@ mqtt.on("message", (topic, message: Buffer) => {
       valueType,
     } as MQTTMessage);
     scheduleProcessing(); // Trigger processing with buffering
-
+    */
     addMessage({ topic, value: val, timestamp: when, valueType } as MQTTMessage);
   }
 });
@@ -117,7 +118,7 @@ const processQueue = async () => {
 
       logger.ws.info("Messages sent to WS");
 
-      await saveToPrisma(uniqueMessages);
+      //await saveToPrisma(uniqueMessages);
     }
   } catch (err) {
     logger.db.error("Error processing queue:" + err);
@@ -126,7 +127,7 @@ const processQueue = async () => {
     isProcessingQueue = false; // Reset the flag
   }
 };
-
+/*
 const saveToPrisma = async (messages: MQTTMessage[]) => {
   const mem = await cloneMemory();
 
@@ -222,7 +223,7 @@ const saveToPrisma = async (messages: MQTTMessage[]) => {
 
   await prisma.$transaction(promises);
 };
-
+*/
 const scheduleProcessing = () => {
   if (debounceTimer) {
     clearTimeout(debounceTimer); // Reset the timer

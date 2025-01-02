@@ -2,9 +2,8 @@ import { EventEmitter } from "eventemitter3";
 import { prisma, Status, status } from "..";
 import logger from "./loggers";
 
-export const memory: Record<string, MQTTMessage[]> = {};
+export const memory: Record<string, MQTTMessage> = {};
 const memoryEmitter = new EventEmitter();
-const memoryLimit = 5;
 
 export const cloneMemory = () => {
   return { ...memory };
@@ -43,40 +42,37 @@ export const getFromDB = async () => {
   return messages;
 };
 
-export const getNFromDB = async (n: number) => {
-  const messages = await prisma.$queryRaw<(MQTTMessage & { rn: bigint })[]>`
+// get two last messages from db
+export const getNFromDB = async (n: number): Promise<MQTTMessage[]> => {
+  // Execute the raw SQL query
+  const messages = await prisma.$queryRaw`
     WITH RankedMessages AS (
-      SELECT *, ROW_NUMBER() OVER (PARTITION BY topic ORDER BY timestamp DESC) AS rn
-      FROM mqtt
+      SELECT m.*, 
+        ROW_NUMBER() OVER (PARTITION BY m.topic ORDER BY m.timestamp DESC) AS rn
+      FROM mqtt m
     )
     SELECT *
     FROM RankedMessages
     WHERE rn <= ${n}
-    ORDER BY topic, timestamp DESC;
+    ORDER BY topic ASC, timestamp DESC;
   `;
-  return messages;
+
+  // Cast the result to the Prisma generated type for the mqtt model
+  return messages as MQTTMessage[];
 };
 
 export const loadMemory = async () => {
   // load memory from db
   const firstVals = (await getFromDB()) as MQTTMessageID[];
   firstVals.forEach((msg) => {
-    memory[msg.topic] = [msg];
+    memory[msg.topic] = msg;
   });
 };
 
 export const addMessage = async (message: MQTTMessage) => {
   // add message to memory
-  if (!memory[message.topic]) {
-    memory[message.topic] = [];
-  }
-  memory[message.topic] = [message, ...memory[message.topic]];
-  if (memory[message.topic].length > memoryLimit) {
-    // cut the array to the memoryLimit length
-    memory[message.topic] = memory[message.topic].slice(0, memoryLimit);
-  }
+  memory[message.topic] = message;
   memoryEmitter.emit("message", message);
-  logger.memory.info(`Value added to memory: ${message.topic} - ${message.value} (${memory[message.topic].length})`);
 };
 
 export const start = async () => {

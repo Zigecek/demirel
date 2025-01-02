@@ -2,7 +2,6 @@ import Prisma from "@prisma/client";
 import { Server } from "socket.io";
 import ViteExpress from "vite-express";
 import { app, sessionDBaccess } from "./server";
-import { createDailyStats } from "./services/daily";
 import "./services/mqttClient";
 import { endClient } from "./services/mqttClient";
 import { connectClient, endTransceiver } from "./services/mqttTransceiver";
@@ -52,7 +51,7 @@ prisma
 
     // schedule daily stats creation
     onEachDay(() => {
-      createDailyStats("all", new Date());
+      //createDailyStats("all", new Date());
     });
     status.daily = Status.RUNNING;
   })
