@@ -4,6 +4,7 @@ import logger from "./loggers";
 
 export const memory: Record<string, MQTTMessage[]> = {};
 const memoryEmitter = new EventEmitter();
+const memoryLimit = 5;
 
 export const cloneMemory = () => {
   return { ...memory };
@@ -64,18 +65,18 @@ export const loadMemory = async () => {
   });
 };
 
-const memoryLimit = 5;
-
 export const addMessage = async (message: MQTTMessage) => {
   // add message to memory
   if (!memory[message.topic]) {
     memory[message.topic] = [];
   }
-  memory[message.topic].unshift(message);
+  memory[message.topic] = [message, ...memory[message.topic]];
   if (memory[message.topic].length > memoryLimit) {
-    memory[message.topic].pop();
+    // cut the array to the memoryLimit length
+    memory[message.topic] = memory[message.topic].slice(0, memoryLimit);
   }
   memoryEmitter.emit("message", message);
+  logger.memory.info(`Value added to memory: ${message.topic} - ${message.value} (${memory[message.topic].length})`);
 };
 
 export const start = async () => {

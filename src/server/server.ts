@@ -50,7 +50,7 @@ app.use(
     },
   })
 );
-
+/*
 // Middleware pro podporu session ID v hlavičkách
 app.use((req, res, next) => {
   if (!req.sessionID && req.headers["x-session-id"]) {
@@ -60,7 +60,7 @@ app.use((req, res, next) => {
     }
   }
   next();
-});
+});*/
 
 const apiRouter = express.Router();
 
