@@ -30,6 +30,7 @@ type Register = {
 
 type UserSafe = {
   username: string;
+  darkMode: boolean;
 };
 
 type SnackBarConfig = {

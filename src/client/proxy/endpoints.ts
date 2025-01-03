@@ -1,13 +1,14 @@
 import { user } from "@prisma/client";
+import { UserState } from "../contexts/UserContext";
 import "./axios";
 import { get, getAsync, postAsync } from "./axios";
 
 export const postSocketAuth = (data: SocketAuth) => postAsync<ApiBase<boolean>>("/api/sockets/auth", data);
 export const getIfLoggedIn = get<ApiBase<Omit<user, "password">>>("/api/user/loggedIn");
 export const getIfLoggedInAsync = () => getAsync<ApiBase<Omit<user, "password">>>("/api/user/loggedIn");
-export const postLogin = (data: Login) => postAsync<ApiBase<UserSafe>>("/api/user/login", data);
+export const postLogin = (data: Login) => postAsync<ApiBase<UserState>>("/api/user/login", data);
 //export const getLogout = get<ApiBase<boolean>>("/api/user/logout");
-export const postRegister = (data: Register) => postAsync<ApiBase<UserSafe>>("/api/user/register", data);
+export const postRegister = (data: Register) => postAsync<ApiBase<UserState>>("/api/user/register", data);
 export const postMqttData = (requestData: postMqttDataRequest) => postAsync<ApiBase<MQTTMessageTransfer[]>>("/api/mqtt/data", requestData);
 // web-push subscription endpoint for Web Push Notifications
 export const postWebPushSubscribe = (data: PushSubscription) => postAsync<ApiBase<boolean>>("/api/push/subscribe", data);

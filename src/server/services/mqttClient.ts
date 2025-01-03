@@ -118,7 +118,7 @@ const processQueue = async () => {
 
       logger.ws.info("Messages sent to WS");
 
-      //await saveToPrisma(uniqueMessages);
+      await saveToPrisma(uniqueMessages);
     }
   } catch (err) {
     logger.db.error("Error processing queue:" + err);
@@ -155,6 +155,8 @@ const saveToPrisma = async (messages: MQTTMessage[]) => {
       return;
     }
 
+    const uniqueWhere = { topic_timestamp: { topic: lastValue.topic, timestamp: lastValue.timestamp } };
+
     // FLOAT
     if (msg.valueType === MqttValueType.FLOAT) {
       // comparing new value to last two values to reduce fluctuations
@@ -167,6 +169,10 @@ const saveToPrisma = async (messages: MQTTMessage[]) => {
     if (msg.valueType === MqttValueType.BOOLEAN) {
       // record only value changes
       if (lastValue?.value === msg.value) {
+        updates.push({
+          where: uniqueWhere,
+          data: { timestamp: msg.timestamp },
+        });
         return;
       }
       inserts.push({

@@ -2,7 +2,7 @@ import { user } from "@prisma/client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getIfLoggedInAsync } from "../proxy/endpoints";
 
-type UserState = Omit<user, "password"> | null | false;
+export type UserState = Omit<user, "password"> | null | false;
 
 interface UserContextType {
   user: UserState;
