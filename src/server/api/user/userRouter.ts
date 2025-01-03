@@ -68,10 +68,12 @@ userRouter.post("/login", async (req: Request, res: Response) => {
   // set session user
   req.session.user = user;
 
+  const { password: trash, ...userSafe } = req.session.user;
+
   // Vrátit session ID pro Android klienty
   const serviceResponse = ServiceResponse.success(
     "Login successful.",
-    { sessionId: req.sessionID }, // Zahrň session ID do odpovědi
+    { ...userSafe, sessionId: req.sessionID }, // Zahrň session ID do odpovědi
     StatusCodes.OK
   );
   handleServiceResponse(serviceResponse, res);

@@ -1,6 +1,6 @@
 // context responsible for managing the dark mode state and syncing it with db
 
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useLayoutEffect, useState } from "react";
 import { postDark } from "../proxy/endpoints";
 import { useSnackbarContext } from "./SnackbarContext";
 import { useUser } from "./UserContext";
@@ -29,12 +29,13 @@ export const DarkProvider = ({ children }: { children: ReactNode }) => {
   const { showSnackbar } = useSnackbarContext();
 
   // load system dark mode
-  useEffect(() => {
+  useLayoutEffect(() => {
     setSystemDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
   useEffect(() => {
+    console.log("dark", user);
     if (!user || user.darkMode === null) {
-      setDark(systemDark || defaultDark);
+      setDark(systemDark ?? defaultDark);
       return;
     }
     setDark(user.darkMode);

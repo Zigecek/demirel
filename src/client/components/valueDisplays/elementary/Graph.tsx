@@ -319,7 +319,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
         },
       },
     });
-  }, [dataPoints, isUserInteracting, timeUnit, suspicious, user]);
+  }, [dataPoints, isUserInteracting, timeUnit, suspicious, user, chartLock, dark]);
 
   useEffect(() => {
     if (!dataPoints) return;
