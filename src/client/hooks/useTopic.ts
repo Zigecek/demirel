@@ -9,6 +9,7 @@ export const useTopic = (topic: string) => {
   const [timestamp, setTimestamp] = useState<Date>();
   const [suspicious, setSuspicious] = useState<boolean>(false);
   const [lastMessageInterval, setLastMessageInterval] = useState<number | undefined>(undefined);
+  const [animationDuration, setAnimationDuration] = useState<number>();
 
   const updateLastUpdated = () => {
     if (timestamp) {
@@ -52,7 +53,14 @@ export const useTopic = (topic: string) => {
       if (msg.timestamp.getTime() <= timestamp.getTime()) return;
 
       const interval = msg.timestamp.getTime() - timestamp.getTime();
+      const duration = msg.timestamp.getTime() + interval - Date.now();
       setLastMessageInterval(interval);
+      setAnimationDuration(duration);
+    } else if (msg.prev) {
+      const interval = msg.timestamp.getTime() - msg.prev.timestamp.getTime();
+      const duration = msg.timestamp.getTime() + interval - Date.now();
+      setLastMessageInterval(interval);
+      setAnimationDuration(duration);
     }
 
     setValue(msg.value);
@@ -70,5 +78,5 @@ export const useTopic = (topic: string) => {
     }
   }, [timestamp]);
 
-  return { value, lastUpdated, timestamp, suspicious, lastMessageInterval };
+  return { value, lastUpdated, timestamp, suspicious, lastMessageInterval, animationDuration };
 };

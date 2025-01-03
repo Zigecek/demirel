@@ -1,9 +1,7 @@
-import { EventEmitter } from "eventemitter3";
 import { prisma, Status, status } from "..";
 import logger from "./loggers";
 
 export const memory: Record<string, MQTTMessage[]> = {};
-const memoryEmitter = new EventEmitter();
 const memoryLimit = 5;
 
 export const cloneMemory = () => {

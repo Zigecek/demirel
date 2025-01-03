@@ -9,6 +9,7 @@ export const useTopics = (topics: string[]) => {
   const [timestamps, setTimestamps] = useState<Record<string, Date>>({});
   const [suspicious, setSuspicious] = useState<Record<string, boolean>>({});
   const [lastMessageIntervals, setLastMessageIntervals] = useState<Record<string, number | undefined>>({});
+  const [animationDurations, setAnimationDurations] = useState<Record<string, number>>({});
 
   const updateLastUpdated = (topic: string) => {
     const timestamp = timestamps[topic];
@@ -49,6 +50,7 @@ export const useTopics = (topics: string[]) => {
     const newValues: Record<string, MQTTMessage["value"]> = {};
     const newTimestamps: Record<string, Date> = {};
     const newLastMessageIntervals: Record<string, number | undefined> = {};
+    const newAnimationDurations: Record<string, number> = {};
     const newMsgHistory: Record<string, MQTTMessage[]> = {};
 
     topics.forEach((topic) => {
@@ -65,7 +67,14 @@ export const useTopics = (topics: string[]) => {
         if (msg.timestamp.getTime() <= timestamp.getTime()) return;
 
         const interval = msg.timestamp.getTime() - timestamp.getTime();
+        const duration = msg.timestamp.getTime() + interval - Date.now();
         newLastMessageIntervals[topic] = interval;
+        newAnimationDurations[topic] = duration;
+      } else if (msg.prev) {
+        const interval = msg.timestamp.getTime() - msg.prev.timestamp.getTime();
+        const duration = msg.timestamp.getTime() + interval - Date.now();
+        newLastMessageIntervals[topic] = interval;
+        newAnimationDurations[topic] = duration;
       }
 
       newValues[topic] = msg.value;
@@ -77,6 +86,7 @@ export const useTopics = (topics: string[]) => {
     setValues((prev) => ({ ...prev, ...newValues }));
     setTimestamps((prev) => ({ ...prev, ...newTimestamps }));
     setLastMessageIntervals((prev) => ({ ...prev, ...newLastMessageIntervals }));
+    setAnimationDurations((prev) => ({ ...prev, ...newAnimationDurations }));
   }, [messages, topics]);
 
   useEffect(() => {
@@ -95,5 +105,5 @@ export const useTopics = (topics: string[]) => {
     };
   }, [timestamps, topics]);
 
-  return { values, lastUpdated, timestamps, suspicious, lastMessageIntervals };
+  return { values, lastUpdated, timestamps, suspicious, lastMessageIntervals, animationDurations };
 };

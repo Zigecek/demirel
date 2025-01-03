@@ -2,6 +2,7 @@ import React from "react";
 import { useNicknames } from "../../contexts/NicknamesContext";
 import { useTopic } from "../../hooks/useTopic";
 import { colors, suspiciousColor } from "../../main";
+import Dot from "./elementary/Dot";
 
 type ValueProps = {
   topic: string;
@@ -9,7 +10,7 @@ type ValueProps = {
 };
 
 export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
-  const { value, suspicious, lastMessageInterval, lastUpdated } = useTopic(topic);
+  const { value, suspicious, animationDuration, lastMessageInterval } = useTopic(topic);
   const { nickname } = useNicknames();
 
   return (
@@ -17,22 +18,12 @@ export const Value: React.FC<ValueProps> = ({ topic, valueF }) => {
       <h2 className="text-xl mb-2 flex flex-wrap whitespace-pre z-0">
         <span>{nickname(topic)} </span>
       </h2>
-      <p className={`text-2xl font-bold`} style={{ color: suspicious ? suspiciousColor : colors[0] }}>
-        <span className="font-semibold text-green-500 opacity-0 px-1" key={lastMessageInterval} style={{ animation: `changeOpacity ${lastMessageInterval}ms linear 1` }}>
-          ●
-        </span>
+      <p className="text-2xl font-bold" style={{ color: suspicious ? suspiciousColor : colors[0] }}>
+        <Dot duration={animationDuration!} interval={lastMessageInterval!} />
         {valueF(value + "")}
       </p>
-
-      {/*lastUpdated != undefined && (
-        <p className="text-xs text-neutral-500 mt-2">
-          Před{" "}
-          <span className={suspicious ? "font-bold" : ""} style={{ color: suspicious ? suspiciousColor : colors[0] }}>
-            {lastUpdated}
-          </span>{" "}
-          vteřinami
-        </p>
-      )*/}
     </div>
   );
 };
+
+export default Value;

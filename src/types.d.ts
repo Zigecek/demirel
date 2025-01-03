@@ -14,6 +14,7 @@ type MQTTMessage = {
   value: number | boolean;
   timestamp: Date;
   valueType: "FLOAT" | "BOOLEAN";
+  prev?: { value: number | boolean; timestamp: Date };
 };
 
 type MQTTMessageID = MQTTMessage & { id: number };
@@ -51,7 +52,7 @@ type UserLogin = {
   password: string;
 };
 
-type MQTTMessageTransfer = MQTTMessage & { timestamp: number };
+type MQTTMessageTransfer = MQTTMessage & { timestamp: number; prev?: { value: number; timestamp: number } };
 
 interface PushSubscription {
   endpoint: string;
