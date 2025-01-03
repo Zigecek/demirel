@@ -1,9 +1,14 @@
 import { EventEmitter } from "eventemitter3";
-import _ from "lodash";
 import { prisma, Status, status } from "..";
 import logger from "./loggers";
 
+export const memory: Record<string, MQTTMessage[]> = {};
 const memoryEmitter = new EventEmitter();
+const memoryLimit = 5;
+
+export const cloneMemory = () => {
+  return { ...memory };
+};
 
 export const onMemoryChange = (cb: (msg: MQTTMessage) => void) => {
   memoryEmitter.on("message", cb);
@@ -37,26 +42,17 @@ export const getFromDB = async () => {
 
   return messages;
 };
-/////////////////////////////////////////////////////////
-
-export const memory: Record<string, MQTTMessage[]> = {};
-const memoryLimit = 5;
-
-export const cloneMemory = () => {
-  return _.cloneDeep(memory);
-};
 
 export const getNFromDB = async (n: number) => {
   const messages = await prisma.$queryRaw<(MQTTMessageID & { rn: bigint })[]>`
     WITH RankedMessages AS (
-      SELECT m.*, 
-        ROW_NUMBER() OVER (PARTITION BY m.topic ORDER BY m.timestamp DESC) AS rn
-      FROM mqtt m
+      SELECT *, ROW_NUMBER() OVER (PARTITION BY topic ORDER BY timestamp DESC) AS rn
+      FROM mqtt
     )
     SELECT *
     FROM RankedMessages
     WHERE rn <= ${n}
-    ORDER BY topic ASC, timestamp DESC;
+    ORDER BY topic, timestamp DESC;
   `;
   return messages;
 };
@@ -70,7 +66,6 @@ export const loadMemory = async () => {
 };
 
 export const addMessage = async (message: MQTTMessage) => {
-  /*
   // add message to memory
   if (!memory[message.topic]) {
     memory[message.topic] = [];
@@ -79,7 +74,7 @@ export const addMessage = async (message: MQTTMessage) => {
   if (memory[message.topic].length > memoryLimit) {
     // cut the array to the memoryLimit length
     memory[message.topic] = memory[message.topic].slice(0, memoryLimit);
-  }*/
+  }
   //memoryEmitter.emit("message", message);
   logger.memory.info(`Value added to memory: ${message.topic} - ${message.value} (${memory[message.topic].length})`);
 };

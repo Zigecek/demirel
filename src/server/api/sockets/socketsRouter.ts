@@ -30,7 +30,7 @@ socketsRouter.post("/auth", authenticated, async (req: Request, res: Response) =
   gotSocket.join("auth");
 
   // Get the latest value from each topic
-  const messages = Object.values(await cloneMemory() /*).map((msgs) => msgs[0]*/);
+  const messages = Object.values(await cloneMemory()).map((msgs) => msgs[0]);
 
   gotSocket.emit("messages", [...new Set([...messages])]);
   logger.ws.info("Socket Authenticated.");
