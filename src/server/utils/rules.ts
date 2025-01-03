@@ -7,7 +7,7 @@ const getContext = (expression: string): RuleContext => {
   const context: RuleContext = {};
   extractTopics(expression).forEach((ruleTopic) => {
     if (memory[ruleTopic]) {
-      context[ruleTopic] = memory[ruleTopic].value;
+      context[ruleTopic] = memory[ruleTopic][0].value;
     }
   });
 
@@ -120,7 +120,7 @@ const getMessagesInSeconds = async (topic: string, seconds: number) => {
       }),
     ]);
 
-    return [...recentMessages, memory[topic], ...(previousMessage ? [previousMessage] : [])];
+    return [...recentMessages, memory[topic][0], ...(previousMessage ? [previousMessage] : [])];
   });
 };
 
@@ -145,7 +145,7 @@ async function ZMENA(expression: string) {
 
     // zde budeš muset zjistit, zda je topic ve správném formátu
     // pokud není, tak bys měl vyhodit chybu
-    if (!memory[topic]) {
+    if (!(memory[topic].length > 0)) {
       return replacedExpression;
     }
 
@@ -163,7 +163,7 @@ async function ZMENA(expression: string) {
 
     // zde budeš muset zjistit, zda je value ve správném rozsahu
     // pokud není, tak bys měl vyhodit chybu
-    if (memory[topic].valueType === "FLOAT") {
+    if (memory[topic][0].valueType === "FLOAT") {
       if (isNaN(+seconds)) {
         return replacedExpression;
       }
@@ -174,7 +174,7 @@ async function ZMENA(expression: string) {
 
     const dbHistory = await getMessagesInSeconds(topic, +seconds);
 
-    if (memory[topic].valueType === "FLOAT") {
+    if (memory[topic][0].valueType === "FLOAT") {
       const vals = dbHistory.map((item) => (item.value !== null ? +item.value : 0));
       const min = Math.min(...vals);
       const max = Math.max(...vals);
@@ -191,7 +191,7 @@ async function ZMENA(expression: string) {
       }
 
       replacedExpression = replacedExpression.replace(fullMatch, result + "");
-    } else if (memory[topic].valueType === "BOOLEAN") {
+    } else if (memory[topic][0].valueType === "BOOLEAN") {
       let changes = 0;
 
       // smer == + => vzestupna hrana
@@ -237,7 +237,7 @@ async function TRVA(expression: string) {
 
     // zde budeš muset zjistit, zda je topic ve správném formátu
     // pokud není, tak bys měl vyhodit chybu
-    if (!memory[topic]) {
+    if (!(memory[topic].length > 0)) {
       return replacedExpression;
     }
 
@@ -251,7 +251,7 @@ async function TRVA(expression: string) {
     // pokud není, tak bys měl vyhodit chybu
     if (
       !validateExpression(`{${topic}} ${condition}`, {
-        [topic]: memory[topic].valueType === "FLOAT" ? "number" : "boolean",
+        [topic]: memory[topic][0].valueType === "FLOAT" ? "number" : "boolean",
       })
     ) {
       return replacedExpression;
@@ -293,7 +293,7 @@ const POSLEDNI = async (expression: string) => {
 
     // zde budeš muset zjistit, zda je topic ve správném formátu
     // pokud není, tak bys měl vyhodit chybu
-    if (!memory[topic]) {
+    if (!(memory[topic].length > 0)) {
       return replacedExpression;
     }
 

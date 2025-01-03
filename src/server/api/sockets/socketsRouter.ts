@@ -1,6 +1,6 @@
 import express, { type Request, type Response, type Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { io } from "../../index";
+import { io } from "../..";
 import { authenticated } from "../../middlewares/authenticated";
 import { handleServiceResponse } from "../../utils/httpHandlers";
 import logger from "../../utils/loggers";

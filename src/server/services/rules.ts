@@ -1,6 +1,6 @@
 import { prisma, Status, status } from "..";
 import logger from "../utils/loggers";
-import { memory, onMemoryChange } from "../utils/memory";
+import { memory } from "../utils/memory";
 import { completeEval, replaceAll, replaceTopicsBasic } from "../utils/rules";
 import { sendNotification } from "../utils/webpush";
 
@@ -143,8 +143,5 @@ export const start = async () => {
   logger.rules.info("Starting rules service.");
   await loadRules();
   await setTypes();
-  onMemoryChange((msg) => {
-    checkRule(msg.topic);
-  });
   status.rules = Status.RUNNING;
 };

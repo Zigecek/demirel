@@ -10,14 +10,6 @@ export const cloneMemory = () => {
   return { ...memory };
 };
 
-export const onMemoryChange = (cb: (msg: MQTTMessage) => void) => {
-  memoryEmitter.on("message", cb);
-};
-
-export const offMemoryChange = (cb: (msg: MQTTMessage) => void) => {
-  memoryEmitter.off("message", cb);
-};
-
 // get last messages from db
 export const getFromDB = async () => {
   const latestTimestamps = await prisma.mqtt.groupBy({
@@ -65,7 +57,7 @@ export const loadMemory = async () => {
   });
 };
 
-export const addMessage = async (message: MQTTMessage) => {
+export const addMessage = (message: MQTTMessage) => {
   // add message to memory
   if (!memory[message.topic]) {
     memory[message.topic] = [];
@@ -77,6 +69,7 @@ export const addMessage = async (message: MQTTMessage) => {
   }
   //memoryEmitter.emit("message", message);
   logger.memory.info(`Value added to memory: ${message.topic} - ${message.value} (${memory[message.topic].length})`);
+  return message;
 };
 
 export const start = async () => {

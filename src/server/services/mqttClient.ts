@@ -4,6 +4,7 @@ import { io, prisma, Status, status } from "..";
 import { env } from "../utils/env";
 import logger from "../utils/loggers";
 import { addMessage, cloneMemory } from "../utils/memory";
+import { checkRule } from "./rules";
 
 export const mqConfig = {
   url: env.MQTT_URL,
@@ -96,7 +97,7 @@ mqtt.on("message", (topic, message: Buffer) => {
     } as MQTTMessage);
     scheduleProcessing(); // Trigger processing with buffering
 
-    addMessage({ topic, value: val, timestamp: when, valueType } as MQTTMessage);
+    checkRule(addMessage({ topic, value: val, timestamp: when, valueType } as MQTTMessage).topic);
   }
 });
 
