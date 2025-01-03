@@ -3,7 +3,7 @@ import { connect } from "mqtt";
 import { io, prisma, Status, status } from "..";
 import { env } from "../utils/env";
 import logger from "../utils/loggers";
-import { addMessage, cloneMemory } from "../utils/memory";
+import { addMessage, cloneMemory, getFromDB } from "../utils/memory";
 import { checkRule } from "./rules";
 
 export const mqConfig = {
@@ -130,6 +130,7 @@ const processQueue = async () => {
 
 const saveToPrisma = async (messages: MQTTMessage[]) => {
   const mem = await cloneMemory();
+  const db = await getFromDB();
 
   const updates: Array<Prisma.mqttUpdateArgs> = [];
   const inserts: Array<Prisma.mqttCreateArgs> = [];
@@ -141,6 +142,7 @@ const saveToPrisma = async (messages: MQTTMessage[]) => {
 
     const lastValue = lastValueArray ? lastValueArray[1] : undefined;
     const lastValue2 = lastValueArray ? lastValueArray[2] : undefined;
+    const lastDbValue = db.find((dbMsg) => dbMsg.topic === msg.topic);
 
     // NEW TOPIC
     if (lastValue == undefined || lastValue2 == undefined) {
@@ -155,8 +157,6 @@ const saveToPrisma = async (messages: MQTTMessage[]) => {
       return;
     }
 
-    const uniqueWhere = { topic_timestamp: { topic: lastValue.topic, timestamp: lastValue.timestamp } };
-
     // FLOAT
     if (msg.valueType === MqttValueType.FLOAT) {
       // comparing new value to last two values to reduce fluctuations
@@ -170,7 +170,9 @@ const saveToPrisma = async (messages: MQTTMessage[]) => {
       // record only value changes
       if (lastValue?.value === msg.value) {
         updates.push({
-          where: uniqueWhere,
+          where: {
+            id: lastDbValue?.id,
+          },
           data: { timestamp: msg.timestamp },
         });
         return;
