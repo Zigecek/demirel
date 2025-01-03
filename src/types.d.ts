@@ -14,7 +14,7 @@ type MQTTMessage = {
   value: number | boolean;
   timestamp: Date;
   valueType: "FLOAT" | "BOOLEAN";
-  prev?: { value: number | boolean; timestamp: Date };
+  prev?: MQTTMessage;
 };
 
 type MQTTMessageID = MQTTMessage & { id: number };

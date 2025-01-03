@@ -33,7 +33,7 @@ socketsRouter.post("/auth", authenticated, async (req: Request, res: Response) =
   const messages: MQTTMessage[] = Object.values(await cloneMemory()).map((msgs) => {
     return {
       ...msgs[0],
-      prev: msgs[1] ? { value: msgs[1].value, timestamp: msgs[1].timestamp } : undefined,
+      prev: msgs[1] ? { ...msgs[1] } : undefined,
     };
   });
 
