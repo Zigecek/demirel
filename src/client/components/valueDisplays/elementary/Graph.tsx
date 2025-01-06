@@ -5,7 +5,6 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import zoomPlugin from "chartjs-plugin-zoom";
 import { eachDayOfInterval, startOfDay } from "date-fns";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Line } from "react-chartjs-2";
 import { useDark } from "../../../contexts/DarkContext";
 import { useMessages } from "../../../contexts/MessagesContext";
 import { useNicknames } from "../../../contexts/NicknamesContext";
@@ -28,7 +27,9 @@ type Bounds = { min: number; max: number; minDefined: boolean; maxDefined: boole
 
 export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) => {
   // GLOBAL STATES //
-  const chartRef = useRef<any>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chartInstanceRef = useRef<ChartJS | null>(null);
+
   const { addToHistory } = useMessages();
   const { nickname } = useNicknames();
   const { user, chartLock } = useUser();
@@ -321,6 +322,24 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     });
   }, [dataPoints, isUserInteracting, timeUnit, suspicious, user, chartLock, dark]);
 
+  // native chart.js creation useEffect
+  useEffect(() => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d");
+      if (ctx) {
+        chartInstanceRef.current = new ChartJS(ctx, {
+          type: "line",
+          data: data,
+          options: options,
+        });
+      }
+    }
+
+    return () => {
+      chartInstanceRef.current?.destroy();
+    };
+  }, [data, options]);
+
   useEffect(() => {
     if (!dataPoints) return;
     if (isUserInteracting) return;
@@ -347,11 +366,12 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
   }, []);
 
   const updateChart = () => {
-    if (chartRef.current && chartRef.current.canvas && chartRef.current.canvas.style) {
-      chartRef.current.canvas.style.width = "100%";
-    }
-    if (chartRef.current) {
-      chartRef.current.update();
+    if (chartInstanceRef.current) {
+      const chart = chartInstanceRef.current;
+      if (chart.canvas && chart.canvas.style) {
+        chart.canvas.style.width = "100%"; // Ensure responsive width for the chart
+      }
+      chart.update(); // Trigger an update on the chart instance
     }
   };
 
@@ -391,11 +411,14 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
 
   // Add right-click event listener for resetting zoom
   useEffect(() => {
-    const canvas = chartRef.current?.canvas?.parentNode;
+    const canvas = canvasRef.current;
 
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      resetZoom();
+      if (chartInstanceRef.current) {
+        // Reset zoom using the Chart.js plugin API
+        chartInstanceRef.current.resetZoom();
+      }
     };
 
     if (canvas) {
@@ -409,5 +432,5 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     };
   }, [dataPoints]);
 
-  return <>{options != undefined && data != undefined && <Line style={style} ref={chartRef} data={data} options={options} />}</>;
+  return <>{options != undefined && data != undefined && <canvas ref={canvasRef} style={style}></canvas>}</>;
 };
