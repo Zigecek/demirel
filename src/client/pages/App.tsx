@@ -10,6 +10,7 @@ import { Chart } from "../components/valueDisplays/Chart";
 import { AverageValue } from "../components/valueDisplays/elementary/AverageValue";
 import { DailyHistory } from "../components/valueDisplays/Stats";
 import { Value } from "../components/valueDisplays/Value";
+import Wind from "../components/valueDisplays/Wind";
 import { useDark } from "../contexts/DarkContext";
 import { useUser } from "../contexts/UserContext";
 import { useNotification } from "../hooks/useNotification";
@@ -104,7 +105,11 @@ export default function App() {
               <DailyHistory topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
               <Chart topics={["zige/meteo/press/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
               <DailyHistory topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
-              <Chart topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
+              <div className="flex flex-row justify-center items-stretch box-border h-full">
+                <Chart className="flex-grow flex-shrink flex-basis-0" topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
+                <Wind className="flex-shrink-0" topic="zige/meteo/anemoscope/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°")} />
+              </div>
+
               <DailyHistory topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
             </div>
           </div>

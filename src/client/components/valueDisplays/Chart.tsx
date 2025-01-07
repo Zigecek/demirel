@@ -8,13 +8,14 @@ type ChartProps = {
   topics: string[];
   boolean?: boolean;
   valueF?: (msg: any) => string;
+  className?: string;
 };
 
-export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = (msg: any) => msg }) => {
+export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = (msg: any) => msg, className = "" }) => {
   const { nickname } = useNicknames();
   const { values } = useTopics(topics);
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-md p-2 m-1">
+    <div className={`bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-md p-2 m-1 ${className}`}>
       <h2 className="text-xl mb-2">
         {topics.map((t, i) => {
           return (
@@ -30,10 +31,8 @@ export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = 
         })}
       </h2>
 
-      <div className="flex flex-row">
-        <div className="flex-1 w-full max-w-full" style={{ height: boolean ? "200px" : topics.length * 30 + 300 }}>
-          <Graph topics={topics} boolean={boolean} />
-        </div>
+      <div style={{ height: boolean ? "200px" : topics.length * 30 + 300 }}>
+        <Graph className="w-full max-w-full" topics={topics} boolean={boolean} />
       </div>
     </div>
   );

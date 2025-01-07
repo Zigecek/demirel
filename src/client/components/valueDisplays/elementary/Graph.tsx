@@ -21,11 +21,12 @@ type GraphProps = {
   topics: string[];
   style?: React.CSSProperties;
   boolean?: boolean;
+  className?: string;
 };
 
 type Bounds = { min: number; max: number; minDefined: boolean; maxDefined: boolean };
 
-export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) => {
+export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, className = "" }) => {
   // GLOBAL STATES //
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<ChartJS | null>(null);
@@ -432,5 +433,5 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false }) 
     };
   }, [dataPoints]);
 
-  return <>{options != undefined && data != undefined && <canvas ref={canvasRef} style={style}></canvas>}</>;
+  return <>{options != undefined && data != undefined && <canvas className={`${className}`} ref={canvasRef} style={style}></canvas>}</>;
 };
