@@ -63,7 +63,7 @@ export default function App() {
             </button>
             <Switch
               value={!chartLock}
-              onChange={(e) => {
+              onChange={() => {
                 setChartLock((prev) => !prev);
               }}
             />
@@ -105,12 +105,13 @@ export default function App() {
               <DailyHistory topic="zige/meteo/hum/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "%")} />
               <Chart topics={["zige/meteo/press/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
               <DailyHistory topic="zige/meteo/press/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "hPa")} />
-              <div className="flex flex-row justify-center items-stretch box-border h-full">
-                <Chart className="flex-grow flex-shrink flex-basis-0" topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
-                <Wind className="flex-shrink-0" topic="zige/meteo/anemoscope/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°")} />
+              <div className="flex flex-row justify-center items-stretch h-full">
+                <Chart className="flex-grow" topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
+                <Wind className="" topic="zige/meteo/anemoscope/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°")} />
               </div>
 
               <DailyHistory topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
+              <DailyHistory topic="zige/meteo/anemoscope/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°")} />
             </div>
           </div>
         </>

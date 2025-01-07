@@ -208,7 +208,9 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     };
 
     const maxTimestamp = Date.now();
-    const defaultView = maxTimestamp - defaultBound;
+    const width = canvasRef.current?.style.width;
+    const screenWidth = window.innerWidth;
+    const defaultView = maxTimestamp - defaultBound * (parseInt(width || "1") / screenWidth);
 
     const minX = bounds?.minDefined ? bounds.min : defaultView;
     const maxX = bounds?.maxDefined ? bounds.max : maxTimestamp;
@@ -356,7 +358,9 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   useEffect(() => {
     if (bounds == undefined) {
       const maxTimestamp = Date.now();
-      const defaultView = maxTimestamp - defaultBound;
+      const width = canvasRef.current?.style.width;
+      const screenWidth = window.innerWidth;
+      const defaultView = maxTimestamp - defaultBound * (parseInt(width || "1") / screenWidth);
       setBounds({
         min: defaultView,
         max: maxTimestamp,
@@ -369,8 +373,8 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   const updateChart = () => {
     if (chartInstanceRef.current) {
       const chart = chartInstanceRef.current;
-      if (chart.canvas && chart.canvas.style) {
-        chart.canvas.style.width = "100%"; // Ensure responsive width for the chart
+      if (!isUserInteracting) {
+        resetZoom();
       }
       chart.update(); // Trigger an update on the chart instance
     }
@@ -398,7 +402,11 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
           .flat()
           .map((dp) => dp.timestamp.getTime())
       );
-      const defaultView = maxTimestamp - defaultBound;
+
+      const width = canvasRef.current?.style.width;
+      // get device display width, not window width (window.innerWidth;)
+      const screenWidth = window.innerWidth;
+      const defaultView = maxTimestamp - defaultBound * (parseInt(width || "1") / screenWidth);
       setBounds({
         min: defaultView,
         max: maxTimestamp,
@@ -433,5 +441,5 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     };
   }, [dataPoints]);
 
-  return <>{options != undefined && data != undefined && <canvas className={`${className}`} ref={canvasRef} style={style}></canvas>}</>;
+  return <>{options != undefined && data != undefined && <canvas className={`${className}`} ref={canvasRef} style={{ ...style, width: "100%", height: "100%" }}></canvas>}</>;
 };

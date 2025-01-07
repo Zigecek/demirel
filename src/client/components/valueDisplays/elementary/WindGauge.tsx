@@ -9,7 +9,6 @@ interface WindGaugeProps {
 const WindGauge: React.FC<WindGaugeProps> = ({ direction, valueF, className = "" }) => {
   const arrowRef = useRef<HTMLDivElement>(null);
 
-  // Map wind direction to Czech labels, starting from North at index 0
   const directions = ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"];
 
   useEffect(() => {
@@ -19,8 +18,8 @@ const WindGauge: React.FC<WindGaugeProps> = ({ direction, valueF, className = ""
   }, [direction]);
 
   return (
-    <div className={`flex items-center justify-center w-full h-full ${className}`}>
-      <div className="relative aspect-square w-full max-w-[20rem]">
+    <div className={`flex items-center justify-center box-border w-full h-full aspect-square ${className}`}>
+      <div className="relative aspect-square w-full max-w">
         {/* Outer Circular Grid */}
         <div className="absolute inset-0 rounded-full grid place-items-center">
           {/* Radar-style concentric circles */}

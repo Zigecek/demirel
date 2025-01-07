@@ -23,16 +23,15 @@ export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = 
               {nickname(t)}
               {":"}
               <span className="font-semibold" style={{ color: colors[i] }}>
-                {" "}
-                {valueF(values[t])}{" "}
+                {` ${valueF(values[t])} `}
               </span>
             </span>
           );
         })}
       </h2>
 
-      <div style={{ height: boolean ? "200px" : topics.length * 30 + 300 }}>
-        <Graph className="w-full max-w-full" topics={topics} boolean={boolean} />
+      <div style={{ height: boolean ? "200px" : `${topics.length * 30 + 300}px` }}>
+        <Graph /*className="w-full max-w-full"*/ topics={topics} boolean={boolean} />
       </div>
     </div>
   );
