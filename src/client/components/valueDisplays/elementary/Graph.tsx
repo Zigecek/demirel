@@ -1,4 +1,4 @@
-import { CategoryScale, Chart as ChartJS, Legend, LinearScale, LineElement, PointElement, Title, Tooltip } from "chart.js";
+import { CategoryScale, Chart as ChartJS, Legend, LinearScale, LineElement, PointElement, registerables, Title, Tooltip } from "chart.js";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
 import annotationPlugin from "chartjs-plugin-annotation";
@@ -14,6 +14,7 @@ import { colors, suspiciousColor } from "../../../main";
 import { postMqttData } from "../../../proxy/endpoints";
 
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(...registerables);
 
 const defaultBound = 1.5 * 24 * 60 * 60 * 1000;
 
@@ -223,7 +224,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       borderColor: suspicious[topic] ? suspiciousColor : colors[topics.indexOf(topic) % colors.length],
       borderWidth: 2,
       fill: false,
-      pointRadius: 1,
+      pointRadius: 0.5,
       animation: true,
     }));
 
@@ -286,6 +287,11 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         intersect: false,
       },
       plugins: {
+        decimation: {
+          enabled: true, // Turn on decimation
+          algorithm: "lttb", // 'lttb' (Largest Triangle Three Buckets) is ideal for time-series data
+          samples: 500, // Maximum points to display
+        },
         tooltip: {
           enabled: chartLock,
           bodyColor: dark ? "#ffffff" : "#000000", // Barva tooltip textu

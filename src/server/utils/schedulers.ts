@@ -13,5 +13,5 @@ export function onEachDay(fn: () => void) {
     setInterval(fn, 24 * 60 * 60 * 1000);
   }, timeUntilNextDay);
 
-  fn();
+  //fn();
 }

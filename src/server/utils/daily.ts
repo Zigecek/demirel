@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "..";
 import { calculateStats, getDayDates } from "../../globals/daily";
-import logger from "../utils/loggers";
+import logger from "./loggers";
 
 export async function createDailyStats(topic: string | "all" = "all", date: Date | "all" = "all") {
   logger.daily.info("Creating daily stats: " + topic + " - " + date);

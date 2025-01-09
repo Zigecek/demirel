@@ -1,22 +1,19 @@
 import Prisma from "@prisma/client";
-import { Server } from "socket.io";
+import { Server as HttpServer } from "http";
+import { Server as IoServer } from "socket.io";
 import ViteExpress from "vite-express";
 import { app, sessionDBaccess } from "./server";
-import { createDailyStats } from "./services/daily";
 import "./services/mqttClient";
 import { endClient } from "./services/mqttClient";
 import { connectClient, endTransceiver } from "./services/mqttTransceiver";
 import { start as startPgMon } from "./services/pgMon";
 import { start as startRules } from "./services/rules";
+import { createDailyStats } from "./utils/daily";
 import { env } from "./utils/env";
 import logger from "./utils/loggers";
 import { start as startMem } from "./utils/memory";
 import { onEachDay } from "./utils/schedulers";
 const { PrismaClient } = Prisma;
-
-if (env.RUNNER === "rpi") {
-  connectClient();
-}
 
 export enum Status {
   RUNNING,
@@ -41,6 +38,9 @@ export const prisma = new PrismaClient({
   //log: ["query", "info", "warn", "error"],
 });
 
+export let server: HttpServer;
+export let io: IoServer;
+
 prisma
   .$connect()
   .then(async () => {
@@ -52,9 +52,15 @@ prisma
 
     // schedule daily stats creation
     onEachDay(() => {
-      createDailyStats("all", new Date());
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      createDailyStats("all", yesterday);
     });
     status.daily = Status.RUNNING;
+    // Create daily stats for the previous day
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    createDailyStats("all", yesterday);
   })
   .catch((e) => {
     logger.db.error(`Prisma: Connection failed: ${e}`);
@@ -66,7 +72,8 @@ ViteExpress.config({
   mode: (env.NODE_ENV as "development" | "production" | undefined) ?? "development",
 });
 
-export const server = ViteExpress.listen(app, env.PORT, () => {
+// eslint-disable-next-line prefer-const
+server = ViteExpress.listen(app, env.PORT, () => {
   const { NODE_ENV, HOST, PORT } = env;
   logger.vite.info(`Started ${NODE_ENV} on http://${HOST}:${PORT}`);
   status.vite = Status.RUNNING;
@@ -82,7 +89,8 @@ server.on("error", (e) => {
   });
 });
 
-export const io = new Server(server, {
+// eslint-disable-next-line prefer-const
+io = new IoServer(server, {
   transports: ["websocket", "polling", "webtransport"],
   allowEIO3: true,
   connectionStateRecovery: {
@@ -93,6 +101,10 @@ export const io = new Server(server, {
 
 logger.ws.info("Started.");
 status.ws = Status.RUNNING;
+
+if (env.RUNNER === "rpi") {
+  connectClient();
+}
 
 export const onCloseSignal = async () => {
   logger.system.warn("System: Closing server...");
