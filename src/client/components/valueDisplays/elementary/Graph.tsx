@@ -45,7 +45,8 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     minDefined: true,
     maxDefined: true,
   });
-  const [boundsTimeout, setBoundsTimeout] = useState<NodeJS.Timeout | null>(null);
+  const boundsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [mouseUp, setMouseUp] = useState(true);
 
   // User interaction state and timeout for resetting zoom
   const [isUserInteracting, setIsUserInteracting] = useState(false);
@@ -122,70 +123,60 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     }
   };
 
+  const handleDataFetch = (bounds: Bounds) => {
+    if (!bounds || !user) return;
+
+    if (bounds.min >= loaded.min && bounds.max <= loaded.max) return;
+
+    const postMin = bounds.min < loaded.min ? bounds.min : loaded.max;
+    const postMax = bounds.max > loaded.max ? bounds.max : loaded.min;
+
+    if (postMin < loaded.min && postMax > loaded.max && loaded.min < loaded.max) {
+      Promise.all([postMqttData({ start: postMin, end: loaded.min, topics, boolean }), postMqttData({ start: loaded.max, end: postMax, topics, boolean })]).then(([res1, res2]) => {
+        if (res1.success) {
+          setLoaded((prev) => ({ min: postMin, max: prev.max }));
+        }
+        if (res2.success) {
+          setLoaded((prev) => ({ min: prev.min, max: postMax }));
+        }
+        processAndSetHttpPoints([...(res2.success ? res2.responseObject : []), ...(res1.success ? res1.responseObject : [])]);
+      });
+    } else {
+      postMqttData({ start: postMin, end: postMax, topics, boolean }).then((res) => {
+        if (res.success) {
+          setLoaded((prev) => ({
+            min: Math.min(prev.min, postMin),
+            max: Math.max(prev.max, postMax),
+          }));
+          processAndSetHttpPoints(res.responseObject);
+        }
+      });
+    }
+  };
+
+  // Effect for debounced bounds changes
   useEffect(() => {
-    if (boundsTimeout) clearTimeout(boundsTimeout);
+    if (boundsTimeoutRef.current) clearTimeout(boundsTimeoutRef.current);
+
     if (bounds) {
       setTimeUnitByBounds(bounds.min, bounds.max);
+
+      boundsTimeoutRef.current = setTimeout(() => {
+        handleDataFetch(bounds);
+      }, 300);
     }
-    if (!user) return;
 
-    const timeout = setTimeout(() => {
-      if (!bounds) return;
-      if (bounds.min >= loaded.min && bounds.max <= loaded.max) return;
-
-      // get needed interval of timestamps for data fetching
-      const postMin: number = bounds.min < loaded.min ? bounds.min : loaded.max;
-      const postMax: number = bounds.max > loaded.max ? bounds.max : loaded.min;
-
-      // if the new interval contains the old one, post the difference (two intervals)
-      if (postMin < loaded.min && postMax > loaded.max && loaded.min < loaded.max) {
-        setLoading(true);
-        postMqttData({
-          start: postMin,
-          end: loaded.min,
-          topics,
-          boolean,
-        }).then((res) => {
-          if (res.success) {
-            setLoaded((prev) => ({ min: postMin, max: prev.max }));
-            processAndSetHttpPoints(res.responseObject);
-            setLoading(false);
-          }
-        });
-
-        postMqttData({
-          start: loaded.max,
-          end: postMax,
-          topics,
-          boolean,
-        }).then((res) => {
-          if (res.success) {
-            setLoaded((prev) => ({ min: prev.min, max: postMax }));
-            processAndSetHttpPoints(res.responseObject);
-            setLoading(false);
-          }
-        });
-      } else {
-        setLoading(true);
-        postMqttData({
-          start: postMin,
-          end: postMax,
-          topics,
-          boolean,
-        }).then((res) => {
-          if (res.success) {
-            // union loaded interval with new interval
-            setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
-            processAndSetHttpPoints(res.responseObject);
-            setLoading(false);
-          }
-        });
-      }
-    }, 100);
-
-    setBoundsTimeout(timeout);
-    return () => clearTimeout(timeout);
+    return () => {
+      if (boundsTimeoutRef.current) clearTimeout(boundsTimeoutRef.current);
+    };
   }, [bounds, user]);
+
+  // Effect for immediate mouseUp changes
+  useEffect(() => {
+    if (mouseUp && !chartLock) {
+      handleDataFetch(bounds);
+    }
+  }, [mouseUp, user]);
 
   // main datapoints useEffect
   useEffect(() => {
@@ -458,13 +449,26 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       resetZoom();
     };
 
+    const handleMouseDown = (_e: MouseEvent) => {
+      setMouseUp(false);
+
+      const globalMouseUp = (_e: MouseEvent) => {
+        setMouseUp(true);
+        document.removeEventListener("mouseup", globalMouseUp);
+      };
+
+      document.addEventListener("mouseup", globalMouseUp);
+    };
+
     if (canvas) {
       canvas.addEventListener("contextmenu", handleContextMenu);
+      canvas.addEventListener("mousedown", handleMouseDown);
     }
 
     return () => {
       if (canvas) {
         canvas.removeEventListener("contextmenu", handleContextMenu);
+        canvas.removeEventListener("mouseup", handleMouseDown);
       }
     };
   }, [shownPoints]);
