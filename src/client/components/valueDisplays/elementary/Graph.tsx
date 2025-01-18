@@ -39,7 +39,12 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   const { dark } = useDark();
 
   // Bounds for data fetching and timeout for debouncing
-  const [bounds, setBounds] = useState<Bounds>();
+  const [bounds, setBounds] = useState<Bounds>({
+    min: Date.now() - defaultBound,
+    max: Date.now(),
+    minDefined: true,
+    maxDefined: true,
+  });
   const [boundsTimeout, setBoundsTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // User interaction state and timeout for resetting zoom
@@ -50,47 +55,51 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   const [options, setOptions] = useState<any>();
 
   // timestamp interval for data fetching in milliseconds
-  const [loaded, setLoaded] = useState({ min: Number.MAX_SAFE_INTEGER, max: 0 });
+  const [loaded, setLoaded] = useState({ min: Date.now(), max: Number.MAX_SAFE_INTEGER });
+  const [loading, setLoading] = useState(false);
 
   // time unit
   const [timeUnit, setTimeUnit] = useState("day");
 
   // TOPIC STATES //
   const { values, timestamps, suspicious } = useTopics(topics);
-  const [allPoints, setAllPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
+  const [httpPoints, setHttpPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
+  const [wsPoints, setWsPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
   const [shownPoints, setShownPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
+  const [minMax, setMinMax] = useState<{ min: number; max: number }>({ min: Number.MAX_SAFE_INTEGER, max: 0 });
 
   // when values or timestamps change, add new data points
   useEffect(() => {
     topics.forEach((topic) => {
       if (values[topic] != undefined && timestamps[topic]) {
-        setAllPoints((prevData) => {
+        setShownPoints((prevData) => {
           const newData = { ...prevData };
-          newData[topic] = [...(newData[topic] || []), { value: values[topic] as number, timestamp: timestamps[topic] }]
-            // remove duplicates
-            .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
-            // sort by timestamp
-            .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+          newData[topic] = [...(newData[topic] || []), { value: values[topic] as number, timestamp: timestamps[topic] }];
+          return newData;
+        });
+        setWsPoints((prevData) => {
+          const newData = { ...prevData };
+          newData[topic] = [...(newData[topic] || []), { value: values[topic] as number, timestamp: timestamps[topic] }];
           return newData;
         });
       }
     });
   }, [values, timestamps]);
 
-  const processAndSetDataPoints = (msgs: MQTTMessageTransfer[], topic: string) => {
-    setAllPoints((prevData) => {
-      const newData = { ...prevData };
-      newData[topic] = [
-        ...(newData[topic] || []),
-        ...msgs.map((msg) => ({
+  const processAndSetHttpPoints = (msgs: MQTTMessageTransfer[]) => {
+    setHttpPoints((prevData) => {
+      const newData = { ...mergePoints(prevData, wsPoints) };
+      msgs.forEach((msg) => {
+        const topic = msg.topic;
+        if (!newData[topic]) {
+          newData[topic] = [];
+        }
+        newData[topic].push({
           value: msg.value as number,
           timestamp: new Date(msg.timestamp),
-        })),
-      ]
-        // remove duplicates
-        .filter((value, index, self) => self.findIndex((v) => v.timestamp.getTime() === value.timestamp.getTime()) === index)
-        // sort by timestamp
-        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        });
+      });
+
       return newData;
     });
 
@@ -115,11 +124,9 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
 
   useEffect(() => {
     if (boundsTimeout) clearTimeout(boundsTimeout);
-
     if (bounds) {
       setTimeUnitByBounds(bounds.min, bounds.max);
     }
-
     if (!user) return;
 
     const timeout = setTimeout(() => {
@@ -130,58 +137,48 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       const postMin: number = bounds.min < loaded.min ? bounds.min : loaded.max;
       const postMax: number = bounds.max > loaded.max ? bounds.max : loaded.min;
 
-      // get newest data point from data points
-      const newestDataPoint = Math.max(
-        ...Object.values(shownPoints)
-          .flat()
-          .map((dp) => dp.timestamp.getTime())
-      );
-
-      if (postMax > newestDataPoint) {
-        setLoaded((prev) => ({ ...prev, max: Number.MAX_SAFE_INTEGER }));
-      }
-
       // if the new interval contains the old one, post the difference (two intervals)
       if (postMin < loaded.min && postMax > loaded.max && loaded.min < loaded.max) {
-        topics.forEach((topic) => {
-          postMqttData({
-            start: postMin,
-            end: loaded.min,
-            topic,
-            boolean,
-          }).then((res) => {
-            if (res.success) {
-              setLoaded((prev) => ({ min: postMin, max: prev.max }));
-              processAndSetDataPoints(res.responseObject, topic);
-            }
-          });
+        setLoading(true);
+        postMqttData({
+          start: postMin,
+          end: loaded.min,
+          topics,
+          boolean,
+        }).then((res) => {
+          if (res.success) {
+            setLoaded((prev) => ({ min: postMin, max: prev.max }));
+            processAndSetHttpPoints(res.responseObject);
+            setLoading(false);
+          }
+        });
 
-          postMqttData({
-            start: loaded.max,
-            end: postMax,
-            topic,
-            boolean,
-          }).then((res) => {
-            if (res.success) {
-              setLoaded((prev) => ({ min: prev.min, max: postMax }));
-              processAndSetDataPoints(res.responseObject, topic);
-            }
-          });
+        postMqttData({
+          start: loaded.max,
+          end: postMax,
+          topics,
+          boolean,
+        }).then((res) => {
+          if (res.success) {
+            setLoaded((prev) => ({ min: prev.min, max: postMax }));
+            processAndSetHttpPoints(res.responseObject);
+            setLoading(false);
+          }
         });
       } else {
-        topics.forEach((topic) => {
-          postMqttData({
-            start: postMin,
-            end: postMax,
-            topic,
-            boolean,
-          }).then((res) => {
-            if (res.success) {
-              // union loaded interval with new interval
-              setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
-              processAndSetDataPoints(res.responseObject, topic);
-            }
-          });
+        setLoading(true);
+        postMqttData({
+          start: postMin,
+          end: postMax,
+          topics,
+          boolean,
+        }).then((res) => {
+          if (res.success) {
+            // union loaded interval with new interval
+            setLoaded((prev) => ({ min: Math.min(prev.min, postMin), max: Math.max(prev.max, postMax) }));
+            processAndSetHttpPoints(res.responseObject);
+            setLoading(false);
+          }
         });
       }
     }, 100);
@@ -211,13 +208,8 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       return midnightAnnotations;
     };
 
-    const maxTimestamp = Date.now();
-    const width = canvasRef.current?.style.width;
-    const screenWidth = window.innerWidth;
-    const defaultView = maxTimestamp - defaultBound * (parseInt(width || "1") / screenWidth);
-
-    const minX = bounds?.minDefined ? bounds.min : defaultView;
-    const maxX = bounds?.maxDefined ? bounds.max : maxTimestamp;
+    const minX = bounds?.minDefined ? bounds.min : Date.now() - defaultBound;
+    const maxX = bounds?.maxDefined ? bounds.max : Date.now();
 
     const midnightAnnotations = generateMidnightAnnotations(minX, maxX);
 
@@ -236,19 +228,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       datasets,
     });
 
-    const min = Math.min(
-      ...Object.values(shownPoints)
-        .flat()
-        .map((dp) => dp.value)
-    );
-
-    const max = Math.max(
-      ...Object.values(shownPoints)
-        .flat()
-        .map((dp) => dp.value)
-    );
-
-    const dif = (max - min) * 0.1;
+    const dif = (minMax.max - minMax.min) * 0.1;
 
     setOptions({
       responsive: true,
@@ -262,8 +242,8 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
           ticks: {
             color: dark ? "#ffffff" : "#000000", // Barva popisků osy X
           },
-          min: min - dif,
-          max: max + dif,
+          min: minMax.min - dif,
+          max: minMax.max + dif,
         },
         x: {
           grid: {
@@ -291,11 +271,6 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         intersect: false,
       },
       plugins: {
-        decimation: {
-          enabled: true, // Turn on decimation
-          algorithm: "lttb", // 'lttb' (Largest Triangle Three Buckets) is ideal for time-series data
-          samples: 500, // Maximum points to display
-        },
         tooltip: {
           enabled: chartLock,
           bodyColor: dark ? "#ffffff" : "#000000", // Barva tooltip textu
@@ -309,7 +284,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         },
         zoom: {
           pan: {
-            enabled: chartLock,
+            enabled: chartLock && !loading,
             mode: "x",
             onPan: ({ chart }: { chart: ChartJS }) => {
               onZoomPan(chart);
@@ -317,10 +292,10 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
           },
           zoom: {
             wheel: {
-              enabled: chartLock,
+              enabled: chartLock && !loading,
             },
             pinch: {
-              enabled: chartLock,
+              enabled: chartLock && !loading,
             },
             mode: "x",
             onZoom: ({ chart }: { chart: ChartJS }) => {
@@ -353,33 +328,10 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     };
   }, [data, options]);
 
-  useEffect(() => {
-    if (!allPoints) return;
-    if (!shownPoints) return;
-    if (isUserInteracting) return;
-
-    resetZoom();
-  }, [isUserInteracting, allPoints, shownPoints, user]);
-
   const onZoomPan = (chart: ChartJS) => {
-    setBounds(chart.scales.x.getUserBounds());
     setIsUserInteracting(true);
+    setBounds(chart.scales.x.getUserBounds());
   };
-
-  useEffect(() => {
-    if (bounds == undefined) {
-      const maxTimestamp = Date.now();
-      const width = canvasRef.current?.style.width;
-      const screenWidth = window.innerWidth;
-      const defaultView = maxTimestamp - defaultBound * (parseInt(width || "1") / screenWidth);
-      setBounds({
-        min: defaultView,
-        max: maxTimestamp,
-        minDefined: true,
-        maxDefined: true,
-      });
-    }
-  }, []);
 
   const updateChart = () => {
     if (chartInstanceRef.current) {
@@ -391,40 +343,75 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     }
   };
 
+  const mergePoints = (pointsA: Record<string, { value: number; timestamp: Date }[]>, pointsB: Record<string, { value: number; timestamp: Date }[]>) => {
+    const mergedPoints: Record<string, { value: number; timestamp: Date }[]> = {};
+    [...Object.keys(pointsA), ...Object.keys(pointsB)].forEach((topic) => {
+      mergedPoints[topic] = [...(pointsA[topic] || []), ...(pointsB[topic] || [])];
+    });
+    return mergedPoints;
+  };
+
   const filterPoints = () => {
-    const chartWidth = canvasRef.current?.width;
-    const minBound = bounds?.min;
-    const maxBound = bounds?.max;
+    let filteredPoints: Record<string, { value: number; timestamp: Date }[]> = {};
+    if (!boolean) {
+      const chartWidth = canvasRef.current?.width;
+      const minBound = bounds?.min;
+      const maxBound = bounds?.max;
 
-    if (minBound == undefined || maxBound == undefined || chartWidth == undefined) return;
+      if (minBound == undefined || maxBound == undefined || chartWidth == undefined) return;
 
-    // time window in milliseconds per pixel
-    const window = (maxBound - minBound) / chartWidth;
+      // time window in milliseconds per pixel
+      const window = Math.round((maxBound - minBound) / chartWidth);
 
-    // filter points so there is only one point per that window (pixel)
-    const filteredPoints: Record<string, { value: number; timestamp: Date }[]> = {};
-    Object.entries(allPoints).forEach(([topic, points]) => {
-      const filtered: { value: number; timestamp: Date }[] = [];
-      let lastTimestamp = 0;
-      points.forEach((point) => {
-        if (point.timestamp.getTime() - lastTimestamp > window) {
-          filtered.push(point);
-          lastTimestamp = point.timestamp.getTime();
-        }
+      // Filter points so there is only one point per window (pixel) per topic, allPoints are not sorted by timestamps
+      Object.entries(mergePoints(httpPoints, wsPoints)).forEach(([topic, points]) => {
+        // points are not sorted by timestamps, make the filtering not dependent on order
+        const sortedPoints = points.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        const filtered: { value: number; timestamp: Date }[] = [];
+        let lastTimestamp = 0;
+        sortedPoints.forEach((point) => {
+          if (point.timestamp.getTime() - lastTimestamp > window) {
+            filtered.push(point);
+            lastTimestamp = point.timestamp.getTime();
+          }
+        });
+        filteredPoints[topic] = filtered;
       });
-      filteredPoints[topic] = filtered;
+    } else {
+      filteredPoints = mergePoints(httpPoints, wsPoints);
+    }
+
+    // filter duplicates and sort by timestamp
+    Object.entries(filteredPoints).forEach(([topic, points]) => {
+      const uniquePoints = points.filter((point, index, self) => self.findIndex((p) => p.timestamp.getTime() === point.timestamp.getTime()) === index);
+      uniquePoints.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      filteredPoints[topic] = uniquePoints;
     });
 
     setShownPoints(filteredPoints);
   };
 
   useEffect(() => {
-    if (boolean) {
-      setShownPoints(allPoints);
-      return;
-    }
+    const ar = [
+      ...Object.values(httpPoints)
+        .flat()
+        .map((dp) => dp.value),
+      ...Object.values(wsPoints)
+        .flat()
+        .map((dp) => dp.value),
+    ];
+    setMinMax({
+      min: Math.min(...ar),
+      max: Math.max(...ar),
+    });
+
     filterPoints();
-  }, [allPoints]);
+  }, [httpPoints]);
+
+  useEffect(() => {
+    if (!isUserInteracting) return;
+    filterPoints();
+  }, [bounds]);
 
   useEffect(() => {
     if (data != undefined && options != undefined) {
@@ -441,25 +428,20 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   }, []);
 
   const resetZoom = () => {
-    if (Object.values(allPoints).flat().length > 0) {
+    if (Object.values(httpPoints).flat().length > 0) {
       // get timestamp from last value of all topics
-      const maxTimestamp = Math.max(
-        ...Object.values(allPoints)
+      const max = Math.max(
+        ...Object.values(httpPoints)
           .flat()
           .map((dp) => dp.timestamp.getTime())
       );
-
-      const width = canvasRef.current?.style.width;
-      // get device display width, not window width (window.innerWidth;)
-      const screenWidth = window.innerWidth;
-      const defaultView = maxTimestamp - defaultBound * (parseInt(width || "1") / screenWidth);
       setBounds({
-        min: defaultView,
-        max: maxTimestamp,
+        min: max - defaultBound,
+        max: max,
         minDefined: true,
         maxDefined: true,
       });
-      setTimeUnitByBounds(defaultView, maxTimestamp);
+      setTimeUnitByBounds(minMax.max - defaultBound, minMax.max);
       setIsUserInteracting(false);
     }
   };

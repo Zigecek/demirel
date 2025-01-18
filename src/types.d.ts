@@ -66,7 +66,7 @@ interface PushSubscription {
 type postMqttDataRequest = {
   start: number;
   end: number;
-  topic: string;
+  topics: string[];
   boolean?: boolean;
 };
 

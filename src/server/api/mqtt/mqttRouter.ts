@@ -24,15 +24,15 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
   }
 
   // get request parameters
-  const { start, end, topic, boolean } = req.body as postMqttDataRequest;
-  if (!start || !end || !topic || typeof start !== "number" || typeof end !== "number" || typeof topic !== "string") {
+  const { start, end, topics, boolean } = req.body as postMqttDataRequest;
+  if (!start || !end || !topics || typeof start !== "number" || typeof end !== "number") {
     const serviceResponse = ServiceResponse.failure("No start or end time provided.", false, StatusCodes.BAD_REQUEST);
     handleServiceResponse(serviceResponse, res);
     return;
   }
   const s = new Date(start);
   const e = new Date(end);
-  const t = topic;
+  const ts = topics;
   //const zoom = (e.getTime() - s.getTime()) / (24 * 60 * 60 * 1000);
 
   if (isNaN(s.getTime()) || isNaN(e.getTime())) {
@@ -48,13 +48,12 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
         gte: s,
         lte: e,
       },
-      topic: t,
+      topic: {
+        in: ts,
+      },
     },
     omit: {
       id: true,
-    },
-    orderBy: {
-      timestamp: "asc",
     },
   })) as MQTTMessage[];
 
@@ -65,7 +64,9 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
         timestamp: {
           lt: s,
         },
-        topic: t,
+        topic: {
+          in: ts,
+        },
       },
       omit: {
         id: true,

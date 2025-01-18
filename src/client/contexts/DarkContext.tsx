@@ -33,7 +33,6 @@ export const DarkProvider = ({ children }: { children: ReactNode }) => {
     setSystemDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
   useEffect(() => {
-    console.log("dark", user);
     if (!user || user.darkMode === null) {
       setDark(systemDark ?? defaultDark);
       return;

@@ -86,8 +86,9 @@ server.on("error", (e) => {
 });
 
 export const io = new Server(server, {
-  transports: ["websocket", "polling", "webtransport"],
+  transports: ["websocket"],
   allowEIO3: true,
+  allowUpgrades: true,
   connectionStateRecovery: {
     maxDisconnectionDuration: 2 * 60 * 1000,
     skipMiddlewares: true,

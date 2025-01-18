@@ -9,8 +9,8 @@ console.log("Connecting (" + API_URL + ")");
 export const socket = io(API_URL, {
   autoConnect: false,
   withCredentials: true,
-  tryAllTransports: true,
-  transports: ["websocket", "polling"],
+  tryAllTransports: false,
+  transports: ["websocket"],
   reconnection: true,
   upgrade: true,
 });
