@@ -20,6 +20,7 @@ const defaultBound = 1.5 * 24 * 60 * 60 * 1000;
 
 type GraphProps = {
   topics: string[];
+  hidden?: boolean[];
   style?: React.CSSProperties;
   boolean?: boolean;
   className?: string;
@@ -27,7 +28,7 @@ type GraphProps = {
 
 type Bounds = { min: number; max: number; minDefined: boolean; maxDefined: boolean };
 
-export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, className = "" }) => {
+export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, className = "", hidden }) => {
   // GLOBAL STATES //
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<ChartJS | null>(null);
@@ -226,6 +227,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       fill: false,
       pointRadius: 0.5,
       animation: true,
+      hidden: hidden ? hidden[topics.indexOf(topic)] : false,
     }));
 
     setData({
@@ -298,7 +300,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
           backgroundColor: dark ? "#000000" : "#ffffff", // Tooltip pozadí
         },
         legend: {
-          display: topics.length > 1,
+          display: false,
           labels: {
             color: dark ? "#ffffff" : "#000000", // Barva textu legendy
           },
@@ -329,7 +331,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         },
       },
     });
-  }, [dataPoints, isUserInteracting, timeUnit, suspicious, user, chartLock, dark]);
+  }, [dataPoints, isUserInteracting, timeUnit, suspicious, user, chartLock, dark, hidden]);
 
   // native chart.js creation useEffect
   useEffect(() => {

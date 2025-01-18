@@ -12,12 +12,15 @@ export async function createDailyStats(topic: string | "all" = "all", date: Date
   }
   if (date !== "all") {
     const { start, end } = getDayDates(date);
+    logger.daily.info("Start: " + start + " End: " + end);
     where = { ...where, timestamp: { gte: start, lte: end } };
   } else {
     // not today
     const { start } = getDayDates(new Date());
     where = { ...where, timestamp: { lt: start } };
   }
+
+  logger.daily.info("Getting messages from db");
 
   // get messages from db
   let messages = (await prisma.mqtt.findMany({
@@ -30,6 +33,8 @@ export async function createDailyStats(topic: string | "all" = "all", date: Date
     },
   })) as MQTTMessage[];
 
+  logger.daily.info("Got messages from db");
+
   if (messages.length === 0) {
     return;
   }
@@ -38,6 +43,8 @@ export async function createDailyStats(topic: string | "all" = "all", date: Date
   const dailyStats: dailyStats[] = [];
 
   const dbDaily = await prisma.daily.findMany({});
+
+  logger.daily.info("Calculating daily stats");
 
   do {
     const first = messages.shift();
@@ -72,8 +79,42 @@ export async function createDailyStats(topic: string | "all" = "all", date: Date
 
   // save the stats to the db
   logger.daily.info("Saving daily stats to db");
+  // create many
   await prisma.daily.createMany({
     data: dailyStats,
   });
+
+  logger.daily.info("Filtering db");
+
+  // filter db
+  await prismaFilterDB();
+
   logger.daily.info("Daily stats saved to db");
+}
+
+export async function prismaFilterDB() {
+  // run sql query to filter the db
+
+  await prisma.$queryRaw`
+    WITH ranked_daily AS (
+      SELECT
+        id,
+        topic,
+        date,
+        ROW_NUMBER() OVER (
+          PARTITION BY topic, date
+          ORDER BY
+            COALESCE("count", 0) DESC,
+            COALESCE("risingCount", 0) DESC,
+            COALESCE("fallingCount", 0) DESC
+        ) AS row_num
+      FROM daily
+    )
+    DELETE FROM daily
+    WHERE id IN (
+      SELECT id
+      FROM ranked_daily
+      WHERE row_num > 1
+    );
+  `;
 }
