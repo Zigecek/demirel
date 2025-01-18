@@ -57,12 +57,14 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
 
   // TOPIC STATES //
   const { values, timestamps, suspicious } = useTopics(topics);
-  const [dataPoints, setDataPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
+  const [allPoints, setAllPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
+  const [shownPoints, setShownPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
 
+  // when values or timestamps change, add new data points
   useEffect(() => {
     topics.forEach((topic) => {
       if (values[topic] != undefined && timestamps[topic]) {
-        setDataPoints((prevData) => {
+        setAllPoints((prevData) => {
           const newData = { ...prevData };
           newData[topic] = [...(newData[topic] || []), { value: values[topic] as number, timestamp: timestamps[topic] }]
             // remove duplicates
@@ -75,12 +77,12 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     });
   }, [values, timestamps]);
 
-  const processAndSetDataPoints = (responseObject: MQTTMessageTransfer[], topic: string) => {
-    setDataPoints((prevData) => {
+  const processAndSetDataPoints = (msgs: MQTTMessageTransfer[], topic: string) => {
+    setAllPoints((prevData) => {
       const newData = { ...prevData };
       newData[topic] = [
         ...(newData[topic] || []),
-        ...responseObject.map((msg) => ({
+        ...msgs.map((msg) => ({
           value: msg.value as number,
           timestamp: new Date(msg.timestamp),
         })),
@@ -92,7 +94,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       return newData;
     });
 
-    addToHistory(responseObject.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) } as MQTTMessage)));
+    addToHistory(msgs.map((msg) => ({ ...msg, timestamp: new Date(msg.timestamp) } as MQTTMessage)));
   };
 
   const setTimeUnitByBounds = (min: number, max: number) => {
@@ -130,7 +132,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
 
       // get newest data point from data points
       const newestDataPoint = Math.max(
-        ...Object.values(dataPoints)
+        ...Object.values(shownPoints)
           .flat()
           .map((dp) => dp.timestamp.getTime())
       );
@@ -221,7 +223,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
 
     const datasets = topics.map((topic) => ({
       label: nickname(topic),
-      data: dataPoints[topic] ? dataPoints[topic].map((dp) => ({ x: dp.timestamp.getTime(), y: dp.value })) : [],
+      data: shownPoints[topic] ? shownPoints[topic].map((dp) => ({ x: dp.timestamp.getTime(), y: dp.value })) : [],
       borderColor: suspicious[topic] ? suspiciousColor : colors[topics.indexOf(topic) % colors.length],
       borderWidth: 2,
       fill: false,
@@ -235,13 +237,13 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     });
 
     const min = Math.min(
-      ...Object.values(dataPoints)
+      ...Object.values(shownPoints)
         .flat()
         .map((dp) => dp.value)
     );
 
     const max = Math.max(
-      ...Object.values(dataPoints)
+      ...Object.values(shownPoints)
         .flat()
         .map((dp) => dp.value)
     );
@@ -331,7 +333,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         },
       },
     });
-  }, [dataPoints, isUserInteracting, timeUnit, suspicious, user, chartLock, dark, hidden]);
+  }, [shownPoints, isUserInteracting, timeUnit, suspicious, user, chartLock, dark, hidden]);
 
   // native chart.js creation useEffect
   useEffect(() => {
@@ -352,11 +354,12 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   }, [data, options]);
 
   useEffect(() => {
-    if (!dataPoints) return;
+    if (!allPoints) return;
+    if (!shownPoints) return;
     if (isUserInteracting) return;
 
     resetZoom();
-  }, [isUserInteracting, dataPoints, user]);
+  }, [isUserInteracting, allPoints, shownPoints, user]);
 
   const onZoomPan = (chart: ChartJS) => {
     setBounds(chart.scales.x.getUserBounds());
@@ -388,6 +391,41 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     }
   };
 
+  const filterPoints = () => {
+    const chartWidth = canvasRef.current?.width;
+    const minBound = bounds?.min;
+    const maxBound = bounds?.max;
+
+    if (minBound == undefined || maxBound == undefined || chartWidth == undefined) return;
+
+    // time window in milliseconds per pixel
+    const window = (maxBound - minBound) / chartWidth;
+
+    // filter points so there is only one point per that window (pixel)
+    const filteredPoints: Record<string, { value: number; timestamp: Date }[]> = {};
+    Object.entries(allPoints).forEach(([topic, points]) => {
+      const filtered: { value: number; timestamp: Date }[] = [];
+      let lastTimestamp = 0;
+      points.forEach((point) => {
+        if (point.timestamp.getTime() - lastTimestamp > window) {
+          filtered.push(point);
+          lastTimestamp = point.timestamp.getTime();
+        }
+      });
+      filteredPoints[topic] = filtered;
+    });
+
+    setShownPoints(filteredPoints);
+  };
+
+  useEffect(() => {
+    if (boolean) {
+      setShownPoints(allPoints);
+      return;
+    }
+    filterPoints();
+  }, [allPoints]);
+
   useEffect(() => {
     if (data != undefined && options != undefined) {
       updateChart();
@@ -403,10 +441,10 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   }, []);
 
   const resetZoom = () => {
-    if (Object.values(dataPoints).flat().length > 0) {
+    if (Object.values(allPoints).flat().length > 0) {
       // get timestamp from last value of all topics
       const maxTimestamp = Math.max(
-        ...Object.values(dataPoints)
+        ...Object.values(allPoints)
           .flat()
           .map((dp) => dp.timestamp.getTime())
       );
@@ -433,9 +471,9 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       if (chartInstanceRef.current) {
-        // Reset zoom using the Chart.js plugin API
         chartInstanceRef.current.resetZoom();
       }
+      resetZoom();
     };
 
     if (canvas) {
@@ -447,7 +485,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         canvas.removeEventListener("contextmenu", handleContextMenu);
       }
     };
-  }, [dataPoints]);
+  }, [shownPoints]);
 
   return <>{options != undefined && data != undefined && <canvas className={`${className}`} ref={canvasRef} style={{ ...style, width: "100%", height: "100%" }}></canvas>}</>;
 };
