@@ -16,7 +16,8 @@ import { postMqttData } from "../../../proxy/endpoints";
 ChartJS.register(zoomPlugin, annotationPlugin, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 ChartJS.register(...registerables);
 
-const defaultBound = 1.5 * 24 * 60 * 60 * 1000;
+const DEFAULT_BOUND = 1.5 * 24 * 60 * 60 * 1000;
+const ZOOM_PAN_DEBOUNCE = 500;
 
 type GraphProps = {
   topics: string[];
@@ -40,13 +41,13 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
 
   // Bounds for data fetching and timeout for debouncing
   const [bounds, setBounds] = useState<Bounds>({
-    min: Date.now() - defaultBound,
+    min: Date.now() - DEFAULT_BOUND,
     max: Date.now(),
     minDefined: true,
     maxDefined: true,
   });
+  const [zoomFactor, setZoomFactor] = useState<number>(bounds.max - bounds.min); // bounds difference
   const boundsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [mouseUp, setMouseUp] = useState(true);
 
   // User interaction state and timeout for resetting zoom
   const [isUserInteracting, setIsUserInteracting] = useState(false);
@@ -57,7 +58,6 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
 
   // timestamp interval for data fetching in milliseconds
   const [loaded, setLoaded] = useState({ min: Date.now(), max: Number.MAX_SAFE_INTEGER });
-  const [loading, setLoading] = useState(false);
 
   // time unit
   const [timeUnit, setTimeUnit] = useState("day");
@@ -67,7 +67,12 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   const [httpPoints, setHttpPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
   const [wsPoints, setWsPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
   const [shownPoints, setShownPoints] = useState<Record<string, { value: number; timestamp: Date }[]>>({});
-  const [minMax, setMinMax] = useState<{ min: number; max: number }>({ min: Number.MAX_SAFE_INTEGER, max: 0 });
+  const [minMax, setMinMax] = useState<{ min: number; max: number; min_timestamp: number; max_timestamp: number }>({
+    min: Number.MAX_SAFE_INTEGER,
+    max: 0,
+    min_timestamp: Date.now() - DEFAULT_BOUND,
+    max_timestamp: Date.now(),
+  });
 
   // when values or timestamps change, add new data points
   useEffect(() => {
@@ -155,15 +160,14 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   };
 
   // Effect for debounced bounds changes
+
   useEffect(() => {
     if (boundsTimeoutRef.current) clearTimeout(boundsTimeoutRef.current);
 
     if (bounds) {
-      setTimeUnitByBounds(bounds.min, bounds.max);
-
       boundsTimeoutRef.current = setTimeout(() => {
         handleDataFetch(bounds);
-      }, 300);
+      }, ZOOM_PAN_DEBOUNCE);
     }
 
     return () => {
@@ -171,12 +175,9 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     };
   }, [bounds, user]);
 
-  // Effect for immediate mouseUp changes
   useEffect(() => {
-    if (mouseUp && !chartLock) {
-      handleDataFetch(bounds);
-    }
-  }, [mouseUp, user]);
+    setTimeUnitByBounds(bounds.min, bounds.max);
+  }, [zoomFactor]);
 
   // main datapoints useEffect
   useEffect(() => {
@@ -199,10 +200,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       return midnightAnnotations;
     };
 
-    const minX = bounds?.minDefined ? bounds.min : Date.now() - defaultBound;
-    const maxX = bounds?.maxDefined ? bounds.max : Date.now();
-
-    const midnightAnnotations = generateMidnightAnnotations(minX, maxX);
+    const midnightAnnotations = generateMidnightAnnotations(bounds.min, bounds.max);
 
     const datasets = topics.map((topic) => ({
       label: nickname(topic),
@@ -210,8 +208,8 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       borderColor: suspicious[topic] ? suspiciousColor : colors[topics.indexOf(topic) % colors.length],
       borderWidth: 2,
       fill: false,
-      pointRadius: 0.5,
-      animation: true,
+      pointRadius: 0,
+      animation: false,
       hidden: hidden ? hidden[topics.indexOf(topic)] : false,
     }));
 
@@ -225,6 +223,8 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
+      normalized: true,
+      parsing: false,
       scales: {
         y: {
           grid: {
@@ -242,10 +242,13 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
           },
           ticks: {
             color: dark ? "#ffffff" : "#000000", // Barva popisků osy X
+            beginAtZero: false,
           },
           type: "time",
-          min: minX,
-          max: maxX,
+          min: bounds.min,
+          max: bounds.max,
+          bounds: "data",
+          clip: false,
           time: {
             unit: timeUnit,
             tooltipFormat: "dd-LL-yyyy HH:mm:ss",
@@ -275,7 +278,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         },
         zoom: {
           pan: {
-            enabled: chartLock && !loading,
+            enabled: chartLock,
             mode: "x",
             onPan: ({ chart }: { chart: ChartJS }) => {
               onZoomPan(chart);
@@ -283,10 +286,10 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
           },
           zoom: {
             wheel: {
-              enabled: chartLock && !loading,
+              enabled: chartLock,
             },
             pinch: {
-              enabled: chartLock && !loading,
+              enabled: chartLock,
             },
             mode: "x",
             onZoom: ({ chart }: { chart: ChartJS }) => {
@@ -355,7 +358,8 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       const window = Math.round((maxBound - minBound) / chartWidth);
 
       // Filter points so there is only one point per window (pixel) per topic, allPoints are not sorted by timestamps
-      Object.entries(mergePoints(httpPoints, wsPoints)).forEach(([topic, points]) => {
+      const mergedPoints = mergePoints(httpPoints, wsPoints);
+      Object.entries(mergedPoints).forEach(([topic, points]) => {
         // points are not sorted by timestamps, make the filtering not dependent on order
         const sortedPoints = points.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
         const filtered: { value: number; timestamp: Date }[] = [];
@@ -391,17 +395,36 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         .flat()
         .map((dp) => dp.value),
     ];
-    setMinMax({
+    const ar2 = [
+      ...Object.values(httpPoints)
+        .flat()
+        .map((dp) => dp.timestamp.getTime()),
+      ...Object.values(wsPoints)
+        .flat()
+        .map((dp) => dp.timestamp.getTime()),
+    ];
+    setMinMax((prev) => ({
+      ...prev,
       min: Math.min(...ar),
       max: Math.max(...ar),
-    });
+      min_timestamp: Math.min(...ar2),
+      max_timestamp: Math.max(...ar2),
+    }));
 
     filterPoints();
   }, [httpPoints]);
 
   useEffect(() => {
-    if (!isUserInteracting) return;
+    if (!isUserInteracting) return; // filter points when user is interacting
     filterPoints();
+  }, [zoomFactor]); // on zoom
+
+  useEffect(() => {
+    const new_factor = bounds.max - bounds.min;
+    // if zoomFactor change is more than 1% update setZoomFactor
+    if (Math.abs(new_factor - zoomFactor) / zoomFactor > 0.01) {
+      setZoomFactor(new_factor);
+    }
   }, [bounds]);
 
   useEffect(() => {
@@ -420,19 +443,12 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
 
   const resetZoom = () => {
     if (Object.values(httpPoints).flat().length > 0) {
-      // get timestamp from last value of all topics
-      const max = Math.max(
-        ...Object.values(httpPoints)
-          .flat()
-          .map((dp) => dp.timestamp.getTime())
-      );
       setBounds({
-        min: max - defaultBound,
-        max: max,
+        min: minMax.max_timestamp - DEFAULT_BOUND,
+        max: minMax.max_timestamp,
         minDefined: true,
         maxDefined: true,
       });
-      setTimeUnitByBounds(minMax.max - defaultBound, minMax.max);
       setIsUserInteracting(false);
     }
   };
@@ -447,28 +463,16 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
         chartInstanceRef.current.resetZoom();
       }
       resetZoom();
-    };
-
-    const handleMouseDown = (_e: MouseEvent) => {
-      setMouseUp(false);
-
-      const globalMouseUp = (_e: MouseEvent) => {
-        setMouseUp(true);
-        document.removeEventListener("mouseup", globalMouseUp);
-      };
-
-      document.addEventListener("mouseup", globalMouseUp);
+      filterPoints(); // must be here
     };
 
     if (canvas) {
       canvas.addEventListener("contextmenu", handleContextMenu);
-      canvas.addEventListener("mousedown", handleMouseDown);
     }
 
     return () => {
       if (canvas) {
         canvas.removeEventListener("contextmenu", handleContextMenu);
-        canvas.removeEventListener("mouseup", handleMouseDown);
       }
     };
   }, [shownPoints]);

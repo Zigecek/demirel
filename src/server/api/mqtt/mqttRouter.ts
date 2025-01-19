@@ -207,7 +207,7 @@ mqttRouter.post("/nickname", async (req: Request, res: Response) => {
   return;
 });
 
-mqttRouter.get("/firstValues", authenticated, async (req: Request, res: Response) => {
+mqttRouter.get("/firstValues", authenticated, async (_: Request, res: Response) => {
   const messages = Object.values(await cloneMemory());
 
   const sendMessages: MQTTMessageTransfer[] = messages.map((msgs) => {
