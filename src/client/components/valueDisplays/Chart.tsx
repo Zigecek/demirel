@@ -42,7 +42,7 @@ export const Chart: React.FC<ChartProps> = ({ topics, boolean = false, valueF = 
       </h2>
 
       <div style={{ height: boolean ? "200px" : `${topics.length * 30 + 300}px` }}>
-        <Graph /*className="w-full max-w-full"*/ topics={topics} boolean={boolean} hidden={hidden} />
+        <Graph className="w-full h-full" topics={topics} boolean={boolean} hidden={hidden} />
       </div>
     </div>
   );

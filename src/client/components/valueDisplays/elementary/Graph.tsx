@@ -329,11 +329,13 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
 
   const updateChart = () => {
     if (chartInstanceRef.current) {
-      const chart = chartInstanceRef.current;
       if (!isUserInteracting) {
         resetZoom();
       }
-      chart.update(); // Trigger an update on the chart instance
+      console.log("updating");
+      chartInstanceRef.current.update(); // Trigger an update on the chart instance
+      chartInstanceRef.current.draw();
+      chartInstanceRef.current.reset();
     }
   };
 
@@ -477,5 +479,5 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
     };
   }, [shownPoints]);
 
-  return <>{options != undefined && data != undefined && <canvas className={`${className}`} ref={canvasRef} style={{ ...style, width: "100%", height: "100%" }}></canvas>}</>;
+  return <>{options != undefined && data != undefined && <canvas className={`${className}`} ref={canvasRef} style={{ ...style /*, width: "100%", height: "100%" */ }}></canvas>}</>;
 };

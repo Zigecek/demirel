@@ -21,7 +21,7 @@ export const Wind: React.FC<WindProps> = ({ topic, valueF, className = "" }) => 
       </h2>
 
       <div className="flex flex-row justify-center items-stretch h-full w-full">
-        {typeof value === "number" && <WindGauge className="min-w-[330px] min-h-[330px]" direction={value} valueF={valueF} />}
+        {typeof value === "number" && <WindGauge className="min-w-[110px] min-h-[110px]" direction={value} valueF={valueF} />}
       </div>
     </div>
   );
