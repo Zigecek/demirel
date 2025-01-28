@@ -8,6 +8,8 @@ import { LoginForm } from "../components/LoginForm";
 import { RuleSetup } from "../components/RuleSetup";
 import { Chart } from "../components/valueDisplays/Chart";
 import { AverageValue } from "../components/valueDisplays/elementary/AverageValue";
+import { DailyHistory } from "../components/valueDisplays/Stats";
+import Value from "../components/valueDisplays/Value";
 import Wind from "../components/valueDisplays/Wind";
 import { useDark } from "../contexts/DarkContext";
 import { useUser } from "../contexts/UserContext";
@@ -83,12 +85,6 @@ export default function App() {
             </button>
           </div>
           <div className={`z-0 bg-neutral-100 dark:bg-neutral-900 ${user === false || isVisible ? "overflow-hidden h-screen" : ""}`}>
-            <div className="flex flex-row justify-center items-stretch h-full">
-              <Chart className="flex-grow" topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
-              <Wind className="" topic="zige/meteo/anemoscope/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°")} />
-            </div>
-
-            {/* 
             <div className="flex flex-row justify-center box-border flex-wrap items-stretch">
               <Value topic="zige/pozar1/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
               <Value topic="zige/pozar0/temp/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°C")} />
@@ -113,7 +109,11 @@ export default function App() {
               <DailyHistory topic="zige/meteo/wind/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
               <DailyHistory topic="zige/meteo/anemoscope/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°")} />
             </div>
-            */}
+
+            <div className="flex flex-row justify-center items-stretch h-full">
+              <Chart className="flex-grow" topics={["zige/meteo/wind/val"]} valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "m/s")} />
+              <Wind className="" topic="zige/meteo/anemoscope/val" valueF={(v) => unit(unundefined(fix(number(v), 1), "---"), "°")} />
+            </div>
           </div>
         </>
       )}

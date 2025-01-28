@@ -33,7 +33,6 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
   const s = new Date(start);
   const e = new Date(end);
   const ts = topics;
-  //const zoom = (e.getTime() - s.getTime()) / (24 * 60 * 60 * 1000);
 
   if (isNaN(s.getTime()) || isNaN(e.getTime())) {
     const serviceResponse = ServiceResponse.failure("Invalid start or end time provided.", false, StatusCodes.BAD_REQUEST);
@@ -57,27 +56,25 @@ mqttRouter.post("/data", async (req: Request, res: Response) => {
     },
   })) as MQTTMessage[];
 
-  // if boolean is true, get also first value before start
-  if (boolean) {
-    const firstMessage = (await prisma.mqtt.findFirst({
-      where: {
-        timestamp: {
-          lt: s,
-        },
-        topic: {
-          in: ts,
-        },
+  // get also first value before start
+  const firstMessage = (await prisma.mqtt.findFirst({
+    where: {
+      timestamp: {
+        lt: s,
       },
-      omit: {
-        id: true,
+      topic: {
+        in: ts,
       },
-      orderBy: {
-        timestamp: "desc",
-      },
-    })) as MQTTMessage;
-    if (firstMessage) {
-      messages.unshift(firstMessage);
-    }
+    },
+    omit: {
+      id: true,
+    },
+    orderBy: {
+      timestamp: "desc",
+    },
+  })) as MQTTMessage;
+  if (firstMessage) {
+    messages.unshift(firstMessage);
   }
 
   const sendMessages: MQTTMessageTransfer[] = messages.map((msg) => {

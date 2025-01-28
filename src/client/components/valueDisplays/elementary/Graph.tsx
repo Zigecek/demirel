@@ -18,6 +18,7 @@ ChartJS.register(...registerables);
 
 const DEFAULT_BOUND = 1.5 * 24 * 60 * 60 * 1000;
 const ZOOM_PAN_DEBOUNCE = 500;
+const PIXELS_PER_POINT = 3;
 
 type GraphProps = {
   topics: string[];
@@ -334,8 +335,6 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       }
       console.log("updating");
       chartInstanceRef.current.update(); // Trigger an update on the chart instance
-      chartInstanceRef.current.draw();
-      chartInstanceRef.current.reset();
     }
   };
 
@@ -348,6 +347,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   };
 
   const filterPoints = () => {
+    console.log("filtering");
     let filteredPoints: Record<string, { value: number; timestamp: Date }[]> = {};
     if (!boolean) {
       const chartWidth = canvasRef.current?.width;
@@ -357,7 +357,7 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
       if (minBound == undefined || maxBound == undefined || chartWidth == undefined) return;
 
       // time window in milliseconds per pixel
-      const window = Math.round((maxBound - minBound) / chartWidth);
+      const window = Math.round((maxBound - minBound) / (chartWidth / PIXELS_PER_POINT));
 
       // Filter points so there is only one point per window (pixel) per topic, allPoints are not sorted by timestamps
       const mergedPoints = mergePoints(httpPoints, wsPoints);
@@ -389,22 +389,10 @@ export const Graph: React.FC<GraphProps> = ({ topics, style, boolean = false, cl
   };
 
   useEffect(() => {
-    const ar = [
-      ...Object.values(httpPoints)
-        .flat()
-        .map((dp) => dp.value),
-      ...Object.values(wsPoints)
-        .flat()
-        .map((dp) => dp.value),
-    ];
-    const ar2 = [
-      ...Object.values(httpPoints)
-        .flat()
-        .map((dp) => dp.timestamp.getTime()),
-      ...Object.values(wsPoints)
-        .flat()
-        .map((dp) => dp.timestamp.getTime()),
-    ];
+    const httpVals = Object.values(httpPoints).flat();
+    const wsVals = Object.values(wsPoints).flat();
+    const ar = [...httpVals.map((dp) => dp.value), ...wsVals.map((dp) => dp.value)];
+    const ar2 = [...httpVals.map((dp) => dp.timestamp.getTime()), ...wsVals.map((dp) => dp.timestamp.getTime())];
     setMinMax((prev) => ({
       ...prev,
       min: Math.min(...ar),

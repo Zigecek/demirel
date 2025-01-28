@@ -26,7 +26,7 @@ export const AverageValue: React.FC<AverageValueProps> = ({ topics, valueF }) =>
       </p>
       <div className="group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none bg-neutral-100 dark:bg-neutral-900 border-2 border-neutral-400 dark:border-neutral-600 dark:text-white rounded-md absolute opacity-0 min-w-max right-0 shadow-lg dark:shadow-neutral-800">
         {topics.map((topic, i) => (
-          <p key={i} className="p-2">
+          <p key={i} className="py-1 px-2">
             <Dot duration={animationDurations[topic]!} interval={lastMessageIntervals[topic]!} />
             {nickname(topic)}: <span style={{ color: suspicious[topic] ? suspiciousColor : colors[i] }}>{valueF(values[topic])}</span>
           </p>
